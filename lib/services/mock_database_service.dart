@@ -11,7 +11,6 @@ class MockDatabaseService {
       name: 'Cornel Bronze',
       latinName: 'Dahlia pinnata',
       color: 'Bronze/Orange',
-      height: '110 cm',
       description: 'Ball dahlia with strong stems.',
     ),
     Species(
@@ -19,7 +18,6 @@ class MockDatabaseService {
       name: 'Cafe au Lait',
       latinName: 'Dahlia pinnata',
       color: 'Creamy Pink',
-      height: '120 cm',
       description: 'Large decorative dinner plate dahlia.',
     ),
   ];

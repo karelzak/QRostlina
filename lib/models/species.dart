@@ -3,7 +3,6 @@ class Species {
   final String name;
   final String? latinName;
   final String? color;
-  final String? height;
   final String? description;
   final String? photoUrl;
 
@@ -12,7 +11,6 @@ class Species {
     required this.name,
     this.latinName,
     this.color,
-    this.height,
     this.description,
     this.photoUrl,
   });
@@ -23,7 +21,6 @@ class Species {
       'name': name,
       'latinName': latinName,
       'color': color,
-      'height': height,
       'description': description,
       'photoUrl': photoUrl,
     };
@@ -35,7 +32,6 @@ class Species {
       name: map['name'],
       latinName: map['latinName'],
       color: map['color'],
-      height: map['height'],
       description: map['description'],
       photoUrl: map['photoUrl'],
     );

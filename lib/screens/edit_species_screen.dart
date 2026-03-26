@@ -19,7 +19,6 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
   late TextEditingController _nameController;
   late TextEditingController _latinNameController;
   late TextEditingController _colorController;
-  late TextEditingController _heightController;
   late TextEditingController _descriptionController;
 
   @override
@@ -29,7 +28,6 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
     _nameController = TextEditingController(text: widget.species?.name ?? '');
     _latinNameController = TextEditingController(text: widget.species?.latinName ?? '');
     _colorController = TextEditingController(text: widget.species?.color ?? '');
-    _heightController = TextEditingController(text: widget.species?.height ?? '');
     _descriptionController = TextEditingController(text: widget.species?.description ?? '');
   }
 
@@ -39,7 +37,6 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
     _nameController.dispose();
     _latinNameController.dispose();
     _colorController.dispose();
-    _heightController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -66,7 +63,6 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
         name: _nameController.text.trim(),
         latinName: _latinNameController.text.trim().isEmpty ? null : _latinNameController.text.trim(),
         color: _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
-        height: _heightController.text.trim().isEmpty ? null : _heightController.text.trim(),
         description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
       );
 
@@ -135,8 +131,6 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
               _buildTextField(controller: _latinNameController, label: 'Latin Name'),
               const SizedBox(height: 16),
               _buildTextField(controller: _colorController, label: 'Color'),
-              const SizedBox(height: 16),
-              _buildTextField(controller: _heightController, label: 'Height (cm)'),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _descriptionController,

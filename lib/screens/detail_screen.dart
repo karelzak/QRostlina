@@ -235,7 +235,6 @@ class _DetailScreenState extends State<DetailScreen> {
               _infoRow('Name', s.name),
               _infoRow('Latin', s.latinName ?? '-'),
               _infoRow('Color', s.color ?? '-'),
-              _infoRow('Height', s.height ?? '-'),
               const SizedBox(height: 8),
               const Text('Description:', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
               Text(s.description ?? 'No description', style: const TextStyle(fontSize: 18)),
