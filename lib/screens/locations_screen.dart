@@ -34,9 +34,10 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
         title: const Text('LOCATIONS'),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.yellow,
-          labelColor: Colors.yellow,
-          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.black,
+          labelColor: Colors.black,
+          unselectedLabelColor: Colors.black54,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           tabs: const [
             Tab(text: 'BEDS (B-)'),
             Tab(text: 'CRATES (C-)'),
