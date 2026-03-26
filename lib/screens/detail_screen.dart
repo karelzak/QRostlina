@@ -5,6 +5,9 @@ import '../models/plant_unit.dart';
 import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
+import 'edit_species_screen.dart';
+import 'edit_plant_screen.dart';
+import 'edit_location_screen.dart';
 
 class DetailScreen extends StatefulWidget {
   final String id;
@@ -67,6 +70,52 @@ class _DetailScreenState extends State<DetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
+        actions: [
+          if (widget.type == ScannedType.species && _data != null)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                final result = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (context) => EditSpeciesScreen(species: _data as Species)),
+                );
+                if (result == true) {
+                  _loadData();
+                }
+              },
+            ),
+          if (widget.type == ScannedType.plant && _data != null)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                final result = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (context) => EditPlantScreen(plant: _data as PlantUnit)),
+                );
+                if (result == true) {
+                  _loadData();
+                }
+              },
+            ),
+          if ((widget.type == ScannedType.bed || widget.type == ScannedType.crate) && _data != null)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                final result = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditLocationScreen(
+                      location: _data as Location,
+                      isBed: widget.type == ScannedType.bed,
+                    ),
+                  ),
+                );
+                if (result == true) {
+                  _loadData();
+                }
+              },
+            ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: Colors.yellow))
@@ -89,8 +138,31 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: () {
-              // TODO: Implement "Create New" logic
+            onPressed: () async {
+              Widget screen;
+              switch (widget.type) {
+                case ScannedType.species:
+                  screen = const EditSpeciesScreen();
+                  break;
+                case ScannedType.plant:
+                  screen = const EditPlantScreen();
+                  break;
+                case ScannedType.bed:
+                  screen = const EditLocationScreen(isBed: true);
+                  break;
+                case ScannedType.crate:
+                  screen = const EditLocationScreen(isBed: false);
+                  break;
+                case ScannedType.unknown:
+                  return;
+              }
+              final result = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (context) => screen),
+              );
+              if (result == true) {
+                _loadData();
+              }
             },
             child: const Text('CREATE NEW'),
           ),
@@ -108,9 +180,40 @@ class _DetailScreenState extends State<DetailScreen> {
           _buildInfoCard(),
           if (_children != null) ...[
             const SizedBox(height: 24),
-            Text(
-              widget.type == ScannedType.species ? 'INSTANCES' : 'CONTENTS',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.type == ScannedType.species ? 'INSTANCES' : 'CONTENTS',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+                ),
+                TextButton.icon(
+                  onPressed: () async {
+                    final result = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditPlantScreen(
+                          initialSpeciesId: widget.type == ScannedType.species ? widget.id : null,
+                          // If we are on a Bed/Crate, pre-fill the location
+                          plant: (widget.type == ScannedType.bed || widget.type == ScannedType.crate)
+                              ? PlantUnit(
+                                  id: 'P-',
+                                  speciesId: 'S-',
+                                  status: PlantStatus.inGround,
+                                  locationId: widget.id,
+                                )
+                              : null,
+                        ),
+                      ),
+                    );
+                    if (result == true) {
+                      _loadData();
+                    }
+                  },
+                  icon: const Icon(Icons.add, color: Colors.yellow),
+                  label: const Text('ADD NEW', style: TextStyle(color: Colors.yellow)),
+                ),
+              ],
             ),
             const Divider(color: Colors.yellow),
             const SizedBox(height: 8),

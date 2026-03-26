@@ -4,6 +4,7 @@ import '../models/species.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
 import 'detail_screen.dart';
+import 'edit_species_screen.dart';
 
 class SpeciesListScreen extends StatefulWidget {
   const SpeciesListScreen({super.key});
@@ -80,8 +81,14 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Implement add species screen
+        onPressed: () async {
+          final result = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(builder: (context) => const EditSpeciesScreen()),
+          );
+          if (result == true) {
+            setState(() {});
+          }
         },
         backgroundColor: Colors.yellow,
         foregroundColor: Colors.black,

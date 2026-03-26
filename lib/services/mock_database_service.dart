@@ -91,6 +91,35 @@ class MockDatabaseService {
   }
 
   static Future<void> addSpecies(Species species) async {
-    _mockSpecies.add(species);
+    await Future.delayed(const Duration(milliseconds: 200));
+    final index = _mockSpecies.indexWhere((s) => s.id == species.id);
+    if (index >= 0) {
+      _mockSpecies[index] = species;
+    } else {
+      _mockSpecies.add(species);
+    }
+  }
+
+  static Future<void> savePlant(PlantUnit plant) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final index = _mockPlants.indexWhere((p) => p.id == plant.id);
+    if (index >= 0) {
+      _mockPlants[index] = plant;
+    } else {
+      _mockPlants.add(plant);
+    }
+  }
+
+  static Future<void> saveLocation(Location location) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (location is Bed) {
+      final index = _mockBeds.indexWhere((b) => b.id == location.id);
+      if (index >= 0) _mockBeds[index] = location;
+      else _mockBeds.add(location);
+    } else if (location is Crate) {
+      final index = _mockCrates.indexWhere((c) => c.id == location.id);
+      if (index >= 0) _mockCrates[index] = location;
+      else _mockCrates.add(location);
+    }
   }
 }
