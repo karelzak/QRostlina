@@ -50,7 +50,11 @@ QRostlina is a mobile application (Flutter/Android) for managing a plant invento
 8. [ ] Android SDK setup (Command Line Tools preferred).
 9. [ ] Script for Android deployment.
 10. [ ] Firebase integration (Auth & Firestore).
-11. [ ] Detailed Cards for Species (S-), Plants (P-), Beds (B-), Crates (C-).
+11. [!] Localization setup (English/Czech).
+    - Status: .arb files created, but `package:flutter_gen` is not resolving.
+    - Error: `Couldn't resolve the package 'flutter_gen'`.
+    - Note: Need to verify if `synthetic-package: true` is required or if files should be generated into `lib/generated`.
+12. [ ] Detailed Cards for Species (S-), Plants (P-), Beds (B-), Crates (C-).
 12. [ ] CRUD implementation for all entities.
 13. [ ] Bed/Crate content listing.
 
