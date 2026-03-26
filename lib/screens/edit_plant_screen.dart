@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/plant_unit.dart';
+import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
 
@@ -173,27 +174,25 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    if (_currentBed!.layout == BedLayout.grid) ...[
-                      Expanded(
-                        flex: 2,
-                        child: DropdownButtonFormField<int>(
-                          value: _gridLine,
-                          decoration: const InputDecoration(
-                            labelText: 'Line',
-                            labelStyle: TextStyle(color: Colors.yellow),
-                            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-                          ),
-                          dropdownColor: Colors.black,
-                          style: const TextStyle(color: Colors.white, fontSize: 18),
-                          items: const [
-                            DropdownMenuItem(value: 1, child: Text('Left')),
-                            DropdownMenuItem(value: 2, child: Text('Right')),
-                          ],
-                          onChanged: (val) => setState(() => _gridLine = val),
+                    Expanded(
+                      flex: 2,
+                      child: DropdownButtonFormField<int>(
+                        value: _gridLine,
+                        decoration: const InputDecoration(
+                          labelText: 'Line',
+                          labelStyle: TextStyle(color: Colors.yellow),
+                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                         ),
+                        dropdownColor: Colors.black,
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        items: const [
+                          DropdownMenuItem(value: 1, child: Text('Left')),
+                          DropdownMenuItem(value: 2, child: Text('Right')),
+                        ],
+                        onChanged: (val) => setState(() => _gridLine = val),
                       ),
-                      const SizedBox(width: 12),
-                    ],
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
                       child: DropdownButtonFormField<int>(

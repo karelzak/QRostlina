@@ -254,7 +254,7 @@ class _DetailScreenState extends State<DetailScreen> {
       }
     }
 
-    final int columns = bed.layout == BedLayout.grid ? 2 : 1;
+    final int columns = 2; // Always 2 lines
     final int rows = bed.totalRows;
 
     return Container(
@@ -264,27 +264,21 @@ class _DetailScreenState extends State<DetailScreen> {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
-          childAspectRatio: columns == 2 ? 2.5 : 5,
+          childAspectRatio: 2.5,
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
         ),
         itemCount: columns * rows,
         itemBuilder: (context, index) {
-          // In Flutter GridView, it fills row by row
-          int rowIdx, lineIdx;
-          if (columns == 2) {
-            rowIdx = (index / 2).floor() + 1;
-            lineIdx = (index % 2) + 1;
-          } else {
-            rowIdx = index + 1;
-            lineIdx = 1;
-          }
+          // row index and line index
+          int rowIdx = (index / 2).floor() + 1;
+          int lineIdx = (index % 2) + 1;
 
           final key = "$lineIdx-$rowIdx";
           final plant = occupancy[key];
           
-          int meter = ((rowIdx - 1) / bed.rowsPerMeter).floor() + 1;
-          int subRow = ((rowIdx - 1) % bed.rowsPerMeter) + 1;
+          int meter = ((rowIdx - 1) / bed.rowsPerMeterEffective).floor() + 1;
+          int subRow = ((rowIdx - 1) % bed.rowsPerMeterEffective) + 1;
           
           String cellLabel = bed.layout == BedLayout.grid 
               ? "${meter}m-$subRow" 

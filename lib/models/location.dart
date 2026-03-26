@@ -25,21 +25,22 @@ class Bed extends Location {
     this.row,
   });
 
-  int get totalLines => layout == BedLayout.grid ? 2 : 1;
-  int get totalRows => length * (layout == BedLayout.grid ? rowsPerMeter : 1);
+  int get totalLines => 2; // Always 2 lines (Left/Right)
+  int get rowsPerMeterEffective => layout == BedLayout.grid ? rowsPerMeter : 1;
+  int get totalRows => length * rowsPerMeterEffective;
   int get totalCells => totalLines * totalRows;
 
   String formatPosition(int? line, int? row) {
     if (row == null) return 'N/A';
     
+    int meter = ((row - 1) / rowsPerMeterEffective).floor() + 1;
+    String lineStr = line == 1 ? 'Left' : 'Right';
+
     if (layout == BedLayout.linear) {
-      return '${this.row ?? id}-${row}m';
+      return '${this.row ?? id}-$lineStr-${meter}m';
     }
 
-    if (line == null) return 'N/A';
-    int meter = ((row - 1) / rowsPerMeter).floor() + 1;
-    int subRow = ((row - 1) % rowsPerMeter) + 1;
-    String lineStr = line == 1 ? 'Left' : 'Right';
+    int subRow = ((row - 1) % rowsPerMeterEffective) + 1;
     return '${this.row ?? id}-$lineStr-${meter}m-$subRow';
   }
 
