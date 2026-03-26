@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../l10n/app_localizations.dart';
 import '../models/species.dart';
 import '../services/mock_database_service.dart';
+import '../services/qr_scanner_service.dart';
+import 'detail_screen.dart';
 
 class SpeciesListScreen extends StatefulWidget {
   const SpeciesListScreen({super.key});
@@ -64,7 +66,12 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios, color: Colors.yellow),
                   onTap: () {
-                    // TODO: Open detailed species card
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DetailScreen(id: s.id, type: ScannedType.species),
+                      ),
+                    );
                   },
                 ),
               );

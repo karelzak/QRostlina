@@ -2,8 +2,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../l10n/app_localizations.dart';
 import '../services/qr_scanner_service.dart';
+import 'detail_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -34,12 +35,18 @@ class _ScannerScreenState extends State<ScannerScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${l10n.scanned}: ${result.id} (${result.type.name})'),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 1),
       ),
     );
 
-    // TODO: Navigation to specific cards based on type
+    // Navigation to specific cards based on type
     debugPrint('Detected ${result.type}: ${result.id}');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetailScreen(id: result.id, type: result.type),
+      ),
+    );
   }
 
   @override
