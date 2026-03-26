@@ -59,8 +59,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     color: Colors.grey[900],
                     child: const Center(
                       child: Text(
-                        'Camera only available on Android/iOS.
-Use manual input below for Linux testing.',
+                        '''Camera only available on Android/iOS.
+Use manual input below for Linux testing.''',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white70),
                       ),
