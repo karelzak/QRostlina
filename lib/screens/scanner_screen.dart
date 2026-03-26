@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../services/qr_scanner_service.dart';
 
 class ScannerScreen extends StatefulWidget {
@@ -27,11 +28,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   void _handleCode(String code) {
     final result = QRScannerService.parse(code);
+    final l10n = AppLocalizations.of(context)!;
     
     // Show a quick snackbar for feedback
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Scanned: ${result.id} (${result.type.name})'),
+        content: Text('${l10n.scanned}: ${result.id} (${result.type.name})'),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -42,11 +44,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // mobile_scanner doesn't support Linux/Desktop yet, so we show a manual input for testing on Linux
     bool isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('SCAN QR CODE')),
+      appBar: AppBar(title: Text(l10n.scanQrCode)),
       body: Column(
         children: [
           Expanded(
@@ -57,12 +60,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
                   )
                 : Container(
                     color: Colors.grey[900],
-                    child: const Center(
+                    child: Center(
                       child: Text(
-                        '''Camera only available on Android/iOS.
-Use manual input below for Linux testing.''',
+                        l10n.cameraOnlyMobile,
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70),
+                        style: const TextStyle(color: Colors.white70),
                       ),
                     ),
                   ),
@@ -76,7 +78,7 @@ Use manual input below for Linux testing.''',
                   controller: _manualIdController,
                   style: const TextStyle(color: Colors.white, fontSize: 20),
                   decoration: InputDecoration(
-                    labelText: 'MANUAL ID ENTRY (e.g. S-001)',
+                    labelText: l10n.manualIdEntry,
                     labelStyle: const TextStyle(color: Colors.yellow),
                     enabledBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.yellow),
@@ -100,7 +102,7 @@ Use manual input below for Linux testing.''',
                       _manualIdController.clear();
                     }
                   },
-                  child: const Text('SUBMIT ID'),
+                  child: Text(l10n.submitId),
                 ),
               ],
             ),

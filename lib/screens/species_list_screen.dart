@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/species.dart';
 import '../services/mock_database_service.dart';
 
@@ -26,8 +27,9 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('SPECIES LIST')),
+      appBar: AppBar(title: Text(l10n.speciesList)),
       body: FutureBuilder<List<Species>>(
         future: _speciesList,
         builder: (context, snapshot) {
@@ -77,7 +79,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
         backgroundColor: Colors.yellow,
         foregroundColor: Colors.black,
         icon: const Icon(Icons.add),
-        label: const Text('ADD NEW SPECIES', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: Text(l10n.addNewSpecies, style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }

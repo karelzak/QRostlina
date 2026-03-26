@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/species_list_screen.dart';
 
@@ -14,6 +16,16 @@ class QRostlinaApp extends StatelessWidget {
     return MaterialApp(
       title: 'QRostlina',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'), // English
+        Locale('cs'), // Czech
+      ],
       theme: ThemeData(
         useMaterial3: true,
         // High contrast theme for field work
@@ -60,9 +72,10 @@ class MainMenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('QRostlina'),
+        title: Text(l10n.appTitle),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -77,7 +90,7 @@ class MainMenuScreen extends StatelessWidget {
             ),
             const SizedBox(height: 48),
             _MenuButton(
-              label: 'SCAN QR CODE',
+              label: l10n.scanQrCode,
               icon: Icons.camera_alt,
               onPressed: () {
                 Navigator.push(
@@ -88,7 +101,7 @@ class MainMenuScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _MenuButton(
-              label: 'SPECIES LIST',
+              label: l10n.speciesList,
               icon: Icons.list_alt,
               onPressed: () {
                 Navigator.push(
@@ -99,7 +112,7 @@ class MainMenuScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _MenuButton(
-              label: 'LOCATIONS',
+              label: l10n.locations,
               icon: Icons.location_on,
               onPressed: () {
                 // TODO: Implement locations view
