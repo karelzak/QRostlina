@@ -6,8 +6,7 @@
   "locations": "UMÍSTĚNÍ",
   "manualIdEntry": "RUČNÍ ZADÁNÍ ID (např. S-001)",
   "submitId": "ODESLAT ID",
-  "cameraOnlyMobile": "Kamera je dostupná pouze pro Android/iOS.
-Pro testování na Linuxu použijte ruční zadání.",
+  "cameraOnlyMobile": "Kamera je dostupná pouze pro Android/iOS.\nPro testování na Linuxu použijte ruční zadání.",
   "scanned": "Naskenováno",
   "addNewSpecies": "PŘIDAT NOVOU ODRŮDU"
 }

@@ -9,8 +9,7 @@
   "locations": "LOCATIONS",
   "manualIdEntry": "MANUAL ID ENTRY (e.g. S-001)",
   "submitId": "SUBMIT ID",
-  "cameraOnlyMobile": "Camera only available on Android/iOS.
-Use manual input below for Linux testing.",
+  "cameraOnlyMobile": "Camera only available on Android/iOS.\nUse manual input below for Linux testing.",
   "scanned": "Scanned",
   "addNewSpecies": "ADD NEW SPECIES"
 }
