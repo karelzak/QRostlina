@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/scanner_screen.dart';
 
 void main() {
   runApp(const QRostlinaApp());
@@ -78,7 +79,10 @@ class MainMenuScreen extends StatelessWidget {
               label: 'SCAN QR CODE',
               icon: Icons.camera_alt,
               onPressed: () {
-                // TODO: Implement scanner logic
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ScannerScreen()),
+                );
               },
             ),
             const SizedBox(height: 16),
