@@ -32,7 +32,7 @@ class MockDatabaseService {
   static final List<Bed> _mockBeds = [
     Bed(id: 'B-01', name: 'West Garden - Bed A', row: 'A', length: 20, rowsPerMeter: 2), // 20m, 2x2 = 80 cells
     Bed(id: 'B-02', name: 'West Garden - Bed B', row: 'B', length: 10, rowsPerMeter: 3), // 10m, 2x3 = 60 cells
-    Bed(id: 'B-03', name: 'North Border', row: 'NB', length: 10, layout: BedLayout.linear), // 10m Linear
+    Bed(id: 'B-03', name: 'North Border', row: 'NB', length: 10, layout: BedLayout.linear, rowsPerMeter: 1), // 10m Linear
   ];
 
   static final List<Crate> _mockCrates = [
