@@ -80,7 +80,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push<bool>(
             context,
@@ -92,8 +92,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
         },
         backgroundColor: Colors.yellow,
         foregroundColor: Colors.black,
-        icon: const Icon(Icons.add),
-        label: Text(l10n.addNewSpecies, style: const TextStyle(fontWeight: FontWeight.bold)),
+        child: const Icon(Icons.add),
       ),
     );
   }

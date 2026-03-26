@@ -187,14 +187,13 @@ class _DetailScreenState extends State<DetailScreen> {
                   widget.type == ScannedType.species ? 'INSTANCES' : 'CONTENTS',
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
                 ),
-                TextButton.icon(
+                IconButton(
                   onPressed: () async {
                     final result = await Navigator.push<bool>(
                       context,
                       MaterialPageRoute(
                         builder: (context) => EditPlantScreen(
                           initialSpeciesId: widget.type == ScannedType.species ? widget.id : null,
-                          // If we are on a Bed/Crate, pre-fill the location
                           plant: (widget.type == ScannedType.bed || widget.type == ScannedType.crate)
                               ? PlantUnit(
                                   id: 'P-',
@@ -210,8 +209,7 @@ class _DetailScreenState extends State<DetailScreen> {
                       _loadData();
                     }
                   },
-                  icon: const Icon(Icons.add, color: Colors.yellow),
-                  label: const Text('ADD NEW', style: TextStyle(color: Colors.yellow)),
+                  icon: const Icon(Icons.add, color: Colors.yellow, size: 32),
                 ),
               ],
             ),
