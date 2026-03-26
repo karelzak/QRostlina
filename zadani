@@ -1,0 +1,121 @@
+Zadání projektu: Systém pro evidenci rostlin (HortiLog)
+
+1. Přehled projektu
+
+Cílem je vytvořit mobilní aplikaci pro Android (vyvíjenou ve Flutteru na Linuxu) pro komplexní evidenci rostlin (primárně hlíz jiřin) v zahradnictví. Systém musí umožňovat práci v terénu, sdílení dat mezi uživateli a tisk odolných štítků.
+
+Jmeno projektu je "QRostlina".
+
+2. Technický Stack
+
+    Frontend: Flutter (Dart) – cílová platforma Android.
+
+    Backend/Sdílení: Firebase (Firestore pro data, Auth pro uživatele).
+
+    Databáze: NoSQL struktura, podpora offline režimu (cache).
+
+    Integrace: * Mobilní tisk přes Bluetooth (Protokol pro Brother TZe, např. PT-P710BT).
+
+        Skenování QR kódů přes kameru telefonu.
+
+        Export dat do CSV/Excel.
+
+    V kod pouzivat anglictinu.
+
+3. Datový Model (Entity)
+
+    Poznamka: vsechny instance danych entit musi mit unikatni ID pouzitelen pro QR.
+
+
+    Species (Druh/Odrůda):
+	Unikátní ID (prefix S-, název, latinský název, barva, výška, popis, foto.
+
+    Plant Unit (Individuální kus):
+	Unikátní ID (prefix P-), odkaz na Species, stav (v zemi, skladem, prodej), aktuální lokace.
+
+    Location (Umístění):
+	* Zahon: Unikátní ID (prefix B-), název, segmentace (řada/pozice).
+	* Přepravka: Unikátní ID (prefix C-), typ přepravky
+
+4. Klíčové Funkcionality k implementaci
+
+A. Modul Skenování a Identifikace
+
+    Implementovat logiku rozpoznávání QR prefixů:
+
+	S-xxx -> Otevře kartu druhu s odkazem na instance (P-xxx) daneho druhu a
+                 umozni pridat novou rostlinu (P-xxx)
+                 
+        P-xxx -> Otevře kartu rostliny s informaci o druhu (foto, ...) a umozni zmenu umisteni
+                 (napriklad ze zahonu do prepravky), pripadne zmenu druhu pro opravu pripadnych chyb
+
+        B-xxx -> Zobrazí obsah, umozni postupne premisteni rostlin do prepravek, pripadne
+                 pridani rostlin co jeste nejsou evidovany
+
+        C-xxx -> Zobrazí obsah daného místa nebo umožní přesun rostlin na zahon
+                 pripadne pridani rostlin co jeste nejsou evidovany
+                
+    Vzdy by se melo predpokladat za nasleduji krok bude podobny (opakovane operace)
+
+B. Modul Správy Lokací
+
+    Hierarchické řazení: Zahrada -> Záhon -> Segment.
+
+    Funkce "Hromadný přesun": Uživatel vybere více rostlin a naskenováním QR kódu přepravky/záhonu změní jejich polohu v databázi.
+
+C. Modul Tisku (Bluetooth)
+
+    Integrace Brother SDK (nebo ekvivalentu pro TZe pásky).
+
+    Generování štítku: Název odrůdy + QR kód + stručné ID.
+
+    Podpora pro tisk jednotlivých štítků přímo v terénu po zadání/úpravě rostliny.
+
+D. Modul Exportu a Bulk operací
+
+    Generování CSV souboru pro hromadný tisk na tiskárně Argox (z PC/Linuxu).
+
+    Export kompletní databáze pro analýzu v Excelu.
+
+5. UI/UX Požadavky
+
+    High-contrast design: Čitelnost na přímém slunci.
+
+    Velké ovládací prvky: Pro práci v rukavicích nebo se zašpiněnýma rukama.
+
+    Offline-first: Možnost zapisovat data i bez signálu s následnou synchronizací do Firebase.
+
+6. Rozsah první fáze (MVP)
+
+    Vytvoreni zakladni infrastruktury pro kod, adresar, git.
+
+    Vytvorit AGENT.md (apod) se zadanim a popisem pro dalsi beh gemini.
+
+    Vytvorit skelet aplikace  (klidne jen jednoduche prazne okno)
+
+    Zvazit moznost pouzivat nejaky emulator (pro zjednoduseni vyvoje bez telefonu) propadne poizivat nativne na Linuxu.
+
+    Pridat skript pto upload aplikace do telefonu s Anroidem.
+
+    Zprovoznění Firebase autentizace a Firestore konektivity.
+
+    Základní CRUD (vytvořit, číst, aktualizovat, smazat) pro Odrůdy a Rostliny.
+
+    Implementace skeneru QR kódů.
+
+    Jednoduchý výpis obsahu konkrétního záhonu.
+
+7. Organizace vyvoje
+
+    Bude na vyvoj poizivan Linux (Fedora).
+
+    Delat male zmeny, vzdy udelat commit, komentare a commit message v anglictine.
+
+8. Budouci vyvoj
+
+    Pridat log pro jednotlive zahony tak aby existoval rychly zpusob zaznamu o hnojeni a dalsi peci o rostliny.
+
+    Pridat moznost poizivat Gemini nad logem tak aby uzivatel mohl konzultovat s AI peci o rostliny.
+
+    Pridat moznost planovani pece (kdy pristi hnojeni , ...), klidne nechat AI pomoci.
+
