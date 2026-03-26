@@ -187,6 +187,16 @@ class _DetailScreenState extends State<DetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildInfoCard(),
+          if (_data is Bed) ...[
+            const SizedBox(height: 24),
+            const Text(
+              'VISUAL MAP',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+            ),
+            const Divider(color: Colors.yellow),
+            const SizedBox(height: 8),
+            _buildGridMap(),
+          ],
           if (_children != null) ...[
             const SizedBox(height: 24),
             Row(
@@ -227,6 +237,118 @@ class _DetailScreenState extends State<DetailScreen> {
             _buildChildrenList(),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildGridMap() {
+    final bed = _data as Bed;
+    // Map of "line-row" to PlantUnit
+    final Map<String, PlantUnit> occupancy = {};
+    if (_children != null) {
+      for (var p in _children!) {
+        if (p.gridRow != null) {
+          final key = "${p.gridLine ?? 1}-${p.gridRow}";
+          occupancy[key] = p;
+        }
+      }
+    }
+
+    final int columns = bed.layout == BedLayout.grid ? 2 : 1;
+    final int rows = bed.totalRows;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: columns,
+          childAspectRatio: columns == 2 ? 2.5 : 5,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+        ),
+        itemCount: columns * rows,
+        itemBuilder: (context, index) {
+          // In Flutter GridView, it fills row by row
+          int rowIdx, lineIdx;
+          if (columns == 2) {
+            rowIdx = (index / 2).floor() + 1;
+            lineIdx = (index % 2) + 1;
+          } else {
+            rowIdx = index + 1;
+            lineIdx = 1;
+          }
+
+          final key = "$lineIdx-$rowIdx";
+          final plant = occupancy[key];
+          
+          int meter = ((rowIdx - 1) / bed.rowsPerMeter).floor() + 1;
+          int subRow = ((rowIdx - 1) % bed.rowsPerMeter) + 1;
+          
+          String cellLabel = bed.layout == BedLayout.grid 
+              ? "${meter}m-$subRow" 
+              : "${meter}m";
+
+          return GestureDetector(
+            onTap: () async {
+              if (plant != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => DetailScreen(id: plant.id, type: ScannedType.plant)),
+                );
+              } else {
+                final result = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditPlantScreen(
+                      plant: PlantUnit(
+                        id: 'P-',
+                        speciesId: 'S-',
+                        status: PlantStatus.inGround,
+                        locationId: bed.id,
+                        gridLine: lineIdx,
+                        gridRow: rowIdx,
+                      ),
+                    ),
+                  ),
+                );
+                if (result == true) _loadData();
+              }
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: plant != null ? Colors.yellow : Colors.grey[900],
+                border: Border.all(color: Colors.yellow, width: 1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 2,
+                    left: 4,
+                    child: Text(
+                      cellLabel,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: plant != null ? Colors.black54 : Colors.yellow.withOpacity(0.5),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Center(
+                    child: plant != null
+                        ? Text(
+                            plant.id,
+                            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+                          )
+                        : const Icon(Icons.add, color: Colors.white10, size: 20),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
