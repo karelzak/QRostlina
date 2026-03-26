@@ -21,6 +21,7 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   dynamic _data;
+  Location? _parentLocation;
   List<PlantUnit>? _children;
   bool _loading = true;
 
@@ -41,6 +42,14 @@ class _DetailScreenState extends State<DetailScreen> {
         break;
       case ScannedType.plant:
         _data = await MockDatabaseService.getPlantById(widget.id);
+        if (_data != null && (_data as PlantUnit).locationId != null) {
+          final locId = (_data as PlantUnit).locationId!;
+          if (locId.startsWith('B-')) {
+            _parentLocation = await MockDatabaseService.getBedById(locId);
+          } else if (locId.startsWith('C-')) {
+            _parentLocation = await MockDatabaseService.getCrateById(locId);
+          }
+        }
         break;
       case ScannedType.bed:
         _data = await MockDatabaseService.getBedById(widget.id);
@@ -244,6 +253,10 @@ class _DetailScreenState extends State<DetailScreen> {
       );
     } else if (_data is PlantUnit) {
       final p = _data as PlantUnit;
+      String locationStr = p.locationId ?? 'None';
+      if (p.locationId != null && _parentLocation is Bed) {
+        locationStr = (_parentLocation as Bed).formatPosition(p.gridLine, p.gridRow);
+      }
       return Card(
         color: Colors.grey[900],
         child: Padding(
@@ -252,8 +265,8 @@ class _DetailScreenState extends State<DetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _infoRow('Species ID', p.speciesId),
-              _infoRow('Status', p.status.name),
-              _infoRow('Location', p.locationId ?? 'None'),
+              _infoRow('Status', p.status.name.toUpperCase()),
+              _infoRow('Position', locationStr),
             ],
           ),
         ),
@@ -317,11 +330,15 @@ class _DetailScreenState extends State<DetailScreen> {
       itemCount: _children!.length,
       itemBuilder: (context, index) {
         final plant = _children![index];
+        String locStr = plant.locationId ?? '-';
+        if (plant.locationId != null && _data is Bed) {
+          locStr = (_data as Bed).formatPosition(plant.gridLine, plant.gridRow);
+        }
         return ListTile(
           tileColor: Colors.grey[900],
           leading: const Icon(Icons.local_florist, color: Colors.yellow),
           title: Text(plant.id, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text('Status: ${plant.status.name} | Loc: ${plant.locationId ?? '-'}'),
+          subtitle: Text('Status: ${plant.status.name.toUpperCase()} | $locStr'),
           trailing: const Icon(Icons.chevron_right, color: Colors.yellow),
           onTap: () {
             Navigator.push(

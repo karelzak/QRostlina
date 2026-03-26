@@ -21,6 +21,9 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   late PlantStatus _status;
   int? _gridLine;
   int? _gridRow;
+  int? _meter;
+  int? _subRow;
+  Bed? _currentBed;
 
   @override
   void initState() {
@@ -31,16 +34,43 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     _status = widget.plant?.status ?? PlantStatus.inGround;
     _gridLine = widget.plant?.gridLine;
     _gridRow = widget.plant?.gridRow;
+    
+    _updateBedInfo();
 
-    // Listen to location changes to show/hide grid fields
+    // Listen to location changes
     _locationIdController.addListener(() {
-      if (!_locationIdController.text.startsWith('B-')) {
+      _updateBedInfo();
+    });
+  }
+
+  void _updateBedInfo() async {
+    final locId = _locationIdController.text.trim().toUpperCase();
+    if (locId.startsWith('B-')) {
+      final bed = await MockDatabaseService.getBedById(locId);
+      if (bed != null && mounted) {
         setState(() {
-          _gridLine = null;
-          _gridRow = null;
+          _currentBed = bed;
+          if (_gridRow != null) {
+            _meter = ((_gridRow! - 1) / bed.rowsPerMeter).floor() + 1;
+            _subRow = ((_gridRow! - 1) % bed.rowsPerMeter) + 1;
+          }
         });
       }
-    });
+    } else {
+      setState(() {
+        _currentBed = null;
+        _gridLine = null;
+        _gridRow = null;
+        _meter = null;
+        _subRow = null;
+      });
+    }
+  }
+
+  void _recalculateGridRow() {
+    if (_currentBed != null && _meter != null && _subRow != null) {
+      _gridRow = (_meter! - 1) * _currentBed!.rowsPerMeter + _subRow!;
+    }
   }
 
   @override
@@ -53,6 +83,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
 
   void _save() async {
     if (_formKey.currentState!.validate()) {
+      _recalculateGridRow();
       final id = _idController.text.trim().toUpperCase();
 
       if (widget.plant == null) {
@@ -133,13 +164,13 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 controller: _locationIdController,
                 label: 'Location ID (B- or C-)',
                 hint: 'e.g. B-01 or C-05',
-                onChanged: (val) => setState(() {}),
               ),
-              if (_locationIdController.text.startsWith('B-')) ...[
+              if (_currentBed != null) ...[
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
+                      flex: 2,
                       child: DropdownButtonFormField<int>(
                         value: _gridLine,
                         decoration: const InputDecoration(
@@ -150,24 +181,52 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                         dropdownColor: Colors.black,
                         style: const TextStyle(color: Colors.white, fontSize: 18),
                         items: const [
-                          DropdownMenuItem(value: 1, child: Text('Left (1)')),
-                          DropdownMenuItem(value: 2, child: Text('Right (2)')),
+                          DropdownMenuItem(value: 1, child: Text('Left')),
+                          DropdownMenuItem(value: 2, child: Text('Right')),
                         ],
                         onChanged: (val) => setState(() => _gridLine = val),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: TextFormField(
-                        initialValue: _gridRow?.toString(),
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                      flex: 2,
+                      child: DropdownButtonFormField<int>(
+                        value: _meter,
                         decoration: const InputDecoration(
-                          labelText: 'Row # (1-60)',
+                          labelText: 'Meter',
                           labelStyle: TextStyle(color: Colors.yellow),
                           enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                         ),
-                        onChanged: (val) => _gridRow = int.tryParse(val),
+                        dropdownColor: Colors.black,
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        items: List.generate(_currentBed!.length, (i) => i + 1)
+                            .map((m) => DropdownMenuItem(value: m, child: Text('${m}m')))
+                            .toList(),
+                        onChanged: (val) => setState(() {
+                          _meter = val;
+                          _recalculateGridRow();
+                        }),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 1,
+                      child: DropdownButtonFormField<int>(
+                        value: _subRow,
+                        decoration: const InputDecoration(
+                          labelText: 'Pos/m',
+                          labelStyle: TextStyle(color: Colors.yellow),
+                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                        ),
+                        dropdownColor: Colors.black,
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        items: List.generate(_currentBed!.rowsPerMeter, (i) => i + 1)
+                            .map((r) => DropdownMenuItem(value: r, child: Text('$r')))
+                            .toList(),
+                        onChanged: (val) => setState(() {
+                          _subRow = val;
+                          _recalculateGridRow();
+                        }),
                       ),
                     ),
                   ],

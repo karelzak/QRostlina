@@ -22,6 +22,14 @@ class Bed extends Location {
   int get totalRows => length * rowsPerMeter;
   int get totalCells => totalLines * totalRows;
 
+  String formatPosition(int? line, int? row) {
+    if (line == null || row == null) return 'N/A';
+    int meter = ((row - 1) / rowsPerMeter).floor() + 1;
+    int subRow = ((row - 1) % rowsPerMeter) + 1;
+    String lineStr = line == 1 ? 'Left' : 'Right';
+    return '$row-$lineStr-${meter}m-$subRow'; // row is the Field Row (e.g. A1)
+  }
+
   @override
   Map<String, dynamic> toMap() {
     return {
