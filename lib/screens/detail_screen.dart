@@ -268,8 +268,9 @@ class _DetailScreenState extends State<DetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _infoRow('Name', b.name),
-              _infoRow('Row', b.row ?? '-'),
-              _infoRow('Position', b.position ?? '-'),
+              _infoRow('Field Row', b.row ?? '-'),
+              _infoRow('Length', '${b.length} Meters'),
+              _infoRow('Layout', '2 Lines x ${b.rowsPerMeter} Rows/m (${b.totalCells} cells)'),
             ],
           ),
         ),

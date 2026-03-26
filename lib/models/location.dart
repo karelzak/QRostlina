@@ -6,22 +6,30 @@ abstract class Location {
 }
 
 class Bed extends Location {
-  final String? row;
-  final String? position;
+  final int length; // 10 or 20 meters
+  final int rowsPerMeter; // 2 or 3
+  final String? row; // The bed's identifier in the field (e.g. "Row A")
 
   Bed({
-    required super.id, // Prefix B-
+    required super.id,
     required super.name,
+    required this.length,
+    required this.rowsPerMeter,
     this.row,
-    this.position,
   });
 
+  int get totalLines => 2; // Fixed width fragmentation
+  int get totalRows => length * rowsPerMeter;
+  int get totalCells => totalLines * totalRows;
+
+  @override
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'name': name,
+      'length': length,
+      'rowsPerMeter': rowsPerMeter,
       'row': row,
-      'position': position,
       'type': 'bed',
     };
   }
@@ -30,8 +38,9 @@ class Bed extends Location {
     return Bed(
       id: map['id'],
       name: map['name'],
+      length: map['length'] ?? 10,
+      rowsPerMeter: map['rowsPerMeter'] ?? 2,
       row: map['row'],
-      position: map['position'],
     );
   }
 }

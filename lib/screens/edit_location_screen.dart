@@ -18,6 +18,8 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
   late TextEditingController _idController;
   late TextEditingController _nameController;
   late TextEditingController _extraController; // Row for Bed, Type for Crate
+  int _length = 10;
+  int _rowsPerMeter = 2;
 
   @override
   void initState() {
@@ -27,8 +29,13 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
     _nameController = TextEditingController(text: loc?.name ?? '');
     
     String extra = '';
-    if (loc is Bed) extra = loc.row ?? '';
-    else if (loc is Crate) extra = loc.type;
+    if (loc is Bed) {
+      extra = loc.row ?? '';
+      _length = loc.length;
+      _rowsPerMeter = loc.rowsPerMeter;
+    } else if (loc is Crate) {
+      extra = loc.type;
+    }
     _extraController = TextEditingController(text: extra);
   }
 
@@ -62,6 +69,8 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
           id: id,
           name: _nameController.text.trim(),
           row: _extraController.text.trim(),
+          length: _length,
+          rowsPerMeter: _rowsPerMeter,
         );
       } else {
         loc = Crate(
@@ -128,8 +137,42 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _extraController,
-                label: widget.isBed ? 'Row / Section' : 'Crate Type (e.g. Plastic)',
+                label: widget.isBed ? 'Field Row (e.g. A)' : 'Crate Type (e.g. Plastic)',
               ),
+              if (widget.isBed) ...[
+                const SizedBox(height: 16),
+                DropdownButtonFormField<int>(
+                  value: _length,
+                  decoration: const InputDecoration(
+                    labelText: 'Bed Length',
+                    labelStyle: TextStyle(color: Colors.yellow),
+                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                  ),
+                  dropdownColor: Colors.black,
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                  items: const [
+                    DropdownMenuItem(value: 10, child: Text('10 Meters')),
+                    DropdownMenuItem(value: 20, child: Text('20 Meters')),
+                  ],
+                  onChanged: (val) => setState(() => _length = val!),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<int>(
+                  value: _rowsPerMeter,
+                  decoration: const InputDecoration(
+                    labelText: 'Fragmentation (Density)',
+                    labelStyle: TextStyle(color: Colors.yellow),
+                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                  ),
+                  dropdownColor: Colors.black,
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                  items: const [
+                    DropdownMenuItem(value: 2, child: Text('2x2 (4 per meter)')),
+                    DropdownMenuItem(value: 3, child: Text('2x3 (6 per meter)')),
+                  ],
+                  onChanged: (val) => setState(() => _rowsPerMeter = val!),
+                ),
+              ],
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _save,

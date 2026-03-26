@@ -19,6 +19,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   late TextEditingController _speciesIdController;
   late TextEditingController _locationIdController;
   late PlantStatus _status;
+  int? _gridLine;
+  int? _gridRow;
 
   @override
   void initState() {
@@ -27,6 +29,18 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     _speciesIdController = TextEditingController(text: widget.plant?.speciesId ?? widget.initialSpeciesId ?? 'S-');
     _locationIdController = TextEditingController(text: widget.plant?.locationId ?? '');
     _status = widget.plant?.status ?? PlantStatus.inGround;
+    _gridLine = widget.plant?.gridLine;
+    _gridRow = widget.plant?.gridRow;
+
+    // Listen to location changes to show/hide grid fields
+    _locationIdController.addListener(() {
+      if (!_locationIdController.text.startsWith('B-')) {
+        setState(() {
+          _gridLine = null;
+          _gridRow = null;
+        });
+      }
+    });
   }
 
   @override
@@ -58,6 +72,8 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         speciesId: _speciesIdController.text.trim().toUpperCase(),
         status: _status,
         locationId: _locationIdController.text.trim().isEmpty ? null : _locationIdController.text.trim().toUpperCase(),
+        gridLine: _gridLine,
+        gridRow: _gridRow,
       );
 
       await MockDatabaseService.savePlant(plant);
@@ -117,7 +133,46 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 controller: _locationIdController,
                 label: 'Location ID (B- or C-)',
                 hint: 'e.g. B-01 or C-05',
+                onChanged: (val) => setState(() {}),
               ),
+              if (_locationIdController.text.startsWith('B-')) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: _gridLine,
+                        decoration: const InputDecoration(
+                          labelText: 'Line',
+                          labelStyle: TextStyle(color: Colors.yellow),
+                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                        ),
+                        dropdownColor: Colors.black,
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        items: const [
+                          DropdownMenuItem(value: 1, child: Text('Left (1)')),
+                          DropdownMenuItem(value: 2, child: Text('Right (2)')),
+                        ],
+                        onChanged: (val) => setState(() => _gridLine = val),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: _gridRow?.toString(),
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        decoration: const InputDecoration(
+                          labelText: 'Row # (1-60)',
+                          labelStyle: TextStyle(color: Colors.yellow),
+                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                        ),
+                        onChanged: (val) => _gridRow = int.tryParse(val),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 16),
               DropdownButtonFormField<PlantStatus>(
                 value: _status,
