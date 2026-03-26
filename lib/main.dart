@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/species_list_screen.dart';
+import 'screens/locations_screen.dart';
 
 void main() {
   runApp(const QRostlinaApp());
@@ -115,7 +116,10 @@ class MainMenuScreen extends StatelessWidget {
               label: l10n.locations,
               icon: Icons.location_on,
               onPressed: () {
-                // TODO: Implement locations view
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LocationsScreen()),
+                );
               },
             ),
           ],

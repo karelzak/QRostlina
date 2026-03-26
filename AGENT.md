@@ -58,7 +58,7 @@ QRostlina is a mobile application (Flutter/Android) for managing a plant invento
     - Note: Synthetic package `package:flutter_gen` was not resolving reliably, switched to local output.
 12. [x] Detailed Cards for Species (S-), Plants (P-), Beds (B-), Crates (C-).
 13. [x] Bed/Crate content listing.
-14. [ ] CRUD implementation for all entities.
+14. [x] CRUD implementation for all entities.
 15. [ ] Logs for bed maintenance (fertilizing, care).
 
 ## Future Plans

@@ -44,6 +44,16 @@ class MockDatabaseService {
     return _mockSpecies;
   }
 
+  static Future<List<Bed>> getAllBeds() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return _mockBeds;
+  }
+
+  static Future<List<Crate>> getAllCrates() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return _mockCrates;
+  }
+
   static Future<Species?> getSpeciesById(String id) async {
     await Future.delayed(const Duration(milliseconds: 100));
     try {
