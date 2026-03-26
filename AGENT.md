@@ -33,16 +33,26 @@ QRostlina is a mobile application (Flutter/Android) for managing a plant invento
 - **B-ID:** Show bed contents, allow moving to crates or adding new plants.
 - **C-ID:** Show crate contents, allow moving to beds or adding new plants.
 
+## Development Environment
+- **OS:** Linux (Fedora)
+- **Flutter SDK Path:** `/home/work/flutter/bin`
+- **Project Path:** `/home/work/QRostlina`
+- **Environment Note:** Flutter has been added to `~/.bashrc`. If the `flutter` command is not found in a new session, ensure `/home/work/flutter/bin` is in the `PATH`.
+
 ## MVP Scope (Phase 1)
 1. [x] Infrastructure, directory structure, git initialization.
 2. [x] Create AGENT.md (this file).
-3. [ ] Flutter application skeleton.
-4. [ ] Emulator/Native Linux support setup.
-5. [ ] Script for Android deployment.
-6. [ ] Firebase integration (Auth & Firestore).
-7. [ ] CRUD for Species and Plants.
-8. [ ] QR scanner implementation.
-9. [ ] Bed content listing.
+3. [x] Flutter application skeleton (Android & Linux).
+4. [x] High-contrast UI theme (Yellow/Black).
+5. [x] Data Models (Species, PlantUnit, Location).
+6. [x] QR Scanner Service & Mock Scanner Screen.
+7. [x] Mock Database Service & Species List Screen.
+8. [ ] Android SDK setup (Command Line Tools preferred).
+9. [ ] Script for Android deployment.
+10. [ ] Firebase integration (Auth & Firestore).
+11. [ ] Detailed Cards for Species (S-), Plants (P-), Beds (B-), Crates (C-).
+12. [ ] CRUD implementation for all entities.
+13. [ ] Bed/Crate content listing.
 
 ## Future Plans
 - Logs for bed maintenance (fertilizing, care).
