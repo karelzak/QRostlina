@@ -15,20 +15,20 @@ class AppLocalizationsCs extends AppLocalizations {
   String get scanQrCode => 'SKENOVAT QR KÓD';
 
   @override
-  String get speciesList => 'SEZNAM ODRŮD';
+  String get speciesList => 'ODRŮDY';
 
   @override
   String get locations => 'UMÍSTĚNÍ';
 
   @override
-  String get manualIdEntry => 'RUČNÍ ZADÁNÍ ID (např. S-001)';
+  String get manualIdEntry => 'MANUÁLNÍ ZADÁNÍ (např. S-001)';
 
   @override
   String get submitId => 'ODESLAT ID';
 
   @override
   String get cameraOnlyMobile =>
-      'Kamera je dostupná pouze pro Android/iOS.\nPro testování na Linuxu použijte ruční zadání.';
+      'Kamera je dostupná pouze na Android/iOS.\nPro testování na Linuxu použijte manuální vstup.';
 
   @override
   String get scanned => 'Naskenováno';

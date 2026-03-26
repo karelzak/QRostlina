@@ -98,7 +98,7 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
-  /// The title of the application
+  /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
   /// **'QRostlina'**
@@ -113,7 +113,7 @@ abstract class AppLocalizations {
   /// No description provided for @speciesList.
   ///
   /// In en, this message translates to:
-  /// **'SPECIES LIST'**
+  /// **'SPECIES'**
   String get speciesList;
 
   /// No description provided for @locations.

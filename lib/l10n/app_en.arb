@@ -1,11 +1,7 @@
 {
-  "@@locale": "en",
   "appTitle": "QRostlina",
-  "@appTitle": {
-    "description": "The title of the application"
-  },
   "scanQrCode": "SCAN QR CODE",
-  "speciesList": "SPECIES LIST",
+  "speciesList": "SPECIES",
   "locations": "LOCATIONS",
   "manualIdEntry": "MANUAL ID ENTRY (e.g. S-001)",
   "submitId": "SUBMIT ID",

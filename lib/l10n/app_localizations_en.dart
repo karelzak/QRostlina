@@ -15,7 +15,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanQrCode => 'SCAN QR CODE';
 
   @override
-  String get speciesList => 'SPECIES LIST';
+  String get speciesList => 'SPECIES';
 
   @override
   String get locations => 'LOCATIONS';

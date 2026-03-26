@@ -1,12 +1,11 @@
 {
-  "@@locale": "cs",
   "appTitle": "QRostlina",
   "scanQrCode": "SKENOVAT QR KÓD",
-  "speciesList": "SEZNAM ODRŮD",
+  "speciesList": "ODRŮDY",
   "locations": "UMÍSTĚNÍ",
-  "manualIdEntry": "RUČNÍ ZADÁNÍ ID (např. S-001)",
+  "manualIdEntry": "MANUÁLNÍ ZADÁNÍ (např. S-001)",
   "submitId": "ODESLAT ID",
-  "cameraOnlyMobile": "Kamera je dostupná pouze pro Android/iOS.\nPro testování na Linuxu použijte ruční zadání.",
+  "cameraOnlyMobile": "Kamera je dostupná pouze na Android/iOS.\nPro testování na Linuxu použijte manuální vstup.",
   "scanned": "Naskenováno",
   "addNewSpecies": "PŘIDAT NOVOU ODRŮDU"
 }
