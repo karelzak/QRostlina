@@ -26,11 +26,13 @@ class MockDatabaseService {
     PlantUnit(id: 'P-001', speciesId: 'S-001', status: PlantStatus.inGround, locationId: 'B-01', gridLine: 1, gridRow: 1),
     PlantUnit(id: 'P-002', speciesId: 'S-001', status: PlantStatus.inStock, locationId: 'C-01'),
     PlantUnit(id: 'P-003', speciesId: 'S-002', status: PlantStatus.inGround, locationId: 'B-01', gridLine: 2, gridRow: 5),
+    PlantUnit(id: 'P-004', speciesId: 'S-001', status: PlantStatus.inGround, locationId: 'B-03', gridRow: 5),
   ];
 
   static final List<Bed> _mockBeds = [
     Bed(id: 'B-01', name: 'West Garden - Bed A', row: 'A', length: 20, rowsPerMeter: 2), // 20m, 2x2 = 80 cells
     Bed(id: 'B-02', name: 'West Garden - Bed B', row: 'B', length: 10, rowsPerMeter: 3), // 10m, 2x3 = 60 cells
+    Bed(id: 'B-03', name: 'North Border', row: 'NB', length: 10, layout: BedLayout.linear), // 10m Linear
   ];
 
   static final List<Crate> _mockCrates = [

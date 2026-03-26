@@ -20,6 +20,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
   late TextEditingController _extraController; // Row for Bed, Type for Crate
   int _length = 10;
   int _rowsPerMeter = 2;
+  BedLayout _layout = BedLayout.grid;
 
   @override
   void initState() {
@@ -33,6 +34,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
       extra = loc.row ?? '';
       _length = loc.length;
       _rowsPerMeter = loc.rowsPerMeter;
+      _layout = loc.layout;
     } else if (loc is Crate) {
       extra = loc.type;
     }
@@ -71,6 +73,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
           row: _extraController.text.trim(),
           length: _length,
           rowsPerMeter: _rowsPerMeter,
+          layout: _layout,
         );
       } else {
         loc = Crate(
@@ -157,21 +160,39 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                   onChanged: (val) => setState(() => _length = val!),
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  value: _rowsPerMeter,
+                DropdownButtonFormField<BedLayout>(
+                  value: _layout,
                   decoration: const InputDecoration(
-                    labelText: 'Fragmentation (Density)',
+                    labelText: 'Layout Type',
                     labelStyle: TextStyle(color: Colors.yellow),
                     enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                   ),
                   dropdownColor: Colors.black,
                   style: const TextStyle(color: Colors.white, fontSize: 18),
                   items: const [
-                    DropdownMenuItem(value: 2, child: Text('2x2 (4 per meter)')),
-                    DropdownMenuItem(value: 3, child: Text('2x3 (6 per meter)')),
+                    DropdownMenuItem(value: BedLayout.grid, child: Text('Grid (2 Lines)')),
+                    DropdownMenuItem(value: BedLayout.linear, child: Text('Linear (Meters only)')),
                   ],
-                  onChanged: (val) => setState(() => _rowsPerMeter = val!),
+                  onChanged: (val) => setState(() => _layout = val!),
                 ),
+                if (_layout == BedLayout.grid) ...[
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    value: _rowsPerMeter,
+                    decoration: const InputDecoration(
+                      labelText: 'Fragmentation (Density)',
+                      labelStyle: TextStyle(color: Colors.yellow),
+                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                    ),
+                    dropdownColor: Colors.black,
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                    items: const [
+                      DropdownMenuItem(value: 2, child: Text('2x2 (4 per meter)')),
+                      DropdownMenuItem(value: 3, child: Text('2x3 (6 per meter)')),
+                    ],
+                    onChanged: (val) => setState(() => _rowsPerMeter = val!),
+                  ),
+                ],
               ],
               const SizedBox(height: 32),
               ElevatedButton(

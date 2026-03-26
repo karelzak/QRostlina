@@ -5,29 +5,42 @@ abstract class Location {
   Location({required this.id, required this.name});
 }
 
+enum BedLayout {
+  grid,   // 2 lines, X rows per meter
+  linear, // Just meters, no sub-grid
+}
+
 class Bed extends Location {
   final int length; // 10 or 20 meters
-  final int rowsPerMeter; // 2 or 3
+  final int rowsPerMeter; // 2 or 3 (ignored if linear)
+  final BedLayout layout;
   final String? row; // The bed's identifier in the field (e.g. "Row A")
 
   Bed({
     required super.id,
     required super.name,
     required this.length,
-    required this.rowsPerMeter,
+    this.rowsPerMeter = 2,
+    this.layout = BedLayout.grid,
     this.row,
   });
 
-  int get totalLines => 2; // Fixed width fragmentation
-  int get totalRows => length * rowsPerMeter;
+  int get totalLines => layout == BedLayout.grid ? 2 : 1;
+  int get totalRows => length * (layout == BedLayout.grid ? rowsPerMeter : 1);
   int get totalCells => totalLines * totalRows;
 
   String formatPosition(int? line, int? row) {
-    if (line == null || row == null) return 'N/A';
+    if (row == null) return 'N/A';
+    
+    if (layout == BedLayout.linear) {
+      return '${this.row ?? id}-${row}m';
+    }
+
+    if (line == null) return 'N/A';
     int meter = ((row - 1) / rowsPerMeter).floor() + 1;
     int subRow = ((row - 1) % rowsPerMeter) + 1;
     String lineStr = line == 1 ? 'Left' : 'Right';
-    return '$row-$lineStr-${meter}m-$subRow'; // row is the Field Row (e.g. A1)
+    return '${this.row ?? id}-$lineStr-${meter}m-$subRow';
   }
 
   @override
@@ -37,6 +50,7 @@ class Bed extends Location {
       'name': name,
       'length': length,
       'rowsPerMeter': rowsPerMeter,
+      'layout': layout.name,
       'row': row,
       'type': 'bed',
     };
@@ -48,6 +62,7 @@ class Bed extends Location {
       name: map['name'],
       length: map['length'] ?? 10,
       rowsPerMeter: map['rowsPerMeter'] ?? 2,
+      layout: BedLayout.values.byName(map['layout'] ?? 'grid'),
       row: map['row'],
     );
   }

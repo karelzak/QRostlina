@@ -68,8 +68,12 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   }
 
   void _recalculateGridRow() {
-    if (_currentBed != null && _meter != null && _subRow != null) {
-      _gridRow = (_meter! - 1) * _currentBed!.rowsPerMeter + _subRow!;
+    if (_currentBed != null && _meter != null) {
+      if (_currentBed!.layout == BedLayout.grid && _subRow != null) {
+        _gridRow = (_meter! - 1) * _currentBed!.rowsPerMeter + _subRow!;
+      } else if (_currentBed!.layout == BedLayout.linear) {
+        _gridRow = _meter;
+      }
     }
   }
 
@@ -169,25 +173,27 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: DropdownButtonFormField<int>(
-                        value: _gridLine,
-                        decoration: const InputDecoration(
-                          labelText: 'Line',
-                          labelStyle: TextStyle(color: Colors.yellow),
-                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                    if (_currentBed!.layout == BedLayout.grid) ...[
+                      Expanded(
+                        flex: 2,
+                        child: DropdownButtonFormField<int>(
+                          value: _gridLine,
+                          decoration: const InputDecoration(
+                            labelText: 'Line',
+                            labelStyle: TextStyle(color: Colors.yellow),
+                            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                          ),
+                          dropdownColor: Colors.black,
+                          style: const TextStyle(color: Colors.white, fontSize: 18),
+                          items: const [
+                            DropdownMenuItem(value: 1, child: Text('Left')),
+                            DropdownMenuItem(value: 2, child: Text('Right')),
+                          ],
+                          onChanged: (val) => setState(() => _gridLine = val),
                         ),
-                        dropdownColor: Colors.black,
-                        style: const TextStyle(color: Colors.white, fontSize: 18),
-                        items: const [
-                          DropdownMenuItem(value: 1, child: Text('Left')),
-                          DropdownMenuItem(value: 2, child: Text('Right')),
-                        ],
-                        onChanged: (val) => setState(() => _gridLine = val),
                       ),
-                    ),
-                    const SizedBox(width: 12),
+                      const SizedBox(width: 12),
+                    ],
                     Expanded(
                       flex: 2,
                       child: DropdownButtonFormField<int>(
@@ -208,27 +214,29 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                         }),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 1,
-                      child: DropdownButtonFormField<int>(
-                        value: _subRow,
-                        decoration: const InputDecoration(
-                          labelText: 'Pos/m',
-                          labelStyle: TextStyle(color: Colors.yellow),
-                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                    if (_currentBed!.layout == BedLayout.grid) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 1,
+                        child: DropdownButtonFormField<int>(
+                          value: _subRow,
+                          decoration: const InputDecoration(
+                            labelText: 'Pos/m',
+                            labelStyle: TextStyle(color: Colors.yellow),
+                            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                          ),
+                          dropdownColor: Colors.black,
+                          style: const TextStyle(color: Colors.white, fontSize: 18),
+                          items: List.generate(_currentBed!.rowsPerMeter, (i) => i + 1)
+                              .map((r) => DropdownMenuItem(value: r, child: Text('$r')))
+                              .toList(),
+                          onChanged: (val) => setState(() {
+                            _subRow = val;
+                            _recalculateGridRow();
+                          }),
                         ),
-                        dropdownColor: Colors.black,
-                        style: const TextStyle(color: Colors.white, fontSize: 18),
-                        items: List.generate(_currentBed!.rowsPerMeter, (i) => i + 1)
-                            .map((r) => DropdownMenuItem(value: r, child: Text('$r')))
-                            .toList(),
-                        onChanged: (val) => setState(() {
-                          _subRow = val;
-                          _recalculateGridRow();
-                        }),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ],
