@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/species.dart';
 import '../services/mock_database_service.dart';
+import '../services/qr_scanner_service.dart';
 
 class EditSpeciesScreen extends StatefulWidget {
   final Species? species; // If null, we're adding new; else editing
@@ -45,8 +46,23 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
 
   void _save() async {
     if (_formKey.currentState!.validate()) {
+      final id = _idController.text.trim().toUpperCase();
+      
+      // Check uniqueness for new entries
+      if (widget.species == null) {
+        final isUnique = await MockDatabaseService.isIdUnique(id);
+        if (!isUnique) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('ID already exists! Choose another.')),
+            );
+          }
+          return;
+        }
+      }
+
       final species = Species(
-        id: _idController.text.trim().toUpperCase(),
+        id: id,
         name: _nameController.text.trim(),
         latinName: _latinNameController.text.trim().isEmpty ? null : _latinNameController.text.trim(),
         color: _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
@@ -78,16 +94,36 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
           key: _formKey,
           child: Column(
             children: [
-              _buildTextField(
-                controller: _idController,
-                label: 'ID (e.g. S-123)',
-                enabled: !isEditing, // ID is immutable after creation
-                validator: (value) {
-                  if (value == null || value.isEmpty || !value.startsWith('S-')) {
-                    return 'Must start with S-';
-                  }
-                  return null;
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _idController,
+                      label: 'ID (e.g. S-123)',
+                      enabled: !isEditing,
+                      validator: (value) {
+                        if (value == null || value.isEmpty || !value.startsWith('S-')) {
+                          return 'Must start with S-';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  if (!isEditing)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: IconButton(
+                        icon: const Icon(Icons.auto_fix_high, color: Colors.yellow, size: 32),
+                        onPressed: () async {
+                          final nextId = await MockDatabaseService.generateNextId(ScannedType.species);
+                          setState(() {
+                            _idController.text = nextId;
+                          });
+                        },
+                        tooltip: 'Generate Next ID',
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 16),
               _buildTextField(

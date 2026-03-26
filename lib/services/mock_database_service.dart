@@ -1,6 +1,7 @@
 import '../models/species.dart';
 import '../models/plant_unit.dart';
 import '../models/location.dart';
+import 'qr_scanner_service.dart';
 
 class MockDatabaseService {
   // Static mock data for development
@@ -38,6 +39,58 @@ class MockDatabaseService {
     Crate(id: 'C-01', name: 'Greenhouse Crate #1', type: 'Plastic'),
     Crate(id: 'C-02', name: 'Storage Crate #2', type: 'Wooden'),
   ];
+
+  static Future<bool> isIdUnique(String id) async {
+    final type = QRScannerService.parse(id).type;
+    switch (type) {
+      case ScannedType.species:
+        return !_mockSpecies.any((s) => s.id == id);
+      case ScannedType.plant:
+        return !_mockPlants.any((p) => p.id == id);
+      case ScannedType.bed:
+        return !_mockBeds.any((b) => b.id == id);
+      case ScannedType.crate:
+        return !_mockCrates.any((c) => c.id == id);
+      default:
+        return true;
+    }
+  }
+
+  static Future<String> generateNextId(ScannedType type) async {
+    String prefix;
+    List<String> existingIds;
+
+    switch (type) {
+      case ScannedType.species:
+        prefix = 'S-';
+        existingIds = _mockSpecies.map((e) => e.id).toList();
+        break;
+      case ScannedType.plant:
+        prefix = 'P-';
+        existingIds = _mockPlants.map((e) => e.id).toList();
+        break;
+      case ScannedType.bed:
+        prefix = 'B-';
+        existingIds = _mockBeds.map((e) => e.id).toList();
+        break;
+      case ScannedType.crate:
+        prefix = 'C-';
+        existingIds = _mockCrates.map((e) => e.id).toList();
+        break;
+      default:
+        throw Exception('Cannot generate ID for unknown type');
+    }
+
+    int maxId = 0;
+    for (var id in existingIds) {
+      final numericPart = id.substring(prefix.length);
+      final val = int.tryParse(numericPart) ?? 0;
+      if (val > maxId) maxId = val;
+    }
+
+    final nextVal = maxId + 1;
+    return '$prefix${nextVal.toString().padLeft(3, '0')}';
+  }
 
   static Future<List<Species>> getAllSpecies() async {
     await Future.delayed(const Duration(milliseconds: 300));

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/plant_unit.dart';
 import '../services/mock_database_service.dart';
+import '../services/qr_scanner_service.dart';
 
 class EditPlantScreen extends StatefulWidget {
   final PlantUnit? plant;
@@ -38,8 +39,22 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
 
   void _save() async {
     if (_formKey.currentState!.validate()) {
+      final id = _idController.text.trim().toUpperCase();
+
+      if (widget.plant == null) {
+        final isUnique = await MockDatabaseService.isIdUnique(id);
+        if (!isUnique) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('ID already exists!')),
+            );
+          }
+          return;
+        }
+      }
+
       final plant = PlantUnit(
-        id: _idController.text.trim().toUpperCase(),
+        id: id,
         speciesId: _speciesIdController.text.trim().toUpperCase(),
         status: _status,
         locationId: _locationIdController.text.trim().isEmpty ? null : _locationIdController.text.trim().toUpperCase(),
@@ -66,11 +81,30 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           key: _formKey,
           child: Column(
             children: [
-              _buildTextField(
-                controller: _idController,
-                label: 'Plant ID (P-XXX)',
-                enabled: !isEditing,
-                validator: (val) => (val == null || !val.startsWith('P-')) ? 'Must start with P-' : null,
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _idController,
+                      label: 'Plant ID (P-XXX)',
+                      enabled: !isEditing,
+                      validator: (val) => (val == null || !val.startsWith('P-')) ? 'Must start with P-' : null,
+                    ),
+                  ),
+                  if (!isEditing)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: IconButton(
+                        icon: const Icon(Icons.auto_fix_high, color: Colors.yellow, size: 32),
+                        onPressed: () async {
+                          final nextId = await MockDatabaseService.generateNextId(ScannedType.plant);
+                          setState(() {
+                            _idController.text = nextId;
+                          });
+                        },
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 16),
               _buildTextField(
