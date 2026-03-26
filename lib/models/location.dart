@@ -44,7 +44,6 @@ class Bed extends Location {
     return '${this.row ?? id}-$lineStr-${meter}m-$subRow';
   }
 
-  @override
   Map<String, dynamic> toMap() {
     return {
       'id': id,

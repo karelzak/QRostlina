@@ -191,7 +191,7 @@ class _DetailScreenState extends State<DetailScreen> {
             const SizedBox(height: 24),
             const Text(
               'VISUAL MAP',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
             ),
             const Divider(color: Colors.yellow),
             const SizedBox(height: 8),

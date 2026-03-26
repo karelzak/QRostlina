@@ -87,20 +87,6 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
             MaterialPageRoute(builder: (context) => const EditSpeciesScreen()),
           );
           if (result == true) {
-            setState(() {});
-          }
-        },
-        backgroundColor: Colors.yellow,
-        foregroundColor: Colors.black,
-        child: const Icon(Icons.add),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(builder: (context) => const EditSpeciesScreen()),
-          );
-          if (result == true) {
             _refreshList();
           }
         },
