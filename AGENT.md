@@ -47,8 +47,11 @@ QRostlina is a mobile application (Flutter/Android) for managing a plant invento
 5. [x] Data Models (Species, PlantUnit, Location).
 6. [x] QR Scanner Service & Mock Scanner Screen.
 7. [x] Mock Database Service & Species List Screen.
-8. [ ] Android SDK setup (Command Line Tools preferred).
-9. [ ] Script for Android deployment.
+8. [x] Android SDK setup (Command Line Tools preferred).
+    - Status: Manual setup at `/home/work/Android/Sdk` using `cmdline-tools`.
+    - Components: platforms 34 & 36, build-tools 34.0.0 & 28.0.3.
+9. [x] Script for Android deployment.
+    - Path: `scripts/deploy_android.sh`.
 10. [ ] Firebase integration (Auth & Firestore).
 11. [x] Localization setup (English/Czech).
     - Status: Local generation in `lib/l10n/` configured via `l10n.yaml`.
