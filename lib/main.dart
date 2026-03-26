@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/scanner_screen.dart';
+import 'screens/species_list_screen.dart';
 
 void main() {
   runApp(const QRostlinaApp());
@@ -90,7 +91,10 @@ class MainMenuScreen extends StatelessWidget {
               label: 'SPECIES LIST',
               icon: Icons.list_alt,
               onPressed: () {
-                // TODO: Implement species list
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SpeciesListScreen()),
+                );
               },
             ),
             const SizedBox(height: 16),
