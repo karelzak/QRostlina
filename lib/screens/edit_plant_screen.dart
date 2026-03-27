@@ -3,6 +3,7 @@ import '../models/plant_unit.dart';
 import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
+import '../widgets/qr_scanner_dialog.dart';
 
 class EditPlantScreen extends StatefulWidget {
   final PlantUnit? plant;
@@ -78,6 +79,26 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     }
   }
 
+  void _scanPlantId() async {
+    final scannedCode = await showDialog<String>(
+      context: context,
+      builder: (context) => const QRScannerDialog(),
+    );
+
+    if (scannedCode != null && mounted) {
+      final result = QRScannerService.parse(scannedCode);
+      if (result.type == ScannedType.plant) {
+        setState(() {
+          _idController.text = result.id;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Not a plant label: $scannedCode')),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _idController.dispose();
@@ -143,7 +164,15 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                       validator: (val) => (val == null || !val.startsWith('P-')) ? 'Must start with P-' : null,
                     ),
                   ),
-                  if (!isEditing)
+                  if (!isEditing) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: IconButton(
+                        icon: const Icon(Icons.qr_code_scanner, color: Colors.yellow, size: 32),
+                        onPressed: () => _scanPlantId(),
+                        tooltip: 'Scan QR Label',
+                      ),
+                    ),
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
                       child: IconButton(
@@ -156,6 +185,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                         },
                       ),
                     ),
+                  ],
                 ],
               ),
               const SizedBox(height: 16),

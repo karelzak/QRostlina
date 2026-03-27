@@ -197,7 +197,7 @@ class _DetailScreenState extends State<DetailScreen> {
             const SizedBox(height: 8),
             _buildGridMap(),
           ],
-          if (_children != null) ...[
+          if (_children != null && widget.type != ScannedType.bed) ...[
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
