@@ -4,6 +4,7 @@ import 'l10n/app_localizations.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/species_list_screen.dart';
 import 'screens/locations_screen.dart';
+import 'screens/plants_screen.dart';
 
 void main() {
   runApp(const QRostlinaApp());
@@ -119,6 +120,17 @@ class MainMenuScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const LocationsScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _MenuButton(
+              label: 'PLANTS',
+              icon: Icons.local_florist,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PlantsScreen()),
                 );
               },
             ),

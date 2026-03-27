@@ -28,6 +28,32 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
     });
   }
 
+  void _confirmDelete(String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text('Delete Species?', style: TextStyle(color: Colors.white)),
+        content: Text(
+          'Are you sure you want to delete $id? This will also delete all associated plants!',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('DELETE', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await MockDatabaseService.deleteSpecies(id);
+      _refreshList();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -65,7 +91,16 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
                       Text(s.color ?? 'N/A', style: const TextStyle(color: Colors.white60)),
                     ],
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.yellow),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () => _confirmDelete(s.id),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, color: Colors.yellow),
+                    ],
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,

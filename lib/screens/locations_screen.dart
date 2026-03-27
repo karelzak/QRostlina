@@ -71,6 +71,32 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
     );
   }
 
+  void _confirmDelete(String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text('Delete Location?', style: TextStyle(color: Colors.white)),
+        content: Text(
+          'Are you sure you want to delete $id? Plants at this location will be moved to "stock" (no location).',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('DELETE', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await MockDatabaseService.deleteLocation(id);
+      setState(() {});
+    }
+  }
+
   Widget _buildBedsList() {
     return FutureBuilder<List<Bed>>(
       future: MockDatabaseService.getAllBeds(),
@@ -105,7 +131,16 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
                 ],
               ),
               subtitle: Text('${bed.id} | Row: ${bed.row ?? "-"}', style: const TextStyle(color: Colors.white70)),
-              trailing: const Icon(Icons.chevron_right, color: Colors.yellow),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.redAccent),
+                    onPressed: () => _confirmDelete(bed.id),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.yellow),
+                ],
+              ),
               onTap: () {
                 Navigator.push(
                   context,
@@ -137,7 +172,16 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
               leading: const Icon(Icons.inventory_2, color: Colors.yellow),
               title: Text(crate.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               subtitle: Text('${crate.id} | Type: ${crate.type}', style: const TextStyle(color: Colors.white70)),
-              trailing: const Icon(Icons.chevron_right, color: Colors.yellow),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.redAccent),
+                    onPressed: () => _confirmDelete(crate.id),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.yellow),
+                ],
+              ),
               onTap: () {
                 Navigator.push(
                   context,

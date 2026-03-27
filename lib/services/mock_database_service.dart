@@ -173,6 +173,42 @@ class MockDatabaseService {
     }
   }
 
+  static Future<List<PlantUnit>> getAllPlants() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return _mockPlants;
+  }
+
+  static Future<void> deleteSpecies(String id) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    _mockSpecies.removeWhere((s) => s.id == id);
+    _mockPlants.removeWhere((p) => p.speciesId == id);
+  }
+
+  static Future<void> deletePlant(String id) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    _mockPlants.removeWhere((p) => p.id == id);
+  }
+
+  static Future<void> deleteLocation(String id) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (id.startsWith('B-')) {
+      _mockBeds.removeWhere((b) => b.id == id);
+    } else if (id.startsWith('C-')) {
+      _mockCrates.removeWhere((c) => c.id == id);
+    }
+    // Update plants at this location to have no location and be inStock (or maybe a new state)
+    for (var i = 0; i < _mockPlants.length; i++) {
+      if (_mockPlants[i].locationId == id) {
+        _mockPlants[i] = PlantUnit(
+          id: _mockPlants[i].id,
+          speciesId: _mockPlants[i].speciesId,
+          status: PlantStatus.inStock, // Default back to stock if location is gone
+          locationId: null,
+        );
+      }
+    }
+  }
+
   static Future<void> savePlant(PlantUnit plant) async {
     await Future.delayed(const Duration(milliseconds: 200));
     final index = _mockPlants.indexWhere((p) => p.id == plant.id);
