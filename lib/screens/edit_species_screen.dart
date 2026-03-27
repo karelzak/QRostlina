@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/species.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
 import '../widgets/id_input_field.dart';

@@ -23,6 +23,7 @@ class _DetailScreenState extends State<DetailScreen> {
   dynamic _data;
   Location? _parentLocation;
   List<PlantUnit>? _children;
+  Map<String, Species> _speciesMap = {};
   bool _loading = true;
 
   @override
@@ -33,21 +34,30 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Future<void> _loadData() async {
     setState(() => _loading = true);
+    _speciesMap = {};
+    
     switch (widget.type) {
       case ScannedType.species:
         _data = await MockDatabaseService.getSpeciesById(widget.id);
         if (_data != null) {
           _children = await MockDatabaseService.getPlantsBySpecies(widget.id);
+          _speciesMap[widget.id] = _data as Species;
         }
         break;
       case ScannedType.plant:
         _data = await MockDatabaseService.getPlantById(widget.id);
-        if (_data != null && (_data as PlantUnit).locationId != null) {
-          final locId = (_data as PlantUnit).locationId!;
-          if (locId.startsWith('B-')) {
-            _parentLocation = await MockDatabaseService.getBedById(locId);
-          } else if (locId.startsWith('C-')) {
-            _parentLocation = await MockDatabaseService.getCrateById(locId);
+        if (_data != null) {
+          final p = _data as PlantUnit;
+          final s = await MockDatabaseService.getSpeciesById(p.speciesId);
+          if (s != null) _speciesMap[p.speciesId] = s;
+
+          if (p.locationId != null) {
+            final locId = p.locationId!;
+            if (locId.startsWith('B-')) {
+              _parentLocation = await MockDatabaseService.getBedById(locId);
+            } else if (locId.startsWith('C-')) {
+              _parentLocation = await MockDatabaseService.getCrateById(locId);
+            }
           }
         }
         break;
@@ -55,12 +65,29 @@ class _DetailScreenState extends State<DetailScreen> {
         _data = await MockDatabaseService.getBedById(widget.id);
         if (_data != null) {
           _children = await MockDatabaseService.getPlantsByLocation(widget.id);
+          // Fetch species for all plants in this bed
+          if (_children != null) {
+            for (var p in _children!) {
+              if (!_speciesMap.containsKey(p.speciesId)) {
+                final s = await MockDatabaseService.getSpeciesById(p.speciesId);
+                if (s != null) _speciesMap[p.speciesId] = s;
+              }
+            }
+          }
         }
         break;
       case ScannedType.crate:
         _data = await MockDatabaseService.getCrateById(widget.id);
         if (_data != null) {
           _children = await MockDatabaseService.getPlantsByLocation(widget.id);
+          if (_children != null) {
+            for (var p in _children!) {
+              if (!_speciesMap.containsKey(p.speciesId)) {
+                final s = await MockDatabaseService.getSpeciesById(p.speciesId);
+                if (s != null) _speciesMap[p.speciesId] = s;
+              }
+            }
+          }
         }
         break;
       case ScannedType.unknown:
@@ -281,7 +308,7 @@ class _DetailScreenState extends State<DetailScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 2.5,
+                childAspectRatio: 2.0, // Taller to fit name
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
               ),
@@ -295,6 +322,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
                 final key = "$lineIdx-$rowIdx";
                 final plant = occupancy[key];
+                final species = plant != null ? _speciesMap[plant.speciesId] : null;
                 String cellLabel = bed.layout == BedLayout.grid ? "$subRow" : "";
 
                 return GestureDetector(
@@ -345,9 +373,19 @@ class _DetailScreenState extends State<DetailScreen> {
                         ),
                         Center(
                           child: plant != null
-                              ? Text(
-                                  plant.id,
-                                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+                              ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      plant.id,
+                                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+                                    ),
+                                    Text(
+                                      species?.name ?? plant.speciesId,
+                                      style: const TextStyle(color: Colors.black87, fontSize: 12, overflow: TextOverflow.ellipsis),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
                                 )
                               : const Icon(Icons.add, color: Colors.white10, size: 24),
                         ),
