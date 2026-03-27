@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
+import '../widgets/id_input_field.dart';
 
 class EditLocationScreen extends StatefulWidget {
   final Location? location;
@@ -58,7 +59,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
         if (!isUnique) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('ID already exists!')),
+              SnackBar(content: Text('ID $id already exists!')),
             );
           }
           return;
@@ -101,35 +102,16 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
           key: _formKey,
           child: Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: _idController,
-                      label: 'ID (${widget.isBed ? "B-" : "C-"})',
-                      enabled: !isEditing,
-                      validator: (val) {
-                        final prefix = widget.isBed ? 'B-' : 'C-';
-                        if (val == null || !val.startsWith(prefix)) return 'Must start with $prefix';
-                        return null;
-                      },
-                    ),
-                  ),
-                  if (!isEditing)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: IconButton(
-                        icon: const Icon(Icons.auto_fix_high, color: Colors.yellow, size: 32),
-                        onPressed: () async {
-                          final type = widget.isBed ? ScannedType.bed : ScannedType.crate;
-                          final nextId = await MockDatabaseService.generateNextId(type);
-                          setState(() {
-                            _idController.text = nextId;
-                          });
-                        },
-                      ),
-                    ),
-                ],
+              IdInputField(
+                controller: _idController,
+                label: 'ID (${widget.isBed ? "B-" : "C-"})',
+                type: widget.isBed ? ScannedType.bed : ScannedType.crate,
+                enabled: !isEditing,
+                validator: (val) {
+                  final prefix = widget.isBed ? 'B-' : 'C-';
+                  if (val == null || !val.startsWith(prefix)) return 'Required (Must start with $prefix)';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               _buildTextField(

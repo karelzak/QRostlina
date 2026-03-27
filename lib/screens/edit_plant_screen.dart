@@ -3,7 +3,7 @@ import '../models/plant_unit.dart';
 import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
-import '../widgets/qr_scanner_dialog.dart';
+import '../widgets/id_input_field.dart';
 
 class EditPlantScreen extends StatefulWidget {
   final PlantUnit? plant;
@@ -30,7 +30,10 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   @override
   void initState() {
     super.initState();
-    _idController = TextEditingController(text: widget.plant?.id ?? 'P-');
+    // Use the provided plant ID, or if it's 'P-' (new from grid), keep it editable
+    String initialId = widget.plant?.id ?? 'P-';
+    
+    _idController = TextEditingController(text: initialId);
     _speciesIdController = TextEditingController(text: widget.plant?.speciesId ?? widget.initialSpeciesId ?? 'S-');
     _locationIdController = TextEditingController(text: widget.plant?.locationId ?? '');
     _status = widget.plant?.status ?? PlantStatus.inGround;
@@ -38,11 +41,6 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     _gridRow = widget.plant?.gridRow;
     
     _updateBedInfo();
-
-    // Listen to location changes
-    _locationIdController.addListener(() {
-      _updateBedInfo();
-    });
   }
 
   void _updateBedInfo() async {
@@ -53,19 +51,17 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         setState(() {
           _currentBed = bed;
           if (_gridRow != null) {
-            _meter = ((_gridRow! - 1) / bed.rowsPerMeter).floor() + 1;
-            _subRow = ((_gridRow! - 1) % bed.rowsPerMeter) + 1;
+            _meter = ((_gridRow! - 1) / bed.rowsPerMeterEffective).floor() + 1;
+            _subRow = ((_gridRow! - 1) % bed.rowsPerMeterEffective) + 1;
           }
         });
       }
     } else {
-      setState(() {
-        _currentBed = null;
-        _gridLine = null;
-        _gridRow = null;
-        _meter = null;
-        _subRow = null;
-      });
+      if (mounted) {
+        setState(() {
+          _currentBed = null;
+        });
+      }
     }
   }
 
@@ -75,26 +71,6 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
         _gridRow = (_meter! - 1) * _currentBed!.rowsPerMeter + _subRow!;
       } else if (_currentBed!.layout == BedLayout.linear) {
         _gridRow = _meter;
-      }
-    }
-  }
-
-  void _scanPlantId() async {
-    final scannedCode = await showDialog<String>(
-      context: context,
-      builder: (context) => const QRScannerDialog(),
-    );
-
-    if (scannedCode != null && mounted) {
-      final result = QRScannerService.parse(scannedCode);
-      if (result.type == ScannedType.plant) {
-        setState(() {
-          _idController.text = result.id;
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Not a plant label: $scannedCode')),
-        );
       }
     }
   }
@@ -111,42 +87,61 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     if (_formKey.currentState!.validate()) {
       _recalculateGridRow();
       final id = _idController.text.trim().toUpperCase();
+      final speciesId = _speciesIdController.text.trim().toUpperCase();
+      final locationId = _locationIdController.text.trim().toUpperCase();
 
-      if (widget.plant == null) {
+      // 1. Check Plant ID Uniqueness if it's a NEW plant
+      if (widget.plant == null || widget.plant!.id == 'P-') {
         final isUnique = await MockDatabaseService.isIdUnique(id);
         if (!isUnique) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('ID already exists!')),
-            );
-          }
+          _showError('Plant ID $id already exists!');
+          return;
+        }
+      }
+
+      // 2. Validate Species Relation
+      final sExists = await MockDatabaseService.speciesExists(speciesId);
+      if (!sExists) {
+        _showError('Species $speciesId does not exist!');
+        return;
+      }
+
+      // 3. Validate Location Relation (if provided)
+      if (locationId.isNotEmpty && locationId != 'NONE') {
+        final lExists = await MockDatabaseService.locationExists(locationId);
+        if (!lExists) {
+          _showError('Location $locationId does not exist!');
           return;
         }
       }
 
       final plant = PlantUnit(
         id: id,
-        speciesId: _speciesIdController.text.trim().toUpperCase(),
+        speciesId: speciesId,
         status: _status,
-        locationId: _locationIdController.text.trim().isEmpty ? null : _locationIdController.text.trim().toUpperCase(),
+        locationId: locationId.isEmpty ? null : locationId,
         gridLine: _gridLine,
         gridRow: _gridRow,
       );
 
       await MockDatabaseService.savePlant(plant);
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
+      if (mounted) Navigator.pop(context, true);
+    }
+  }
+
+  void _showError(String msg) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.plant != null;
+    final isRealEdit = widget.plant != null && widget.plant!.id != 'P-';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'EDIT PLANT' : 'ADD NEW PLANT'),
+        title: Text(isRealEdit ? 'EDIT PLANT' : 'ADD NEW PLANT'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -154,51 +149,26 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
           key: _formKey,
           child: Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: _idController,
-                      label: 'Plant ID (P-XXX)',
-                      enabled: !isEditing,
-                      validator: (val) => (val == null || !val.startsWith('P-')) ? 'Must start with P-' : null,
-                    ),
-                  ),
-                  if (!isEditing) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: IconButton(
-                        icon: const Icon(Icons.qr_code_scanner, color: Colors.yellow, size: 32),
-                        onPressed: () => _scanPlantId(),
-                        tooltip: 'Scan QR Label',
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: IconButton(
-                        icon: const Icon(Icons.auto_fix_high, color: Colors.yellow, size: 32),
-                        onPressed: () async {
-                          final nextId = await MockDatabaseService.generateNextId(ScannedType.plant);
-                          setState(() {
-                            _idController.text = nextId;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ],
+              IdInputField(
+                controller: _idController,
+                label: 'Plant ID (P-XXX)',
+                type: ScannedType.plant,
+                enabled: !isRealEdit,
+                validator: (val) => (val == null || !val.startsWith('P-')) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-              _buildTextField(
+              IdInputField(
                 controller: _speciesIdController,
                 label: 'Species ID (S-XXX)',
-                validator: (val) => (val == null || !val.startsWith('S-')) ? 'Must start with S-' : null,
+                type: ScannedType.species,
+                validator: (val) => (val == null || !val.startsWith('S-')) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-              _buildTextField(
+              IdInputField(
                 controller: _locationIdController,
                 label: 'Location ID (B- or C-)',
-                hint: 'e.g. B-01 or C-05',
+                type: ScannedType.unknown,
+                onChanged: _updateBedInfo,
               ),
               if (_currentBed != null) ...[
                 const SizedBox(height: 16),
@@ -298,30 +268,6 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    String? hint,
-    bool enabled = true,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      enabled: enabled,
-      validator: validator,
-      style: const TextStyle(color: Colors.white, fontSize: 18),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white38),
-        labelStyle: const TextStyle(color: Colors.yellow),
-        disabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey[800]!)),
-        enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow, width: 2)),
       ),
     );
   }

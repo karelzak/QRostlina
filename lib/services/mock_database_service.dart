@@ -143,6 +143,16 @@ class MockDatabaseService {
     }
   }
 
+  static Future<bool> speciesExists(String id) async {
+    return _mockSpecies.any((s) => s.id == id);
+  }
+
+  static Future<bool> locationExists(String id) async {
+    if (id.startsWith('B-')) return _mockBeds.any((b) => b.id == id);
+    if (id.startsWith('C-')) return _mockCrates.any((c) => c.id == id);
+    return false;
+  }
+
   static Future<List<PlantUnit>> getPlantsByLocation(String locationId) async {
     await Future.delayed(const Duration(milliseconds: 100));
     return _mockPlants.where((p) => p.locationId == locationId).toList();
