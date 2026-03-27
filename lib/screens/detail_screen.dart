@@ -308,7 +308,7 @@ class _DetailScreenState extends State<DetailScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 2.0, // Taller to fit name
+                childAspectRatio: 1.8, // Slightly taller for bigger font
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
               ),
@@ -373,19 +373,28 @@ class _DetailScreenState extends State<DetailScreen> {
                         ),
                         Center(
                           child: plant != null
-                              ? Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      plant.id,
-                                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
-                                    ),
-                                    Text(
-                                      species?.name ?? plant.speciesId,
-                                      style: const TextStyle(color: Colors.black87, fontSize: 12, overflow: TextOverflow.ellipsis),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
+                              ? Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        plant.id,
+                                        style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                      Text(
+                                        species?.name ?? plant.speciesId,
+                                        style: const TextStyle(
+                                          color: Colors.black, 
+                                          fontSize: 14, 
+                                          fontWeight: FontWeight.bold,
+                                          overflow: TextOverflow.ellipsis
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                      ),
+                                    ],
+                                  ),
                                 )
                               : const Icon(Icons.add, color: Colors.white10, size: 24),
                         ),
