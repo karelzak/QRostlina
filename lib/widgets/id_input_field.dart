@@ -11,6 +11,7 @@ class IdInputField extends StatelessWidget {
   final String? Function(String?)? validator;
   final VoidCallback? onChanged;
   final VoidCallback? onAdd;
+  final VoidCallback? onSearch;
 
   const IdInputField({
     super.key,
@@ -21,6 +22,7 @@ class IdInputField extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.onAdd,
+    this.onSearch,
   });
 
   Future<void> _scan(BuildContext context) async {
@@ -75,6 +77,12 @@ class IdInputField extends StatelessWidget {
             onPressed: () => _scan(context),
             tooltip: 'Scan QR',
           ),
+          if (onSearch != null)
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.yellow),
+              onPressed: onSearch,
+              tooltip: 'Search',
+            ),
           if (onAdd != null)
             IconButton(
               icon: const Icon(Icons.add_circle_outline, color: Colors.yellow),

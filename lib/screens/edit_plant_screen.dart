@@ -4,6 +4,7 @@ import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
 import '../widgets/id_input_field.dart';
+import '../widgets/search_dialog.dart';
 import 'edit_species_screen.dart';
 import 'edit_location_screen.dart';
 
@@ -149,6 +150,28 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     }
   }
 
+  void _searchSpecies() async {
+    final allSpecies = await MockDatabaseService.getAllSpecies();
+    final items = allSpecies.map((s) => SearchItem(
+      id: s.id,
+      name: s.name,
+      subtitle: s.latinName,
+    )).toList();
+
+    if (!mounted) return;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => SearchDialog(title: 'SEARCH SPECIES', items: items),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _speciesIdController.text = result;
+      });
+    }
+  }
+
   void _addLocation() async {
     final isBed = await showModalBottomSheet<bool>(
       context: context,
@@ -189,6 +212,38 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     }
   }
 
+  void _searchLocation() async {
+    final beds = await MockDatabaseService.getAllBeds();
+    final crates = await MockDatabaseService.getAllCrates();
+    
+    final items = [
+      ...beds.map((b) => SearchItem(
+        id: b.id,
+        name: b.name,
+        subtitle: 'Bed (Row: ${b.row ?? "-"})',
+      )),
+      ...crates.map((c) => SearchItem(
+        id: c.id,
+        name: c.name,
+        subtitle: 'Crate (Type: ${c.type})',
+      )),
+    ];
+
+    if (!mounted) return;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => SearchDialog(title: 'SEARCH LOCATION', items: items),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _locationIdController.text = result;
+      });
+      _updateBedInfo();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isRealEdit = widget.plant != null && widget.plant!.id != 'P-';
@@ -216,6 +271,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 label: 'Species ID (S-XXX)',
                 type: ScannedType.species,
                 onAdd: _addSpecies,
+                onSearch: _searchSpecies,
                 validator: (val) => (val == null || !val.startsWith('S-')) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
@@ -224,6 +280,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 label: 'Location ID (B- or C-)',
                 type: ScannedType.unknown,
                 onAdd: _addLocation,
+                onSearch: _searchLocation,
                 onChanged: _updateBedInfo,
               ),
               if (_currentBed != null) ...[
