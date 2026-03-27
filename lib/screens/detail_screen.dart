@@ -98,6 +98,29 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
+  void _confirmDeletePlant(BuildContext context, String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text('Plant Die?', style: TextStyle(color: Colors.white)),
+        content: Text('Are you sure you want to delete plant $id?', style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('YES, DELETE', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await MockDatabaseService.deletePlant(id);
+      if (mounted) Navigator.pop(context, true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -120,7 +143,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 }
               },
             ),
-          if (widget.type == ScannedType.plant && _data != null)
+          if (widget.type == ScannedType.plant && _data != null) ...[
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () async {
@@ -133,6 +156,12 @@ class _DetailScreenState extends State<DetailScreen> {
                 }
               },
             ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: () => _confirmDeletePlant(context, widget.id),
+              tooltip: 'Mark as Dead/Delete',
+            ),
+          ],
           if ((widget.type == ScannedType.bed || widget.type == ScannedType.crate) && _data != null)
             IconButton(
               icon: const Icon(Icons.edit),
@@ -327,10 +356,11 @@ class _DetailScreenState extends State<DetailScreen> {
                 return GestureDetector(
                   onTap: () async {
                     if (plant != null) {
-                      Navigator.push(
+                      final result = await Navigator.push<bool>(
                         context,
                         MaterialPageRoute(builder: (context) => DetailScreen(id: plant.id, type: ScannedType.plant)),
                       );
+                      if (result == true) _loadData();
                     } else {
                       final result = await Navigator.push<bool>(
                         context,
@@ -518,13 +548,16 @@ class _DetailScreenState extends State<DetailScreen> {
           title: Text(plant.id, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text('Status: ${plant.status.toUpperCase()} | $locStr'),
           trailing: const Icon(Icons.chevron_right, color: Colors.yellow),
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            final result = await Navigator.push<bool>(
               context,
               MaterialPageRoute(
                 builder: (context) => DetailScreen(id: plant.id, type: ScannedType.plant),
               ),
             );
+            if (result == true) {
+              _loadData();
+            }
           },
         );
       },
