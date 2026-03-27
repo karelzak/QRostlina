@@ -54,13 +54,13 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final isBed = _tabController.index == 0;
-          final result = await Navigator.push<bool>(
+          final result = await Navigator.push<dynamic>(
             context,
             MaterialPageRoute(
               builder: (context) => EditLocationScreen(isBed: isBed),
             ),
           );
-          if (result == true) {
+          if (result != null) {
             setState(() {});
           }
         },

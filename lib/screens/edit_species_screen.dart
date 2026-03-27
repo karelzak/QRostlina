@@ -69,7 +69,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
       await MockDatabaseService.addSpecies(species);
       
       if (mounted) {
-        Navigator.pop(context, true);
+        Navigator.pop(context, species.id);
       }
     }
   }

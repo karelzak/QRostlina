@@ -117,11 +117,11 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final result = await Navigator.push<bool>(
+          final result = await Navigator.push<dynamic>(
             context,
             MaterialPageRoute(builder: (context) => const EditSpeciesScreen()),
           );
-          if (result == true) {
+          if (result != null) {
             _refreshList();
           }
         },

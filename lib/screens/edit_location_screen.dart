@@ -85,7 +85,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
       }
 
       await MockDatabaseService.saveLocation(loc);
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) Navigator.pop(context, loc.id);
     }
   }
 

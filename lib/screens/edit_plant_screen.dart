@@ -4,6 +4,8 @@ import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
 import '../widgets/id_input_field.dart';
+import 'edit_species_screen.dart';
+import 'edit_location_screen.dart';
 
 class EditPlantScreen extends StatefulWidget {
   final PlantUnit? plant;
@@ -135,6 +137,58 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     }
   }
 
+  void _addSpecies() async {
+    final result = await Navigator.push<dynamic>(
+      context,
+      MaterialPageRoute(builder: (context) => const EditSpeciesScreen()),
+    );
+    if (result is String && mounted) {
+      setState(() {
+        _speciesIdController.text = result;
+      });
+    }
+  }
+
+  void _addLocation() async {
+    final isBed = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Add New Location', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.grid_view, color: Colors.yellow),
+              title: const Text('New Bed (B-)', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(context, true),
+            ),
+            ListTile(
+              leading: const Icon(Icons.inventory_2, color: Colors.yellow),
+              title: const Text('New Crate (C-)', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(context, false),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (isBed != null && mounted) {
+      final result = await Navigator.push<dynamic>(
+        context,
+        MaterialPageRoute(builder: (context) => EditLocationScreen(isBed: isBed)),
+      );
+      if (result is String && mounted) {
+        setState(() {
+          _locationIdController.text = result;
+        });
+        _updateBedInfo();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isRealEdit = widget.plant != null && widget.plant!.id != 'P-';
@@ -161,6 +215,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 controller: _speciesIdController,
                 label: 'Species ID (S-XXX)',
                 type: ScannedType.species,
+                onAdd: _addSpecies,
                 validator: (val) => (val == null || !val.startsWith('S-')) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
@@ -168,6 +223,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 controller: _locationIdController,
                 label: 'Location ID (B- or C-)',
                 type: ScannedType.unknown,
+                onAdd: _addLocation,
                 onChanged: _updateBedInfo,
               ),
               if (_currentBed != null) ...[
