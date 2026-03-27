@@ -5,6 +5,7 @@ import 'screens/scanner_screen.dart';
 import 'screens/species_list_screen.dart';
 import 'screens/locations_screen.dart';
 import 'screens/plants_screen.dart';
+import 'screens/data_management_screen.dart';
 
 void main() {
   runApp(const QRostlinaApp());
@@ -131,6 +132,17 @@ class MainMenuScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const PlantsScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _MenuButton(
+              label: 'DATA MANAGEMENT',
+              icon: Icons.storage,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DataManagementScreen()),
                 );
               },
             ),

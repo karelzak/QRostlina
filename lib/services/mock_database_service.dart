@@ -9,45 +9,55 @@ import 'qr_scanner_service.dart';
 class MockDatabaseService {
   static bool _initialized = false;
 
-  // Static mock data for development
-  static final List<Species> _mockSpecies = [
-    Species(
-      id: 'S-001',
-      name: 'Cornel Bronze',
-      latinName: 'Dahlia pinnata',
-      color: 'Bronze/Orange',
-      description: 'Ball dahlia with strong stems.',
-    ),
-    Species(
-      id: 'S-002',
-      name: 'Cafe au Lait',
-      latinName: 'Dahlia pinnata',
-      color: 'Creamy Pink',
-      description: 'Large decorative dinner plate dahlia.',
-    ),
-  ];
-
-  static final List<PlantUnit> _mockPlants = [
-    PlantUnit(id: 'P-001', speciesId: 'S-001', locationId: 'B-01', gridLine: 1, gridRow: 1),
-    PlantUnit(id: 'P-002', speciesId: 'S-001', locationId: 'C-01'),
-    PlantUnit(id: 'P-003', speciesId: 'S-002', locationId: 'B-01', gridLine: 2, gridRow: 5),
-    PlantUnit(id: 'P-004', speciesId: 'S-001', locationId: 'B-03', gridRow: 5),
-  ];
-
-  static final List<Bed> _mockBeds = [
-    Bed(id: 'B-01', name: 'West Garden - Bed A', row: 'A', length: 20, rowsPerMeter: 2), // 20m, 2x2 = 80 cells
-    Bed(id: 'B-02', name: 'West Garden - Bed B', row: 'B', length: 10, rowsPerMeter: 3), // 10m, 2x3 = 60 cells
-    Bed(id: 'B-03', name: 'North Border', row: 'NB', length: 10, layout: BedLayout.linear, rowsPerMeter: 1), // 10m Linear
-  ];
-
-  static final List<Crate> _mockCrates = [
-    Crate(id: 'C-01', name: 'Greenhouse Crate #1', type: 'Plastic'),
-    Crate(id: 'C-02', name: 'Storage Crate #2', type: 'Wooden'),
-  ];
+  // Static lists to hold data in memory (initially empty)
+  static final List<Species> _mockSpecies = [];
+  static final List<PlantUnit> _mockPlants = [];
+  static final List<Bed> _mockBeds = [];
+  static final List<Crate> _mockCrates = [];
 
   static Future<File> _getFile() async {
     final directory = await getApplicationDocumentsDirectory();
     return File('${directory.path}/qrostlina_data.json');
+  }
+
+  static Future<void> exportData(String path) async {
+    await _ensureInitialized();
+    final Map<String, dynamic> data = {
+      'species': _mockSpecies.map((s) => s.toMap()).toList(),
+      'plants': _mockPlants.map((p) => p.toMap()).toList(),
+      'beds': _mockBeds.map((b) => b.toMap()).toList(),
+      'crates': _mockCrates.map((c) => c.toMap()).toList(),
+    };
+    final file = File(path);
+    await file.writeAsString(jsonEncode(data));
+  }
+
+  static Future<void> importData(String path) async {
+    final file = File(path);
+    if (!await file.exists()) throw Exception('Import file not found');
+    
+    final content = await file.readAsString();
+    final Map<String, dynamic> data = jsonDecode(content);
+
+    _mockSpecies.clear();
+    if (data.containsKey('species')) {
+      for (var s in data['species']) _mockSpecies.add(Species.fromMap(s));
+    }
+    _mockPlants.clear();
+    if (data.containsKey('plants')) {
+      for (var p in data['plants']) _mockPlants.add(PlantUnit.fromMap(p));
+    }
+    _mockBeds.clear();
+    if (data.containsKey('beds')) {
+      for (var b in data['beds']) _mockBeds.add(Bed.fromMap(b));
+    }
+    _mockCrates.clear();
+    if (data.containsKey('crates')) {
+      for (var c in data['crates']) _mockCrates.add(Crate.fromMap(c));
+    }
+    
+    await _saveData();
+    _initialized = true;
   }
 
   static Future<void> _ensureInitialized() async {
