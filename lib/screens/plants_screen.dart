@@ -123,7 +123,7 @@ class _PlantsScreenState extends State<PlantsScreen> with SingleTickerProviderSt
               style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              'Status: ${plant.status.name.toUpperCase()} | Loc: ${plant.locationId ?? "NONE"}',
+              'Status: ${plant.status.toUpperCase()} | Loc: ${plant.locationId ?? "NONE"}',
               style: const TextStyle(color: Colors.white70),
             ),
             trailing: Row(

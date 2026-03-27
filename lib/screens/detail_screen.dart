@@ -244,7 +244,6 @@ class _DetailScreenState extends State<DetailScreen> {
                               ? PlantUnit(
                                   id: 'P-',
                                   speciesId: 'S-',
-                                  status: PlantStatus.inGround,
                                   locationId: widget.id,
                                 )
                               : null,
@@ -340,7 +339,6 @@ class _DetailScreenState extends State<DetailScreen> {
                             plant: PlantUnit(
                               id: 'P-',
                               speciesId: 'S-',
-                              status: PlantStatus.inGround,
                               locationId: bed.id,
                               gridLine: lineIdx,
                               gridRow: rowIdx,
@@ -444,7 +442,7 @@ class _DetailScreenState extends State<DetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _infoRow('Species ID', p.speciesId),
-              _infoRow('Status', p.status.name.toUpperCase()),
+              _infoRow('Status', p.status.toUpperCase()),
               _infoRow('Position', locationStr),
             ],
           ),
@@ -518,7 +516,7 @@ class _DetailScreenState extends State<DetailScreen> {
           tileColor: Colors.grey[900],
           leading: const Icon(Icons.local_florist, color: Colors.yellow),
           title: Text(plant.id, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text('Status: ${plant.status.name.toUpperCase()} | $locStr'),
+          subtitle: Text('Status: ${plant.status.toUpperCase()} | $locStr'),
           trailing: const Icon(Icons.chevron_right, color: Colors.yellow),
           onTap: () {
             Navigator.push(

@@ -23,10 +23,10 @@ class MockDatabaseService {
   ];
 
   static final List<PlantUnit> _mockPlants = [
-    PlantUnit(id: 'P-001', speciesId: 'S-001', status: PlantStatus.inGround, locationId: 'B-01', gridLine: 1, gridRow: 1),
-    PlantUnit(id: 'P-002', speciesId: 'S-001', status: PlantStatus.inStock, locationId: 'C-01'),
-    PlantUnit(id: 'P-003', speciesId: 'S-002', status: PlantStatus.inGround, locationId: 'B-01', gridLine: 2, gridRow: 5),
-    PlantUnit(id: 'P-004', speciesId: 'S-001', status: PlantStatus.inGround, locationId: 'B-03', gridRow: 5),
+    PlantUnit(id: 'P-001', speciesId: 'S-001', locationId: 'B-01', gridLine: 1, gridRow: 1),
+    PlantUnit(id: 'P-002', speciesId: 'S-001', locationId: 'C-01'),
+    PlantUnit(id: 'P-003', speciesId: 'S-002', locationId: 'B-01', gridLine: 2, gridRow: 5),
+    PlantUnit(id: 'P-004', speciesId: 'S-001', locationId: 'B-03', gridRow: 5),
   ];
 
   static final List<Bed> _mockBeds = [
@@ -196,13 +196,12 @@ class MockDatabaseService {
     } else if (id.startsWith('C-')) {
       _mockCrates.removeWhere((c) => c.id == id);
     }
-    // Update plants at this location to have no location and be inStock (or maybe a new state)
+    // Update plants at this location to have no location
     for (var i = 0; i < _mockPlants.length; i++) {
       if (_mockPlants[i].locationId == id) {
         _mockPlants[i] = PlantUnit(
           id: _mockPlants[i].id,
           speciesId: _mockPlants[i].speciesId,
-          status: PlantStatus.inStock, // Default back to stock if location is gone
           locationId: null,
         );
       }

@@ -23,7 +23,6 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
   late TextEditingController _idController;
   late TextEditingController _speciesIdController;
   late TextEditingController _locationIdController;
-  late PlantStatus _status;
   int? _gridLine;
   int? _gridRow;
   int? _meter;
@@ -39,11 +38,44 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
     _idController = TextEditingController(text: initialId);
     _speciesIdController = TextEditingController(text: widget.plant?.speciesId ?? widget.initialSpeciesId ?? 'S-');
     _locationIdController = TextEditingController(text: widget.plant?.locationId ?? '');
-    _status = widget.plant?.status ?? PlantStatus.inGround;
     _gridLine = widget.plant?.gridLine;
     _gridRow = widget.plant?.gridRow;
     
     _updateBedInfo();
+  }
+
+  void _checkPlantExists() async {
+    final id = _idController.text.trim().toUpperCase();
+    if (id.length <= 2 || !id.startsWith('P-')) return;
+
+    final existingPlant = await MockDatabaseService.getPlantById(id);
+    if (existingPlant != null && mounted) {
+      setState(() {
+        // We found an existing plant! 
+        // We want to "MOVE" it, so we keep the NEW location but take its SPECIES
+        _speciesIdController.text = existingPlant.speciesId;
+        
+        // If we are in a context where we ALREADY have a location (e.g. from grid), 
+        // we DON'T overwrite _locationIdController, _gridLine, _gridRow.
+        // But if we are just "Adding" from main menu, we might want to see where it was.
+        if (_locationIdController.text.isEmpty || _locationIdController.text == 'P-') {
+           _locationIdController.text = existingPlant.locationId ?? '';
+           _gridLine = existingPlant.gridLine;
+           _gridRow = existingPlant.gridRow;
+           _updateBedInfo();
+        }
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Existing plant $id found. Moving to this location.'),
+            backgroundColor: Colors.blueAccent,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   void _updateBedInfo() async {
@@ -93,15 +125,9 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       final speciesId = _speciesIdController.text.trim().toUpperCase();
       final locationId = _locationIdController.text.trim().toUpperCase();
 
-      // 1. Check Plant ID Uniqueness if it's a NEW plant
-      if (widget.plant == null || widget.plant!.id == 'P-') {
-        final isUnique = await MockDatabaseService.isIdUnique(id);
-        if (!isUnique) {
-          _showError('Plant ID $id already exists!');
-          return;
-        }
-      }
-
+      // 1. Check Plant ID uniqueness ONLY if it's a NEW plant creation and NOT a "Move" operation.
+      // We allow existing IDs now to support moving plants from one location to another.
+      
       // 2. Validate Species Relation
       final sExists = await MockDatabaseService.speciesExists(speciesId);
       if (!sExists) {
@@ -121,7 +147,6 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
       final plant = PlantUnit(
         id: id,
         speciesId: speciesId,
-        status: _status,
         locationId: locationId.isEmpty ? null : locationId,
         gridLine: _gridLine,
         gridRow: _gridRow,
@@ -250,7 +275,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isRealEdit ? 'EDIT PLANT' : 'ADD NEW PLANT'),
+        title: Text(isRealEdit ? 'EDIT PLANT' : 'ADD/MOVE PLANT'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -263,6 +288,7 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 label: 'Plant ID (P-XXX)',
                 type: ScannedType.plant,
                 enabled: !isRealEdit,
+                onChanged: _checkPlantExists,
                 validator: (val) => (val == null || !val.startsWith('P-')) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
@@ -352,26 +378,6 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                   ],
                 ),
               ],
-              const SizedBox(height: 16),
-              DropdownButtonFormField<PlantStatus>(
-                value: _status,
-                decoration: const InputDecoration(
-                  labelText: 'Status',
-                  labelStyle: TextStyle(color: Colors.yellow),
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-                ),
-                dropdownColor: Colors.black,
-                style: const TextStyle(color: Colors.white, fontSize: 18),
-                items: PlantStatus.values.map((status) {
-                  return DropdownMenuItem(
-                    value: status,
-                    child: Text(status.name.toUpperCase()),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  if (val != null) setState(() => _status = val);
-                },
-              ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _save,
