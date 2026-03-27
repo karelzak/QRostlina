@@ -85,7 +85,25 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
             final bed = beds[index];
             return ListTile(
               leading: const Icon(Icons.grid_view, color: Colors.yellow),
-              title: Text(bed.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(bed.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                  if (!bed.isConsistent)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'ERROR: LINEAR BUT 2 LINES',
+                        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                ],
+              ),
               subtitle: Text('${bed.id} | Row: ${bed.row ?? "-"}', style: const TextStyle(color: Colors.white70)),
               trailing: const Icon(Icons.chevron_right, color: Colors.yellow),
               onTap: () {

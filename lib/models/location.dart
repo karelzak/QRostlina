@@ -30,6 +30,13 @@ class Bed extends Location {
   int get totalRows => length * rowsPerMeterEffective;
   int get totalCells => totalLines * totalRows;
 
+  bool get isConsistent {
+    // A linear bed should ideally have only 1 line, but our model currently forces 2.
+    // If it's linear and has 2 lines, it's inconsistent.
+    if (layout == BedLayout.linear && totalLines > 1) return false;
+    return true;
+  }
+
   String formatPosition(int? line, int? row) {
     if (row == null) return 'N/A';
     
