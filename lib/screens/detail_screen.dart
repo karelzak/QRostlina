@@ -331,6 +331,13 @@ class _DetailScreenState extends State<DetailScreen> {
                 ],
               ),
             ),
+            Row(
+              children: [
+                Expanded(child: Center(child: Text("LEFT", style: TextStyle(color: Colors.yellow.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)))),
+                Expanded(child: Center(child: Text("RIGHT", style: TextStyle(color: Colors.yellow.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)))),
+              ],
+            ),
+            const SizedBox(height: 4),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -351,7 +358,9 @@ class _DetailScreenState extends State<DetailScreen> {
                 final key = "$lineIdx-$rowIdx";
                 final plant = occupancy[key];
                 final species = plant != null ? _speciesMap[plant.speciesId] : null;
-                String cellLabel = bed.layout == BedLayout.grid ? "$subRow" : "";
+                
+                String lineStr = lineIdx == 1 ? 'L' : 'R';
+                String cellLabel = bed.layout == BedLayout.grid ? "$subRow-$lineStr" : lineStr;
 
                 return GestureDetector(
                   onTap: () async {
