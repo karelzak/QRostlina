@@ -109,7 +109,9 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                 enabled: !isEditing,
                 validator: (val) {
                   final prefix = widget.isBed ? 'B-' : 'C-';
-                  if (val == null || !val.startsWith(prefix)) return 'Required (Must start with $prefix)';
+                  if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith(prefix)) {
+                    return 'Required (e.g. $prefix-001)';
+                  }
                   return null;
                 },
               ),

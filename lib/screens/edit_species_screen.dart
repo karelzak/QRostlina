@@ -93,9 +93,9 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
                 label: 'Species ID (S-XXX)',
                 type: ScannedType.species,
                 enabled: !isEditing,
-                validator: (value) {
-                  if (value == null || value.isEmpty || !value.startsWith('S-')) {
-                    return 'Must start with S-';
+                validator: (val) {
+                  if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('S-')) {
+                    return 'Required (e.g. S-001)';
                   }
                   return null;
                 },

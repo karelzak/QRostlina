@@ -289,7 +289,12 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 type: ScannedType.plant,
                 enabled: !isRealEdit,
                 onChanged: _checkPlantExists,
-                validator: (val) => (val == null || !val.startsWith('P-')) ? 'Required' : null,
+                validator: (val) {
+                  if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('P-')) {
+                    return 'Required (e.g. P-001)';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               IdInputField(
@@ -298,7 +303,12 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 type: ScannedType.species,
                 onAdd: _addSpecies,
                 onSearch: _searchSpecies,
-                validator: (val) => (val == null || !val.startsWith('S-')) ? 'Required' : null,
+                validator: (val) {
+                  if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('S-')) {
+                    return 'Required (e.g. S-001)';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               IdInputField(
@@ -308,6 +318,12 @@ class _EditPlantScreenState extends State<EditPlantScreen> {
                 onAdd: _addLocation,
                 onSearch: _searchLocation,
                 onChanged: _updateBedInfo,
+                validator: (val) {
+                  if (val != null && val.isNotEmpty && val.trim().length <= 2) {
+                     return 'Invalid ID';
+                  }
+                  return null;
+                },
               ),
               if (_currentBed != null) ...[
                 const SizedBox(height: 16),
