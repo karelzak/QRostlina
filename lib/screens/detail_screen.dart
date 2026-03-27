@@ -243,7 +243,6 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Widget _buildGridMap() {
     final bed = _data as Bed;
-    // Map of "line-row" to PlantUnit
     final Map<String, PlantUnit> occupancy = {};
     if (_children != null) {
       for (var p in _children!) {
@@ -254,96 +253,113 @@ class _DetailScreenState extends State<DetailScreen> {
       }
     }
 
-    final int columns = 2; // Always 2 lines
-    final int rows = bed.totalRows;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: columns,
-          childAspectRatio: 2.5,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-        ),
-        itemCount: columns * rows,
-        itemBuilder: (context, index) {
-          // row index and line index
-          int rowIdx = (index / 2).floor() + 1;
-          int lineIdx = (index % 2) + 1;
-
-          final key = "$lineIdx-$rowIdx";
-          final plant = occupancy[key];
-          
-          int meter = ((rowIdx - 1) / bed.rowsPerMeterEffective).floor() + 1;
-          int subRow = ((rowIdx - 1) % bed.rowsPerMeterEffective) + 1;
-          
-          String cellLabel = bed.layout == BedLayout.grid 
-              ? "${meter}m-$subRow" 
-              : "${meter}m";
-
-          return GestureDetector(
-            onTap: () async {
-              if (plant != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => DetailScreen(id: plant.id, type: ScannedType.plant)),
-                );
-              } else {
-                final result = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditPlantScreen(
-                      plant: PlantUnit(
-                        id: 'P-',
-                        speciesId: 'S-',
-                        status: PlantStatus.inGround,
-                        locationId: bed.id,
-                        gridLine: lineIdx,
-                        gridRow: rowIdx,
-                      ),
-                    ),
-                  ),
-                );
-                if (result == true) _loadData();
-              }
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: plant != null ? Colors.yellow : Colors.grey[900],
-                border: Border.all(color: Colors.yellow, width: 1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Stack(
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: bed.length,
+      itemBuilder: (context, meterIdx) {
+        int meter = meterIdx + 1;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
+              child: Row(
                 children: [
-                  Positioned(
-                    top: 2,
-                    left: 4,
-                    child: Text(
-                      cellLabel,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: plant != null ? Colors.black54 : Colors.yellow.withOpacity(0.5),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  const Icon(Icons.straighten, color: Colors.yellow, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    "METER $meter",
+                    style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 18),
                   ),
-                  Center(
-                    child: plant != null
-                        ? Text(
-                            plant.id,
-                            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
-                          )
-                        : const Icon(Icons.add, color: Colors.white10, size: 20),
-                  ),
+                  const Expanded(child: Divider(indent: 16, color: Colors.white24)),
                 ],
               ),
             ),
-          );
-        },
-      ),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 2.5,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+              ),
+              itemCount: 2 * bed.rowsPerMeterEffective,
+              itemBuilder: (context, cellIdx) {
+                // Determine line and sub-row within this meter
+                int lineIdx = (cellIdx % 2) + 1;
+                int subRow = (cellIdx / 2).floor() + 1;
+                // Calculate absolute gridRow
+                int rowIdx = (meter - 1) * bed.rowsPerMeterEffective + subRow;
+
+                final key = "$lineIdx-$rowIdx";
+                final plant = occupancy[key];
+                String cellLabel = bed.layout == BedLayout.grid ? "$subRow" : "";
+
+                return GestureDetector(
+                  onTap: () async {
+                    if (plant != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => DetailScreen(id: plant.id, type: ScannedType.plant)),
+                      );
+                    } else {
+                      final result = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditPlantScreen(
+                            plant: PlantUnit(
+                              id: 'P-',
+                              speciesId: 'S-',
+                              status: PlantStatus.inGround,
+                              locationId: bed.id,
+                              gridLine: lineIdx,
+                              gridRow: rowIdx,
+                            ),
+                          ),
+                        ),
+                      );
+                      if (result == true) _loadData();
+                    }
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: plant != null ? Colors.yellow : Colors.grey[900],
+                      border: Border.all(color: Colors.yellow, width: 1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: 2,
+                          left: 4,
+                          child: Text(
+                            cellLabel,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: plant != null ? Colors.black54 : Colors.yellow.withOpacity(0.5),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: plant != null
+                              ? Text(
+                                  plant.id,
+                                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+                                )
+                              : const Icon(Icons.add, color: Colors.white10, size: 24),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
