@@ -48,18 +48,21 @@ QRostlina is a mobile application (Flutter/Android) for managing a plant invento
 6. [x] QR Scanner Service & Mock Scanner Screen.
 7. [x] Mock Database Service & Species List Screen.
 8. [x] Android SDK setup (Command Line Tools preferred).
-    - Status: Manual setup at `/home/work/Android/Sdk` using `cmdline-tools`.
-    - Components: platforms 34 & 36, build-tools 34.0.0 & 28.0.3.
-9. [x] Script for Android deployment.
-    - Path: `scripts/deploy_android.sh`.
+9. [x] Script for Android deployment (`scripts/deploy_android.sh`).
 10. [ ] Firebase integration (Auth & Firestore).
 11. [x] Localization setup (English/Czech).
     - Status: Local generation in `lib/l10n/` configured via `l10n.yaml`.
-    - Note: Synthetic package `package:flutter_gen` was not resolving reliably, switched to local output.
 12. [x] Detailed Cards for Species (S-), Plants (P-), Beds (B-), Crates (C-).
 13. [x] Bed/Crate content listing.
 14. [x] CRUD implementation for all entities.
-15. [ ] Logs for bed maintenance (fertilizing, care).
+    - Status: Standardized via `IdInputField` (QR/Auto/Manual) with relation validation.
+15. [x] Visual Grid Map for Beds.
+    - Status: Organized by meter, supports 2-column layout (Left/Right), human-friendly indexing (e.g. A1-Left-8m-2), and species name display.
+16. [x] Linear Bed Support.
+    - Status: Support for "disorganized" beds with meter-only tracking.
+17. [ ] Logs for bed maintenance (fertilizing, care).
+18. [ ] Photo support for plants/species.
+19. [ ] Label printing (Bluetooth/Brother TZe).
 
 ## Future Plans
 - Logs for bed maintenance (fertilizing, care).
