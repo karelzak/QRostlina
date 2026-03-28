@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/species.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
+import '../services/local_image_service.dart';
 import '../widgets/id_input_field.dart';
 
 class EditSpeciesScreen extends StatefulWidget {
@@ -21,6 +24,10 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
   late TextEditingController _colorController;
   late TextEditingController _descriptionController;
 
+  String? _photoUrl;
+  File? _localPhotoFile;
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +36,40 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
     _latinNameController = TextEditingController(text: widget.species?.latinName ?? '');
     _colorController = TextEditingController(text: widget.species?.color ?? '');
     _descriptionController = TextEditingController(text: widget.species?.description ?? '');
+    _photoUrl = widget.species?.photoUrl;
+    _loadLocalPhoto();
+  }
+
+  Future<void> _loadLocalPhoto() async {
+    if (_photoUrl != null && !LocalImageService.isRemoteUrl(_photoUrl!)) {
+      final file = await LocalImageService.getLocalFile(_photoUrl!);
+      if (mounted) {
+        setState(() {
+          _localPhotoFile = file;
+        });
+      }
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      
+      if (pickedFile != null && mounted) {
+        setState(() {
+          _localPhotoFile = File(pickedFile.path);
+          // Clear _photoUrl because we have a new unsaved local file
+          _photoUrl = null; 
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
   }
 
   @override
@@ -58,12 +99,23 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
         }
       }
 
+      String? finalPhotoUrl = _photoUrl;
+      
+      // If we have a new local photo file that hasn't been saved to app storage yet
+      if (_localPhotoFile != null && _photoUrl == null) {
+         final savedPath = await LocalImageService.saveImageLocally(_localPhotoFile!, id);
+         if (savedPath != null) {
+           finalPhotoUrl = savedPath;
+         }
+      }
+
       final species = Species(
         id: id,
         name: _nameController.text.trim(),
         latinName: _latinNameController.text.trim().isEmpty ? null : _latinNameController.text.trim(),
         color: _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
         description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+        photoUrl: finalPhotoUrl,
       );
 
       await MockDatabaseService.addSpecies(species);
@@ -88,6 +140,8 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
           key: _formKey,
           child: Column(
             children: [
+              _buildPhotoPicker(),
+              const SizedBox(height: 24),
               IdInputField(
                 controller: _idController,
                 label: 'Species ID (S-XXX)',
@@ -128,6 +182,58 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPhotoPicker() {
+    return Column(
+      children: [
+        Container(
+          height: 200,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            border: Border.all(color: Colors.yellow),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: _localPhotoFile != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(7),
+                  child: Image.file(_localPhotoFile!, fit: BoxFit.cover),
+                )
+              : const Center(
+                  child: Icon(Icons.image_not_supported, size: 64, color: Colors.white24),
+                ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => _pickImage(ImageSource.camera),
+                icon: const Icon(Icons.camera_alt),
+                label: const Text('CAMERA'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => _pickImage(ImageSource.gallery),
+                icon: const Icon(Icons.photo_library),
+                label: const Text('GALLERY'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

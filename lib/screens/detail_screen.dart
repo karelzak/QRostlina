@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../l10n/app_localizations.dart';
 import '../models/species.dart';
 import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
 import '../services/csv_service.dart';
+import '../services/local_image_service.dart';
 import '../widgets/search_dialog.dart';
 import 'edit_species_screen.dart';
 import 'edit_location_screen.dart';
@@ -24,6 +27,7 @@ class _DetailScreenState extends State<DetailScreen> {
   List<String>? _locations; // For Species
   Map<String, Species> _speciesMap = {};
   bool _loading = true;
+  File? _localPhotoFile;
 
   // Summary counts
   int _bedInstanceCount = 0;
@@ -42,13 +46,19 @@ class _DetailScreenState extends State<DetailScreen> {
     _bedInstanceCount = 0;
     _crateInstanceCount = 0;
     _uniqueSpeciesInLocationCount = 0;
-    
+    _localPhotoFile = null;
+
     switch (widget.type) {
       case ScannedType.species:
         _data = await MockDatabaseService.getSpeciesById(widget.id);
         if (_data != null) {
+          final s = _data as Species;
           _locations = await MockDatabaseService.getLocationsForSpecies(widget.id);
-          _speciesMap[widget.id] = _data as Species;
+          _speciesMap[widget.id] = s;
+
+          if (s.photoUrl != null && !LocalImageService.isRemoteUrl(s.photoUrl!)) {
+            _localPhotoFile = await LocalImageService.getLocalFile(s.photoUrl!);
+          }
 
           for (var loc in _locations!) {
             if (loc.startsWith('B-')) {
@@ -530,19 +540,25 @@ class _DetailScreenState extends State<DetailScreen> {
       final s = _data as Species;
       return Card(
         color: Colors.grey[900],
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _infoRow('Name', s.name),
-              _infoRow('Latin', s.latinName ?? '-'),
-              _infoRow('Color', s.color ?? '-'),
-              const SizedBox(height: 8),
-              const Text('Description:', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
-              Text(s.description ?? 'No description', style: const TextStyle(fontSize: 18)),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildPhotoHeader(s),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _infoRow('Name', s.name),
+                  _infoRow('Latin', s.latinName ?? '-'),
+                  _infoRow('Color', s.color ?? '-'),
+                  const SizedBox(height: 8),
+                  const Text('Description:', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
+                  Text(s.description ?? 'No description', style: const TextStyle(fontSize: 18)),
+                ],
+              ),
+            ),
+          ],
         ),
       );
     } else if (_data is Bed) {
@@ -594,6 +610,33 @@ class _DetailScreenState extends State<DetailScreen> {
           Text('$label: ', style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 18)),
           Expanded(child: Text(value, style: const TextStyle(fontSize: 18))),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPhotoHeader(Species species) {
+    if (species.photoUrl == null) return const SizedBox();
+
+    return Container(
+      height: 250,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+        border: Border.all(color: Colors.yellow, width: 1),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+        child: LocalImageService.isRemoteUrl(species.photoUrl!)
+            ? CachedNetworkImage(
+                imageUrl: species.photoUrl!,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.yellow)),
+                errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.red),
+              )
+            : _localPhotoFile != null
+                ? Image.file(_localPhotoFile!, fit: BoxFit.cover)
+                : const Center(child: Icon(Icons.broken_image, size: 64, color: Colors.white24)),
       ),
     );
   }
