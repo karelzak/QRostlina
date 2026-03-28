@@ -20,7 +20,6 @@
     - **C-ID (Crates):** Simple list of species stored in the crate.
 - **Scanning Logic:**
   - **S-ID:** Open Species card, show its locations.
-  - **P-ID:** (Deprecated) Notify user that individual plant tracking is no longer used.
   - **B-ID:** Show bed visual map, allow adding/removing species to cells.
   - **C-ID:** Show crate contents, allow adding/removing species from list.
 

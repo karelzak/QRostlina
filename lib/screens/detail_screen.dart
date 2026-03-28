@@ -457,7 +457,7 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Remove (Plant Died)', style: TextStyle(color: Colors.white)),
+              title: const Text('Remove (Died)', style: TextStyle(color: Colors.white)),
               onTap: () async {
                 Navigator.pop(context);
                 await MockDatabaseService.setSpeciesAtBedCell(widget.id, line, row, null);
