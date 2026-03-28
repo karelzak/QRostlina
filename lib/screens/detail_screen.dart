@@ -295,7 +295,12 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
             const Divider(color: Colors.yellow),
             const SizedBox(height: 8),
-            _buildGridMap(),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: _buildGridMap(),
+              ),
+            ),
           ],
           if (widget.type == ScannedType.species) ...[
              const SizedBox(height: 24),
