@@ -73,7 +73,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
           name: _nameController.text.trim(),
           row: _extraController.text.trim(),
           length: _length,
-          rowsPerMeter: _rowsPerMeter,
+          rowsPerMeter: _layout == BedLayout.grid ? _rowsPerMeter : 1,
           layout: _layout,
           speciesMap: widget.location is Bed ? (widget.location as Bed).speciesMap : null,
         );
@@ -159,7 +159,16 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                     DropdownMenuItem(value: BedLayout.grid, child: Text('Grid (2 Lines)')),
                     DropdownMenuItem(value: BedLayout.linear, child: Text('Linear (Meters only)')),
                   ],
-                  onChanged: (val) => setState(() => _layout = val!),
+                  onChanged: (val) {
+                    setState(() {
+                      _layout = val!;
+                      if (_layout == BedLayout.linear) {
+                        _rowsPerMeter = 1;
+                      } else if (_rowsPerMeter == 1) {
+                        _rowsPerMeter = 2; // Default for grid
+                      }
+                    });
+                  },
                 ),
                 if (_layout == BedLayout.grid) ...[
                   const SizedBox(height: 16),

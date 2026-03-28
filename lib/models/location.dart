@@ -27,26 +27,23 @@ class Bed extends Location {
     Map<String, String>? speciesMap,
   }) : speciesMap = speciesMap ?? {};
 
-  int get totalLines => 2; // Always 2 lines (Left/Right)
+  int get totalLines => layout == BedLayout.grid ? 2 : 1;
   int get rowsPerMeterEffective => layout == BedLayout.grid ? rowsPerMeter : 1;
   int get totalRows => length * rowsPerMeterEffective;
   int get totalCells => totalLines * totalRows;
 
-  bool get isConsistent {
-    if (layout == BedLayout.linear && totalLines > 1) return false;
-    return true;
-  }
+  bool get isConsistent => true; // Now that totalLines is dynamic
 
   String formatPosition(int? line, int? row) {
     if (row == null) return 'N/A';
     
     int meter = ((row - 1) / rowsPerMeterEffective).floor() + 1;
-    String lineStr = line == 1 ? 'L' : 'R';
 
     if (layout == BedLayout.linear) {
-      return '$id-${meter}M-$lineStr';
+      return '$id-${meter}M';
     }
 
+    String lineStr = line == 1 ? 'L' : 'R';
     int subRow = ((row - 1) % rowsPerMeterEffective) + 1;
     return '$id-${meter}M-$subRow$lineStr';
   }

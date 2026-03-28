@@ -314,34 +314,42 @@ class _DetailScreenState extends State<DetailScreen> {
                 ],
               ),
             ),
-            Row(
-              children: [
-                Expanded(child: Center(child: Text("LEFT", style: TextStyle(color: Colors.yellow.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)))),
-                Expanded(child: Center(child: Text("RIGHT", style: TextStyle(color: Colors.yellow.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)))),
-              ],
-            ),
+            if (bed.totalLines > 1)
+              Row(
+                children: [
+                  Expanded(child: Center(child: Text("LEFT", style: TextStyle(color: Colors.yellow.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)))),
+                  Expanded(child: Center(child: Text("RIGHT", style: TextStyle(color: Colors.yellow.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)))),
+                ],
+              )
+            else
+              Center(child: Text("CENTER", style: TextStyle(color: Colors.yellow.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold))),
             const SizedBox(height: 4),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 1.8,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: bed.totalLines,
+                childAspectRatio: bed.totalLines == 1 ? 4.0 : 1.8,
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
               ),
-              itemCount: 2 * bed.rowsPerMeterEffective,
+              itemCount: bed.totalLines * bed.rowsPerMeterEffective,
               itemBuilder: (context, cellIdx) {
-                int lineIdx = (cellIdx % 2) + 1;
-                int subRow = (cellIdx / 2).floor() + 1;
+                int lineIdx = (cellIdx % bed.totalLines) + 1;
+                int subRow = (cellIdx / bed.totalLines).floor() + 1;
                 int rowIdx = (meter - 1) * bed.rowsPerMeterEffective + subRow;
 
                 final key = "$lineIdx-$rowIdx";
                 final speciesId = bed.speciesMap[key];
                 final species = speciesId != null ? _speciesMap[speciesId] : null;
                 
-                String lineStr = lineIdx == 1 ? 'L' : 'R';
-                String cellLabel = bed.layout == BedLayout.grid ? "$subRow$lineStr" : lineStr;
+                String cellLabel = "";
+                if (bed.layout == BedLayout.grid) {
+                   String lineStr = lineIdx == 1 ? 'L' : 'R';
+                   cellLabel = "$subRow$lineStr";
+                } else {
+                   cellLabel = "METER $meter";
+                }
 
                 return GestureDetector(
                   onLongPress: speciesId != null ? () async {

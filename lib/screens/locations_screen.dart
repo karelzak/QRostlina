@@ -127,7 +127,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text(
-                        'ERROR: LINEAR BUT 2 LINES',
+                        'DATA ERROR',
                         style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                       ),
                     ),
