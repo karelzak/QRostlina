@@ -146,56 +146,60 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: Column(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IdInputField(
-                controller: _idController,
-                label: 'Species ID (S-XXX)',
-                type: ScannedType.species,
-                enabled: !isEditing,
-                validator: (val) {
-                  if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('S-')) {
-                    return 'Required (e.g. S-001)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _nameController,
-                label: 'Variety Name',
-                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(controller: _latinNameController, label: 'Latin Name'),
-              const SizedBox(height: 16),
-              _buildTextField(controller: _colorController, label: 'Color'),
-              const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: _buildTextField(
+              Expanded(
+                flex: 3,
+                child: Column(
+                  children: [
+                    IdInputField(
+                      controller: _idController,
+                      label: 'Species ID (S-XXX)',
+                      type: ScannedType.species,
+                      enabled: !isEditing,
+                      validator: (val) {
+                        if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('S-')) {
+                          return 'Required (e.g. S-001)';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _nameController,
+                      label: 'Variety Name',
+                      validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(controller: _latinNameController, label: 'Latin Name'),
+                    const SizedBox(height: 16),
+                    _buildTextField(controller: _colorController, label: 'Color'),
+                    const SizedBox(height: 16),
+                    _buildTextField(
                       controller: _descriptionController,
                       label: 'Description',
-                      maxLines: 8,
+                      maxLines: 5,
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: _buildPhotoPicker(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _save,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 60),
+                  ],
                 ),
-                child: const Text('SAVE SPECIES'),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  children: [
+                    _buildPhotoPicker(),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      onPressed: _save,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 80),
+                      ),
+                      child: const Text('SAVE'),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
