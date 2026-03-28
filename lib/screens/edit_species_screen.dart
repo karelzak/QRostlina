@@ -155,51 +155,41 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
           key: _formKey,
           child: Column(
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      children: [
-                        IdInputField(
-                          controller: _idController,
-                          label: 'Species ID (S-XXX)',
-                          type: ScannedType.species,
-                          enabled: !isEditing,
-                          validator: (val) {
-                            if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('S-')) {
-                              return 'Required (e.g. S-001)';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          controller: _nameController,
-                          label: 'Variety Name',
-                          validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(controller: _latinNameController, label: 'Latin Name'),
-                        const SizedBox(height: 16),
-                        _buildTextField(controller: _colorController, label: 'Color'),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          controller: _descriptionController,
-                          label: 'Description',
-                          maxLines: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    flex: 1,
-                    child: _buildPhotoPicker(),
-                  ),
-                ],
+              IdInputField(
+                controller: _idController,
+                label: 'Species ID (S-XXX)',
+                type: ScannedType.species,
+                enabled: !isEditing,
+                validator: (val) {
+                  if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('S-')) {
+                    return 'Required (e.g. S-001)';
+                  }
+                  return null;
+                },
               ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                controller: _nameController,
+                label: 'Variety Name',
+                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(controller: _latinNameController, label: 'Latin Name'),
+              const SizedBox(height: 16),
+              _buildTextField(controller: _colorController, label: 'Color'),
+              const SizedBox(height: 16),
+              _buildTextField(
+                controller: _descriptionController,
+                label: 'Description',
+                maxLines: 6,
+              ),
+              const SizedBox(height: 24),
+              const Divider(color: Colors.yellow, thickness: 1),
+              const SizedBox(height: 16),
+              const Text('SPECIES PHOTO', 
+                style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 16),
+              _buildPhotoPicker(),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _save,
