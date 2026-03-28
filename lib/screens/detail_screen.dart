@@ -4,7 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../l10n/app_localizations.dart';
 import '../models/species.dart';
 import '../models/location.dart';
-import '../services/mock_database_service.dart';
+import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
 import '../services/csv_service.dart';
 import '../services/local_image_service.dart';
@@ -58,10 +58,10 @@ class _DetailScreenState extends State<DetailScreen> {
 
     switch (widget.type) {
       case ScannedType.species:
-        newData = await MockDatabaseService.getSpeciesById(widget.id);
+        newData = await locator.db.getSpeciesById(widget.id);
         if (newData != null) {
           final s = newData as Species;
-          newLocations = await MockDatabaseService.getLocationsForSpecies(widget.id);
+          newLocations = await locator.db.getLocationsForSpecies(widget.id);
           newSpeciesMap[widget.id] = s;
 
           if (s.photoUrl != null && !LocalImageService.isRemoteUrl(s.photoUrl!)) {
@@ -78,14 +78,14 @@ class _DetailScreenState extends State<DetailScreen> {
         }
         break;
       case ScannedType.bed:
-        newData = await MockDatabaseService.getBedById(widget.id);
+        newData = await locator.db.getBedById(widget.id);
         if (newData != null) {
           final bed = newData as Bed;
           final uniqueIds = <String>{};
           for (var sId in bed.speciesMap.values) {
             uniqueIds.add(sId);
             if (!newSpeciesMap.containsKey(sId)) {
-              final s = await MockDatabaseService.getSpeciesById(sId);
+              final s = await locator.db.getSpeciesById(sId);
               if (s != null) newSpeciesMap[sId] = s;
             }
           }
@@ -99,13 +99,13 @@ class _DetailScreenState extends State<DetailScreen> {
         }
         break;
       case ScannedType.crate:
-        newData = await MockDatabaseService.getCrateById(widget.id);
+        newData = await locator.db.getCrateById(widget.id);
         if (newData != null) {
           final crate = newData as Crate;
           newUniqueSpeciesInLocationCount = crate.speciesIds.length;
           for (var sId in crate.speciesIds) {
             if (!newSpeciesMap.containsKey(sId)) {
-              final s = await MockDatabaseService.getSpeciesById(sId);
+              final s = await locator.db.getSpeciesById(sId);
               if (s != null) newSpeciesMap[sId] = s;
             }
           }
@@ -157,7 +157,7 @@ class _DetailScreenState extends State<DetailScreen> {
     );
 
     if (confirmed == true && mounted) {
-      await MockDatabaseService.clearLocation(widget.id);
+      await locator.db.clearLocation(widget.id);
       _loadData(showLoading: false);
     }
   }
@@ -432,7 +432,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
                 return GestureDetector(
                   onLongPress: speciesId != null ? () async {
-                    await MockDatabaseService.setSpeciesAtBedCell(bed.id, lineIdx, rowIdx, null);
+                    await locator.db.setSpeciesAtBedCell(bed.id, lineIdx, rowIdx, null);
                     _loadData(showLoading: false);
                   } : null,
                   onTap: () async {
@@ -503,7 +503,7 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   void _selectSpeciesForCell(int line, int row) async {
-    final allSpecies = await MockDatabaseService.getAllSpecies();
+    final allSpecies = await locator.db.getAllSpecies();
     final items = allSpecies.map((s) => SearchItem(id: s.id, name: s.name, subtitle: s.latinName)).toList();
 
     if (!mounted) return;
@@ -513,7 +513,7 @@ class _DetailScreenState extends State<DetailScreen> {
     );
 
     if (result != null && mounted) {
-      await MockDatabaseService.setSpeciesAtBedCell(widget.id, line, row, result);
+      await locator.db.setSpeciesAtBedCell(widget.id, line, row, result);
       _loadData(showLoading: false);
     }
   }
@@ -552,7 +552,7 @@ class _DetailScreenState extends State<DetailScreen> {
               title: const Text('Remove (Died)', style: TextStyle(color: Colors.white)),
               onTap: () async {
                 Navigator.pop(context);
-                await MockDatabaseService.setSpeciesAtBedCell(widget.id, line, row, null);
+                await locator.db.setSpeciesAtBedCell(widget.id, line, row, null);
                 _loadData(showLoading: false);
               },
             ),
@@ -563,7 +563,7 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   void _addSpeciesToCrate() async {
-    final allSpecies = await MockDatabaseService.getAllSpecies();
+    final allSpecies = await locator.db.getAllSpecies();
     final items = allSpecies.map((s) => SearchItem(id: s.id, name: s.name, subtitle: s.latinName)).toList();
 
     if (!mounted) return;
@@ -573,7 +573,7 @@ class _DetailScreenState extends State<DetailScreen> {
     );
 
     if (result != null && mounted) {
-      await MockDatabaseService.addSpeciesToCrate(widget.id, result);
+      await locator.db.addSpeciesToCrate(widget.id, result);
       _loadData(showLoading: false);
     }
   }
@@ -777,7 +777,7 @@ class _DetailScreenState extends State<DetailScreen> {
           trailing: IconButton(
             icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
             onPressed: () async {
-              await MockDatabaseService.removeSpeciesFromCrate(crate.id, sId);
+              await locator.db.removeSpeciesFromCrate(crate.id, sId);
               _loadData(showLoading: false);
             },
           ),

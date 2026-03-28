@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/location.dart';
-import '../services/mock_database_service.dart';
+import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
 import '../widgets/id_input_field.dart';
 
@@ -55,7 +55,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
       final id = _idController.text.trim().toUpperCase();
 
       if (widget.location == null) {
-        final isUnique = await MockDatabaseService.isIdUnique(id);
+        final isUnique = await locator.db.isIdUnique(id);
         if (!isUnique) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -86,7 +86,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
         );
       }
 
-      await MockDatabaseService.saveLocation(loc);
+      await locator.db.saveLocation(loc);
       if (mounted) Navigator.pop(context, loc.id);
     }
   }

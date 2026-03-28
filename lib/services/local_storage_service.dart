@@ -5,56 +5,64 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/species.dart';
 import '../models/location.dart';
+import 'database_service.dart';
 import 'qr_scanner_service.dart';
 
-class MockDatabaseService {
-  static bool _initialized = false;
-  static Completer<void>? _initCompleter;
+class LocalStorageService implements DatabaseService {
+  bool _initialized = false;
+  Completer<void>? _initCompleter;
   static const _encoder = JsonEncoder.withIndent('  ');
 
-  static final List<Species> _mockSpecies = [];
-  static final List<Bed> _mockBeds = [];
-  static final List<Crate> _mockCrates = [];
+  final List<Species> _species = [];
+  final List<Bed> _beds = [];
+  final List<Crate> _crates = [];
 
-  static Future<File> _getFile() async {
+  Future<File> _getFile() async {
     final directory = await getApplicationDocumentsDirectory();
     return File('${directory.path}/qrostlina_data.json');
   }
 
-  static Future<void> exportData(String path) async {
+  @override
+  Future<void> initialize() async {
+    await _ensureInitialized();
+  }
+
+  @override
+  Future<void> exportData(String path) async {
     await _ensureInitialized();
     final Map<String, dynamic> data = {
-      'species': _mockSpecies.map((s) => s.toMap()).toList(),
-      'beds': _mockBeds.map((b) => b.toMap()).toList(),
-      'crates': _mockCrates.map((c) => c.toMap()).toList(),
+      'species': _species.map((s) => s.toMap()).toList(),
+      'beds': _beds.map((b) => b.toMap()).toList(),
+      'crates': _crates.map((c) => c.toMap()).toList(),
     };
     final file = File(path);
     await file.writeAsString(_encoder.convert(data));
   }
 
-  static Future<void> importData(String path) async {
+  @override
+  Future<void> importData(String path) async {
     final file = File(path);
     if (!await file.exists()) throw Exception('Import file not found');
     
     final content = await file.readAsString();
     final Map<String, dynamic> data = jsonDecode(content);
 
-    _mockSpecies.clear();
+    _species.clear();
     if (data.containsKey('species')) {
       for (var s in data['species']) {
-        _mockSpecies.add(Species.fromMap(s));
+        _species.add(Species.fromMap(s));
       }
     }
-    _mockBeds.clear();
+    _beds.clear();
     if (data.containsKey('beds')) {
       for (var b in data['beds']) {
-        _mockBeds.add(Bed.fromMap(b));
+        _beds.add(Bed.fromMap(b));
       }
     }
-    _mockCrates.clear();
+    _crates.clear();
     if (data.containsKey('crates')) {
       for (var c in data['crates']) {
-        _mockCrates.add(Crate.fromMap(c));
+        _crates.add(Crate.fromMap(c));
       }
     }
     
@@ -62,7 +70,7 @@ class MockDatabaseService {
     _initialized = true;
   }
 
-  static Future<void> _ensureInitialized() async {
+  Future<void> _ensureInitialized() async {
     if (_initialized) return;
     if (_initCompleter != null) return _initCompleter!.future;
 
@@ -74,21 +82,21 @@ class MockDatabaseService {
         final Map<String, dynamic> data = jsonDecode(content);
 
         if (data.containsKey('species')) {
-          _mockSpecies.clear();
+          _species.clear();
           for (var s in data['species']) {
-            _mockSpecies.add(Species.fromMap(s));
+            _species.add(Species.fromMap(s));
           }
         }
         if (data.containsKey('beds')) {
-          _mockBeds.clear();
+          _beds.clear();
           for (var b in data['beds']) {
-            _mockBeds.add(Bed.fromMap(b));
+            _beds.add(Bed.fromMap(b));
           }
         }
         if (data.containsKey('crates')) {
-          _mockCrates.clear();
+          _crates.clear();
           for (var c in data['crates']) {
-            _mockCrates.add(Crate.fromMap(c));
+            _crates.add(Crate.fromMap(c));
           }
         }
       }
@@ -101,13 +109,13 @@ class MockDatabaseService {
     }
   }
 
-  static Future<void> _saveData() async {
+  Future<void> _saveData() async {
     try {
       final file = await _getFile();
       final Map<String, dynamic> data = {
-        'species': _mockSpecies.map((s) => s.toMap()).toList(),
-        'beds': _mockBeds.map((b) => b.toMap()).toList(),
-        'crates': _mockCrates.map((c) => c.toMap()).toList(),
+        'species': _species.map((s) => s.toMap()).toList(),
+        'beds': _beds.map((b) => b.toMap()).toList(),
+        'crates': _crates.map((c) => c.toMap()).toList(),
       };
       await file.writeAsString(_encoder.convert(data));
     } catch (e) {
@@ -115,22 +123,24 @@ class MockDatabaseService {
     }
   }
 
-  static Future<bool> isIdUnique(String id) async {
+  @override
+  Future<bool> isIdUnique(String id) async {
     await _ensureInitialized();
     final type = QRScannerService.parse(id).type;
     switch (type) {
       case ScannedType.species:
-        return !_mockSpecies.any((s) => s.id == id);
+        return !_species.any((s) => s.id == id);
       case ScannedType.bed:
-        return !_mockBeds.any((b) => b.id == id);
+        return !_beds.any((b) => b.id == id);
       case ScannedType.crate:
-        return !_mockCrates.any((c) => c.id == id);
+        return !_crates.any((c) => c.id == id);
       default:
         return true;
     }
   }
 
-  static Future<String> generateNextId(ScannedType type) async {
+  @override
+  Future<String> generateNextId(ScannedType type) async {
     await _ensureInitialized();
     String prefix;
     List<String> existingIds;
@@ -138,15 +148,15 @@ class MockDatabaseService {
     switch (type) {
       case ScannedType.species:
         prefix = 'S-';
-        existingIds = _mockSpecies.map((e) => e.id).toList();
+        existingIds = _species.map((e) => e.id).toList();
         break;
       case ScannedType.bed:
         prefix = 'B-';
-        existingIds = _mockBeds.map((e) => e.id).toList();
+        existingIds = _beds.map((e) => e.id).toList();
         break;
       case ScannedType.crate:
         prefix = 'C-';
-        existingIds = _mockCrates.map((e) => e.id).toList();
+        existingIds = _crates.map((e) => e.id).toList();
         break;
       default:
         throw Exception('Cannot generate ID for unknown type');
@@ -163,124 +173,137 @@ class MockDatabaseService {
     return '$prefix${nextVal.toString().padLeft(3, '0')}';
   }
 
-  static Future<List<Species>> getAllSpecies() async {
+  @override
+  Future<List<Species>> getAllSpecies() async {
     await _ensureInitialized();
-    return _mockSpecies;
+    return _species;
   }
 
-  static Future<List<Bed>> getAllBeds() async {
+  @override
+  Future<List<Bed>> getAllBeds() async {
     await _ensureInitialized();
-    return _mockBeds;
+    return _beds;
   }
 
-  static Future<List<Crate>> getAllCrates() async {
+  @override
+  Future<List<Crate>> getAllCrates() async {
     await _ensureInitialized();
-    return _mockCrates;
+    return _crates;
   }
 
-  static Future<Species?> getSpeciesById(String id) async {
+  @override
+  Future<Species?> getSpeciesById(String id) async {
     await _ensureInitialized();
     try {
-      return _mockSpecies.firstWhere((s) => s.id == id);
+      return _species.firstWhere((s) => s.id == id);
     } catch (_) {
       return null;
     }
   }
 
-  static Future<Bed?> getBedById(String id) async {
+  @override
+  Future<Bed?> getBedById(String id) async {
     await _ensureInitialized();
     try {
-      return _mockBeds.firstWhere((b) => b.id == id);
+      return _beds.firstWhere((b) => b.id == id);
     } catch (_) {
       return null;
     }
   }
 
-  static Future<Crate?> getCrateById(String id) async {
+  @override
+  Future<Crate?> getCrateById(String id) async {
     await _ensureInitialized();
     try {
-      return _mockCrates.firstWhere((c) => c.id == id);
+      return _crates.firstWhere((c) => c.id == id);
     } catch (_) {
       return null;
     }
   }
 
-  static Future<bool> speciesExists(String id) async {
+  @override
+  Future<bool> speciesExists(String id) async {
     await _ensureInitialized();
-    return _mockSpecies.any((s) => s.id == id);
+    return _species.any((s) => s.id == id);
   }
 
-  static Future<bool> locationExists(String id) async {
+  @override
+  Future<bool> locationExists(String id) async {
     await _ensureInitialized();
     if (id.startsWith('B-')) {
-      return _mockBeds.any((b) => b.id == id);
+      return _beds.any((b) => b.id == id);
     }
     if (id.startsWith('C-')) {
-      return _mockCrates.any((c) => c.id == id);
+      return _crates.any((c) => c.id == id);
     }
     return false;
   }
 
-  static Future<void> addSpecies(Species species) async {
+  @override
+  Future<void> addSpecies(Species species) async {
     await _ensureInitialized();
-    final index = _mockSpecies.indexWhere((s) => s.id == species.id);
+    final index = _species.indexWhere((s) => s.id == species.id);
     if (index >= 0) {
-      _mockSpecies[index] = species;
+      _species[index] = species;
     } else {
-      _mockSpecies.add(species);
+      _species.add(species);
     }
     await _saveData();
   }
 
-  static Future<void> deleteSpecies(String id) async {
+  @override
+  Future<void> deleteSpecies(String id) async {
     await _ensureInitialized();
-    _mockSpecies.removeWhere((s) => s.id == id);
+    _species.removeWhere((s) => s.id == id);
     // Remove from all beds
-    for (var bed in _mockBeds) {
+    for (var bed in _beds) {
       bed.speciesMap.removeWhere((key, value) => value == id);
     }
     // Remove from all crates
-    for (var crate in _mockCrates) {
+    for (var crate in _crates) {
       crate.speciesIds.removeWhere((element) => element == id);
     }
     await _saveData();
   }
 
-  static Future<void> deleteLocation(String id) async {
+  @override
+  Future<void> deleteLocation(String id) async {
     await _ensureInitialized();
     if (id.startsWith('B-')) {
-      _mockBeds.removeWhere((b) => b.id == id);
+      _beds.removeWhere((b) => b.id == id);
     } else if (id.startsWith('C-')) {
-      _mockCrates.removeWhere((c) => c.id == id);
+      _crates.removeWhere((c) => c.id == id);
     }
     await _saveData();
   }
 
-  static Future<void> saveLocation(Location location) async {
+  @override
+  Future<void> saveLocation(Location location) async {
     await _ensureInitialized();
     if (location is Bed) {
-      final index = _mockBeds.indexWhere((b) => b.id == location.id);
+      final index = _beds.indexWhere((b) => b.id == location.id);
       if (index >= 0) {
-        _mockBeds[index] = location;
+        _beds[index] = location;
       } else {
-        _mockBeds.add(location);
+        _beds.add(location);
       }
     } else if (location is Crate) {
-      final index = _mockCrates.indexWhere((c) => c.id == location.id);
+      final index = _crates.indexWhere((c) => c.id == location.id);
       if (index >= 0) {
-        _mockCrates[index] = location;
+        _crates[index] = location;
       } else {
-        _mockCrates.add(location);
+        _crates.add(location);
       }
     }
     await _saveData();
   }
 
-  static Future<List<String>> getLocationsForSpecies(String speciesId) async {
+  @override
+  Future<List<String>> getLocationsForSpecies(String speciesId) async {
     await _ensureInitialized();
     List<String> locations = [];
     
-    for (var bed in _mockBeds) {
+    for (var bed in _beds) {
       bed.speciesMap.forEach((key, sId) {
         if (sId == speciesId) {
           final parts = key.split('-');
@@ -291,7 +314,7 @@ class MockDatabaseService {
       });
     }
 
-    for (var crate in _mockCrates) {
+    for (var crate in _crates) {
       if (crate.speciesIds.contains(speciesId)) {
         locations.add(crate.id);
       }
@@ -300,7 +323,8 @@ class MockDatabaseService {
     return locations;
   }
 
-  static Future<void> setSpeciesAtBedCell(String bedId, int line, int row, String? speciesId) async {
+  @override
+  Future<void> setSpeciesAtBedCell(String bedId, int line, int row, String? speciesId) async {
     await _ensureInitialized();
     final bed = await getBedById(bedId);
     if (bed != null) {
@@ -314,7 +338,8 @@ class MockDatabaseService {
     }
   }
 
-  static Future<void> addSpeciesToCrate(String crateId, String speciesId) async {
+  @override
+  Future<void> addSpeciesToCrate(String crateId, String speciesId) async {
     await _ensureInitialized();
     final crate = await getCrateById(crateId);
     if (crate != null && !crate.speciesIds.contains(speciesId)) {
@@ -323,7 +348,8 @@ class MockDatabaseService {
     }
   }
 
-  static Future<void> removeSpeciesFromCrate(String crateId, String speciesId) async {
+  @override
+  Future<void> removeSpeciesFromCrate(String crateId, String speciesId) async {
     await _ensureInitialized();
     final crate = await getCrateById(crateId);
     if (crate != null) {
@@ -332,7 +358,8 @@ class MockDatabaseService {
     }
   }
 
-  static Future<void> clearLocation(String id) async {
+  @override
+  Future<void> clearLocation(String id) async {
     await _ensureInitialized();
     if (id.startsWith('B-')) {
       final bed = await getBedById(id);

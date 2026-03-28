@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../l10n/app_localizations.dart';
 import '../models/species.dart';
-import '../services/mock_database_service.dart';
+import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
 import '../services/csv_service.dart';
 import '../services/local_image_service.dart';
@@ -39,7 +39,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
       });
     }
 
-    final species = await MockDatabaseService.getAllSpecies();
+    final species = await locator.db.getAllSpecies();
     
     // Create new local versions of data
     Map<String, File?> newLocalThumbnails = {};
@@ -59,8 +59,8 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
       });
     }
 
-    final beds = await MockDatabaseService.getAllBeds();
-    final crates = await MockDatabaseService.getAllCrates();
+    final beds = await locator.db.getAllBeds();
+    final crates = await locator.db.getAllCrates();
 
     final bedCounts = <String, int>{};
     final crateCounts = <String, int>{};
@@ -109,7 +109,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
     );
 
     if (confirmed == true) {
-      await MockDatabaseService.deleteSpecies(id);
+      await locator.db.deleteSpecies(id);
       _refreshList();
     }
   }

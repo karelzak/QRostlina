@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:firebase_storage/firebase_storage.dart';
+import 'service_locator.dart';
 
 class LocalImageService {
   static Future<String?> saveImageLocally(File imageFile, String speciesId) async {
@@ -12,20 +15,42 @@ class LocalImageService {
         await imagesDir.create(recursive: true);
       }
 
-      // Use species ID and timestamp to ensure uniqueness and help with debugging
       final extension = p.extension(imageFile.path);
       final fileName = '${speciesId}_${DateTime.now().millisecondsSinceEpoch}$extension';
       final localFile = File('${imagesDir.path}/$fileName');
 
       await imageFile.copy(localFile.path);
       
-      // Return the relative path or just the filename to keep it portable
-      // Store 'species_images/filename' in the database
-      return 'species_images/$fileName';
+      String relativePath = 'species_images/$fileName';
+
+      // If we are in cloud mode, also upload to Firebase Storage
+      if (locator.isCloudMode) {
+        final cloudUrl = await uploadToCloud(localFile, speciesId);
+        if (cloudUrl != null) {
+          return cloudUrl;
+        }
+      }
+
+      return relativePath;
     } catch (e) {
-      print('Error saving image locally: $e');
+      debugPrint('Error saving image: $e');
       return null;
     }
+  }
+
+  static Future<String?> uploadToCloud(File file, String speciesId) async {
+    if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+      try {
+        final fileName = p.basename(file.path);
+        final ref = FirebaseStorage.instance.ref().child('species_images/$speciesId/$fileName');
+        final uploadTask = await ref.putFile(file);
+        return await uploadTask.ref.getDownloadURL();
+      } catch (e) {
+        debugPrint('Error uploading to Firebase Storage: $e');
+        return null;
+      }
+    }
+    return null;
   }
 
   static Future<File?> getLocalFile(String storedPath) async {
@@ -38,12 +63,30 @@ class LocalImageService {
         return file;
       }
     } catch (e) {
-      print('Error getting local file: $e');
+      debugPrint('Error getting local file: $e');
     }
     return null;
   }
 
   static bool isRemoteUrl(String path) {
     return path.startsWith('http://') || path.startsWith('https://');
+  }
+
+  static Future<void> deleteImage(String path) async {
+    try {
+      if (isRemoteUrl(path)) {
+        if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+          final ref = FirebaseStorage.instance.refFromURL(path);
+          await ref.delete();
+        }
+      } else {
+        final file = await getLocalFile(path);
+        if (file != null && await file.exists()) {
+          await file.delete();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error deleting image: $e');
+    }
   }
 }

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/species.dart';
-import '../services/mock_database_service.dart';
+import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
 import '../services/local_image_service.dart';
 import '../widgets/id_input_field.dart';
@@ -95,7 +95,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
       
       // Check uniqueness for new entries
       if (widget.species == null) {
-        final isUnique = await MockDatabaseService.isIdUnique(id);
+        final isUnique = await locator.db.isIdUnique(id);
         if (!isUnique) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -125,7 +125,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
         photoUrl: finalPhotoUrl,
       );
 
-      await MockDatabaseService.addSpecies(species);
+      await locator.db.addSpecies(species);
       
       if (mounted) {
         // A tiny delay can help if the framework is locked during a transition/build

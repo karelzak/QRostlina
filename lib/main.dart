@@ -5,8 +5,13 @@ import 'screens/scanner_screen.dart';
 import 'screens/species_list_screen.dart';
 import 'screens/locations_screen.dart';
 import 'screens/settings_screen.dart';
+import 'services/service_locator.dart';
+import 'services/auth_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await authService.initialize();
+  await locator.initialize();
   runApp(const QRostlinaApp());
 }
 

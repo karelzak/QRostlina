@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/location.dart';
-import '../services/mock_database_service.dart';
+import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
 import '../services/csv_service.dart';
 import 'detail_screen.dart';
@@ -31,8 +31,8 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
       setState(() => _loading = true);
     }
 
-    final beds = await MockDatabaseService.getAllBeds();
-    final crates = await MockDatabaseService.getAllCrates();
+    final beds = await locator.db.getAllBeds();
+    final crates = await locator.db.getAllCrates();
 
     if (mounted) {
       setState(() {
@@ -144,7 +144,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
     );
 
     if (confirmed == true) {
-      await MockDatabaseService.deleteLocation(id);
+      await locator.db.deleteLocation(id);
       _refreshData();
     }
   }

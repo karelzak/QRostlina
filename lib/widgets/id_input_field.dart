@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/mock_database_service.dart';
+import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
 import '../widgets/qr_scanner_dialog.dart';
 
@@ -44,7 +44,7 @@ class IdInputField extends StatelessWidget {
   }
 
   Future<void> _generate() async {
-    final nextId = await MockDatabaseService.generateNextId(type);
+    final nextId = await locator.db.generateNextId(type);
     controller.text = nextId;
     if (onChanged != null) onChanged!();
   }

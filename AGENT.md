@@ -13,11 +13,27 @@
 ## Technical Architecture
 - **Language:** Dart 3.x
 - **Framework:** Flutter (Mobile/Linux)
-- **Data Model:**
-  - **Species (S-ID):** Name, latin name, description, color. (Root entity)
-  - **Location (B-ID / C-ID):** 
-    - **B-ID (Beds):** 2D Grid (Line L/R, Meter, Sub-row). Structured location tracking.
-    - **C-ID (Crates):** Simple list of species stored in the crate.
+- **Data Layer (Dual-Mode):**
+  - **Local Mode (Linux/Offline):** Uses `MockDatabaseService` with JSON persistence (`qrostlina_data.json`).
+  - **Cloud Mode (Android/Sync):** Uses Firestore for text data and Firebase Storage for images.
+  - **Coexistence:** The app must seamlessly switch between Local and Cloud modes based on settings or platform capabilities. Linux defaults to Local JSON, while Android supports both.
+
+## Phase 2: Cloud Support & Synchronization (In Progress)
+1. **Infrastructure:**
+   - Add Firebase dependencies (`firebase_core`, `cloud_firestore`, `firebase_storage`, `firebase_auth`).
+   - Platform-specific setup (`google-services.json`).
+2. **Data Layer Refactor:**
+   - Abstract `DatabaseService` into an interface.
+   - Implement `FirestoreDatabaseService`.
+   - Implement `LocalStorageService` (formerly `MockDatabaseService`).
+3. **Authentication:**
+   - Implement Google Sign-In in `AuthService`.
+   - Update `SettingsScreen` (AUTH tab) with login/logout and Cloud/Local toggle.
+4. **Image Handling:**
+   - Update `LocalImageService` to handle Firebase Storage uploads/downloads.
+   - Use `cached_network_image` for efficient cloud image display.
+5. **Synchronization:**
+   - Implement "Sync to Cloud" and "Download from Cloud" manual actions in the DATA tab.
 - **Scanning Logic:**
   - **S-ID:** Open Species card, show its locations.
   - **B-ID:** Show bed visual map, allow adding/removing species to cells.

@@ -6,11 +6,11 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/species.dart';
 import '../models/location.dart';
-import 'mock_database_service.dart';
+import 'service_locator.dart';
 
 class CSVService {
   static Future<void> exportSpecies() async {
-    final species = await MockDatabaseService.getAllSpecies();
+    final species = await locator.db.getAllSpecies();
     List<List<dynamic>> rows = [
       ['ID', 'Name', 'Latin Name', 'Color', 'Description']
     ];
@@ -23,7 +23,7 @@ class CSVService {
   }
 
   static Future<void> exportBeds() async {
-    final beds = await MockDatabaseService.getAllBeds();
+    final beds = await locator.db.getAllBeds();
     List<List<dynamic>> rows = [
       ['ID', 'Name', 'Label', 'Length', 'RowsPerMeter', 'Layout', 'SpeciesMap']
     ];
@@ -44,7 +44,7 @@ class CSVService {
   }
 
   static Future<void> exportCrates() async {
-    final crates = await MockDatabaseService.getAllCrates();
+    final crates = await locator.db.getAllCrates();
     List<List<dynamic>> rows = [
       ['ID', 'Name', 'Type', 'SpeciesIDs']
     ];
@@ -73,7 +73,7 @@ class CSVService {
         color: r.length > 3 && r[3].toString().isNotEmpty ? r[3].toString() : null,
         description: r.length > 4 && r[4].toString().isNotEmpty ? r[4].toString() : null,
       );
-      await MockDatabaseService.addSpecies(s);
+      await locator.db.addSpecies(s);
       count++;
     }
     return count;
@@ -101,7 +101,7 @@ class CSVService {
           layout: BedLayout.values.byName(r[5].toString().trim().toLowerCase()),
           speciesMap: Map<String, String>.from(decodedMap),
         );
-        await MockDatabaseService.saveLocation(b);
+        await locator.db.saveLocation(b);
         count++;
       } catch (e) {
         debugPrint('Error importing bed row $i: $e');
@@ -128,7 +128,7 @@ class CSVService {
         type: r[2].toString().trim(),
         speciesIds: speciesIds,
       );
-      await MockDatabaseService.saveLocation(c);
+      await locator.db.saveLocation(c);
       count++;
     }
     return count;
