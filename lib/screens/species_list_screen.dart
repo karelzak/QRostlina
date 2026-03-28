@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../l10n/app_localizations.dart';
 import '../models/species.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
 import '../services/csv_service.dart';
+import '../services/local_image_service.dart';
 import 'detail_screen.dart';
 import 'edit_species_screen.dart';
 
@@ -18,6 +21,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
   late Future<List<Species>> _speciesList;
   Map<String, int> _bedCounts = {};
   Map<String, int> _crateCounts = {};
+  Map<String, File?> _localThumbnails = {};
   bool _countsLoading = true;
 
   @override
@@ -30,7 +34,20 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
     setState(() {
       _speciesList = MockDatabaseService.getAllSpecies();
       _countsLoading = true;
+      _localThumbnails = {};
     });
+
+    final species = await _speciesList;
+    for (var s in species) {
+      if (s.photoUrl != null && !LocalImageService.isRemoteUrl(s.photoUrl!)) {
+        final file = await LocalImageService.getLocalFile(s.photoUrl!);
+        if (mounted) {
+          setState(() {
+            _localThumbnails[s.id] = file;
+          });
+        }
+      }
+    }
 
     final beds = await MockDatabaseService.getAllBeds();
     final crates = await MockDatabaseService.getAllCrates();
@@ -137,6 +154,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
+                  leading: _buildThumbnail(s),
                   title: Text(
                     s.name.toUpperCase(),
                     style: const TextStyle(color: Colors.yellow, fontSize: 22, fontWeight: FontWeight.bold),
@@ -196,6 +214,51 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
         backgroundColor: Colors.yellow,
         foregroundColor: Colors.black,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildThumbnail(Species species) {
+    if (species.photoUrl == null) {
+      return Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.black26,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: const Icon(Icons.local_florist, color: Colors.white24, size: 30),
+      );
+    }
+
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.yellow.withOpacity(0.5)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(7),
+        child: LocalImageService.isRemoteUrl(species.photoUrl!)
+            ? CachedNetworkImage(
+                imageUrl: species.photoUrl!,
+                fit: BoxFit.cover,
+                memCacheWidth: 120, // Low-res cache for list performance
+                memCacheHeight: 120,
+                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2, color: Colors.yellow)),
+                errorWidget: (context, url, error) => const Icon(Icons.broken_image, color: Colors.red),
+              )
+            : _localThumbnails[species.id] != null
+                ? Image.file(
+                    _localThumbnails[species.id]!,
+                    fit: BoxFit.cover,
+                    cacheWidth: 120, // Low-res cache for list performance
+                    cacheHeight: 120,
+                  )
+                : const Icon(Icons.image, color: Colors.white12),
       ),
     );
   }

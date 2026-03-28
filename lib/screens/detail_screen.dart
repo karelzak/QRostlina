@@ -28,6 +28,7 @@ class _DetailScreenState extends State<DetailScreen> {
   Map<String, Species> _speciesMap = {};
   bool _loading = true;
   File? _localPhotoFile;
+  Map<String, File?> _localThumbnails = {};
 
   // Summary counts
   int _bedInstanceCount = 0;
@@ -47,6 +48,7 @@ class _DetailScreenState extends State<DetailScreen> {
     _crateInstanceCount = 0;
     _uniqueSpeciesInLocationCount = 0;
     _localPhotoFile = null;
+    _localThumbnails = {};
 
     switch (widget.type) {
       case ScannedType.species:
@@ -82,6 +84,12 @@ class _DetailScreenState extends State<DetailScreen> {
             }
           }
           _uniqueSpeciesInLocationCount = uniqueIds.length;
+          
+          for (var s in _speciesMap.values) {
+            if (s.photoUrl != null && !LocalImageService.isRemoteUrl(s.photoUrl!)) {
+              _localThumbnails[s.id] = await LocalImageService.getLocalFile(s.photoUrl!);
+            }
+          }
         }
         break;
       case ScannedType.crate:
@@ -93,6 +101,12 @@ class _DetailScreenState extends State<DetailScreen> {
             if (!_speciesMap.containsKey(sId)) {
               final s = await MockDatabaseService.getSpeciesById(sId);
               if (s != null) _speciesMap[sId] = s;
+            }
+          }
+
+          for (var s in _speciesMap.values) {
+            if (s.photoUrl != null && !LocalImageService.isRemoteUrl(s.photoUrl!)) {
+              _localThumbnails[s.id] = await LocalImageService.getLocalFile(s.photoUrl!);
             }
           }
         }
@@ -431,16 +445,20 @@ class _DetailScreenState extends State<DetailScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
+                                      if (species?.photoUrl != null) ...[
+                                        _buildGridThumbnail(species!),
+                                        const SizedBox(height: 2),
+                                      ],
                                       Text(
                                         species?.name ?? speciesId,
                                         style: const TextStyle(
                                           color: Colors.black, 
-                                          fontSize: 14, 
+                                          fontSize: 12, 
                                           fontWeight: FontWeight.bold,
                                           overflow: TextOverflow.ellipsis
                                         ),
                                         textAlign: TextAlign.center,
-                                        maxLines: 2,
+                                        maxLines: species?.photoUrl != null ? 1 : 2,
                                       ),
                                     ],
                                   ),
@@ -653,6 +671,37 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
+  Widget _buildGridThumbnail(Species species, {double size = 30}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.black26),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: LocalImageService.isRemoteUrl(species.photoUrl!)
+            ? CachedNetworkImage(
+                imageUrl: species.photoUrl!,
+                fit: BoxFit.cover,
+                memCacheWidth: 80, // High efficiency for tiny icons
+                memCacheHeight: 80,
+                errorWidget: (context, url, error) => const Icon(Icons.broken_image, size: 10, color: Colors.red),
+              )
+            : _localThumbnails[species.id] != null
+                ? Image.file(
+                    _localThumbnails[species.id]!,
+                    fit: BoxFit.cover,
+                    cacheWidth: 80,
+                    cacheHeight: 80,
+                  )
+                : const Icon(Icons.image, size: 10, color: Colors.white12),
+      ),
+    );
+  }
+
   Widget _buildLocationsList() {
     if (_locations == null || _locations!.isEmpty) {
       return const Text('Not used in any location.', style: TextStyle(fontStyle: FontStyle.italic));
@@ -695,7 +744,9 @@ class _DetailScreenState extends State<DetailScreen> {
         final species = _speciesMap[sId];
         return ListTile(
           tileColor: Colors.grey[900],
-          leading: const Icon(Icons.local_florist, color: Colors.yellow),
+          leading: species != null && species.photoUrl != null 
+            ? _buildGridThumbnail(species, size: 40)
+            : const Icon(Icons.local_florist, color: Colors.yellow),
           title: Text(species?.name ?? sId, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(sId),
           trailing: IconButton(
