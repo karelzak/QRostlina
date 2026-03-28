@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -8,6 +9,7 @@ import 'qr_scanner_service.dart';
 
 class MockDatabaseService {
   static bool _initialized = false;
+  static Completer<void>? _initCompleter;
 
   static final List<Species> _mockSpecies = [];
   static final List<Bed> _mockBeds = [];
@@ -61,7 +63,9 @@ class MockDatabaseService {
 
   static Future<void> _ensureInitialized() async {
     if (_initialized) return;
-    _initialized = true;
+    if (_initCompleter != null) return _initCompleter!.future;
+
+    _initCompleter = Completer<void>();
     try {
       final file = await _getFile();
       if (await file.exists()) {
@@ -87,8 +91,12 @@ class MockDatabaseService {
           }
         }
       }
+      _initialized = true;
+      _initCompleter!.complete();
     } catch (e) {
       debugPrint('Error loading data: $e');
+      _initCompleter!.complete();
+      _initCompleter = null;
     }
   }
 

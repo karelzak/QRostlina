@@ -109,6 +109,9 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
           itemCount: beds.length,
           itemBuilder: (context, index) {
             final bed = beds[index];
+            final uniqueSpeciesCount = bed.speciesMap.values.toSet().length;
+            final totalOccupancy = bed.speciesMap.length;
+
             return ListTile(
               leading: const Icon(Icons.grid_view, color: Colors.yellow),
               title: Row(
@@ -130,7 +133,20 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
                     ),
                 ],
               ),
-              subtitle: Text('${bed.id} | Row: ${bed.row ?? "-"}', style: const TextStyle(color: Colors.white70)),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${bed.id} | Row: ${bed.row ?? "-"}', style: const TextStyle(color: Colors.white70)),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      _countBadge('Species: $uniqueSpeciesCount', Colors.orange),
+                      const SizedBox(width: 8),
+                      _countBadge('Occupied: $totalOccupancy/${bed.totalCells}', Colors.green),
+                    ],
+                  ),
+                ],
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -141,13 +157,14 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
                   const Icon(Icons.chevron_right, color: Colors.yellow),
                 ],
               ),
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => DetailScreen(id: bed.id, type: ScannedType.bed),
                   ),
                 );
+                setState(() {});
               },
             );
           },
@@ -168,10 +185,19 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
           itemCount: crates.length,
           itemBuilder: (context, index) {
             final crate = crates[index];
+            final speciesCount = crate.speciesIds.length;
+
             return ListTile(
               leading: const Icon(Icons.inventory_2, color: Colors.yellow),
               title: Text(crate.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              subtitle: Text('${crate.id} | Type: ${crate.type}', style: const TextStyle(color: Colors.white70)),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${crate.id} | Type: ${crate.type}', style: const TextStyle(color: Colors.white70)),
+                  const SizedBox(height: 4),
+                  _countBadge('Species: $speciesCount', Colors.blue),
+                ],
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -182,18 +208,34 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
                   const Icon(Icons.chevron_right, color: Colors.yellow),
                 ],
               ),
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => DetailScreen(id: crate.id, type: ScannedType.crate),
                   ),
                 );
+                setState(() {});
               },
             );
           },
         );
       },
+    );
+  }
+
+  Widget _countBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+      ),
     );
   }
 }
