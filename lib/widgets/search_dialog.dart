@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/qr_scanner_service.dart';
+import 'qr_scanner_dialog.dart';
 
 class SearchItem {
   final String id;
@@ -66,12 +68,38 @@ class _SearchDialogState extends State<SearchDialog> {
               controller: _searchController,
               autofocus: true,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Search by name or ID...',
-                hintStyle: TextStyle(color: Colors.white54),
-                prefixIcon: Icon(Icons.search, color: Colors.yellow),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.yellow, width: 2)),
+                hintStyle: const TextStyle(color: Colors.white54),
+                prefixIcon: const Icon(Icons.search, color: Colors.yellow),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.qr_code_scanner, color: Colors.yellow),
+                  onPressed: () async {
+                    final code = await showDialog<String>(
+                      context: context,
+                      builder: (context) => const QRScannerDialog(),
+                    );
+                    if (code != null && context.mounted) {
+                      final result = QRScannerService.parse(code);
+                      if (result.type == ScannedType.species) {
+                        // Attempt to find the exact item in the list
+                        try {
+                          final item = widget.items.firstWhere((i) => i.id == result.id);
+                          Navigator.pop(context, item.id);
+                        } catch (_) {
+                          // Filter the list by the scanned ID if not an exact match in current list
+                          _searchController.text = result.id;
+                        }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Not a Species QR code (S-xxx expected)')),
+                        );
+                      }
+                    }
+                  },
+                ),
+                enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.yellow, width: 2)),
               ),
             ),
             const SizedBox(height: 16),
