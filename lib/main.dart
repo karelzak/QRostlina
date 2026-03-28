@@ -63,6 +63,11 @@ class QRostlinaApp extends StatelessWidget {
             textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
+        popupMenuTheme: PopupMenuThemeData(
+          backgroundColor: Colors.grey[900],
+          surfaceTintColor: Colors.transparent,
+          textStyle: const TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       home: const MainMenuScreen(),
     );
