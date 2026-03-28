@@ -120,13 +120,13 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _nameController,
-                label: 'Name / Label',
+                label: 'Name',
                 validator: (val) => (val == null || val.isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _extraController,
-                label: widget.isBed ? 'Field Row (e.g. A)' : 'Crate Type (e.g. Plastic)',
+                label: widget.isBed ? 'Label (e.g. A)' : 'Crate Type (e.g. Plastic)',
               ),
               if (widget.isBed) ...[
                 const SizedBox(height: 16),

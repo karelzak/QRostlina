@@ -516,7 +516,7 @@ class _DetailScreenState extends State<DetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _infoRow('Name', b.name),
-              _infoRow('Field Row', b.row ?? '-'),
+              _infoRow('Label', b.row ?? '-'),
               _infoRow('Length', '${b.length} Meters'),
               _infoRow('Layout', '${b.layout.name.toUpperCase()} (2 Lines x ${b.rowsPerMeterEffective} Rows/m)'),
             ],
