@@ -159,7 +159,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    flex: 3,
+                    flex: 1,
                     child: Column(
                       children: [
                         IdInputField(
@@ -188,14 +188,14 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
                         _buildTextField(
                           controller: _descriptionController,
                           label: 'Description',
-                          maxLines: 8,
+                          maxLines: 6,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 24),
                   Expanded(
-                    flex: 2,
+                    flex: 1,
                     child: _buildPhotoPicker(),
                   ),
                 ],
@@ -220,22 +220,24 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
       children: [
         Stack(
           children: [
-            Container(
-              height: 250,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                border: Border.all(color: Colors.yellow),
-                borderRadius: BorderRadius.circular(8),
+            AspectRatio(
+              aspectRatio: 1, // Keep it square
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  border: Border.all(color: Colors.yellow),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: _localPhotoFile != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(7),
+                        child: Image.file(_localPhotoFile!, fit: BoxFit.cover),
+                      )
+                    : const Center(
+                        child: Icon(Icons.image_not_supported, size: 64, color: Colors.white24),
+                      ),
               ),
-              child: _localPhotoFile != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(7),
-                      child: Image.file(_localPhotoFile!, fit: BoxFit.cover),
-                    )
-                  : const Center(
-                      child: Icon(Icons.image_not_supported, size: 64, color: Colors.white24),
-                    ),
             ),
             if (_localPhotoFile != null)
               Positioned(
@@ -262,6 +264,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[800],
                   foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),
@@ -274,6 +277,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[800],
                   foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),
