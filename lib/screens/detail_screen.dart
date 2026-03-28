@@ -408,7 +408,7 @@ class _DetailScreenState extends State<DetailScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: bed.totalLines,
-                childAspectRatio: bed.totalLines == 1 ? 3.5 : 1.4,
+                childAspectRatio: bed.totalLines == 1 ? 3.5 : 1.0,
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
               ),
@@ -456,7 +456,7 @@ class _DetailScreenState extends State<DetailScreen> {
                           child: Text(
                             cellLabel,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 12,
                               color: speciesId != null ? Colors.black54 : Colors.yellow.withOpacity(0.5),
                               fontWeight: FontWeight.bold,
                             ),
@@ -465,26 +465,25 @@ class _DetailScreenState extends State<DetailScreen> {
                         Center(
                           child: speciesId != null
                               ? Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                  child: Row(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      if (species?.photoUrl != null) ...[
-                                        _buildGridThumbnail(species!, size: 50),
-                                        const SizedBox(width: 8),
-                                      ],
-                                      Expanded(
-                                        child: Text(
-                                          species?.name ?? speciesId,
-                                          style: const TextStyle(
-                                            color: Colors.black, 
-                                            fontSize: 14, 
-                                            fontWeight: FontWeight.bold,
-                                            overflow: TextOverflow.ellipsis
-                                          ),
-                                          textAlign: species?.photoUrl != null ? TextAlign.left : TextAlign.center,
-                                          maxLines: 2,
+                                      const SizedBox(height: 10), // Offset for cellLabel
+                                      Text(
+                                        species?.name ?? speciesId,
+                                        style: const TextStyle(
+                                          color: Colors.black, 
+                                          fontSize: 11, 
+                                          fontWeight: FontWeight.bold,
+                                          overflow: TextOverflow.ellipsis
                                         ),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
                                       ),
+                                      const SizedBox(height: 2),
+                                      if (species?.photoUrl != null) 
+                                        Expanded(child: _buildGridThumbnail(species!)),
                                     ],
                                   ),
                                 )
@@ -691,33 +690,36 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildGridThumbnail(Species species, {double size = 30}) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.black26),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(3),
-        child: LocalImageService.isRemoteUrl(species.photoUrl!)
-            ? CachedNetworkImage(
-                imageUrl: species.photoUrl!,
-                fit: BoxFit.cover,
-                memCacheWidth: 160, // Much sharper for 80px icons
-                memCacheHeight: 160,
-                errorWidget: (context, url, error) => const Icon(Icons.broken_image, size: 10, color: Colors.red),
-              )
-            : _localThumbnails[species.id] != null
-                ? Image.file(
-                    _localThumbnails[species.id]!,
-                    fit: BoxFit.cover,
-                    cacheWidth: 160,
-                    cacheHeight: 160,
-                  )
-                : const Icon(Icons.image, size: 10, color: Colors.white12),
+  Widget _buildGridThumbnail(Species species, {double? size}) {
+    return AspectRatio(
+      aspectRatio: 1.0,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.black26),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: LocalImageService.isRemoteUrl(species.photoUrl!)
+              ? CachedNetworkImage(
+                  imageUrl: species.photoUrl!,
+                  fit: BoxFit.cover,
+                  memCacheWidth: 160, // Much sharper for 80px icons
+                  memCacheHeight: 160,
+                  errorWidget: (context, url, error) => const Icon(Icons.broken_image, size: 10, color: Colors.red),
+                )
+              : _localThumbnails[species.id] != null
+                  ? Image.file(
+                      _localThumbnails[species.id]!,
+                      fit: BoxFit.cover,
+                      cacheWidth: 160,
+                      cacheHeight: 160,
+                    )
+                  : const Icon(Icons.image, size: 10, color: Colors.white12),
+        ),
       ),
     );
   }
