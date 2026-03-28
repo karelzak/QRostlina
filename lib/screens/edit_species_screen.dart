@@ -126,7 +126,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
           if (mounted) {
             final navigator = Navigator.of(context);
             if (navigator.canPop()) {
-              navigator.pop(species.id);
+              navigator.pop(true);
             }
           }
         });
