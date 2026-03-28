@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 import '../services/mock_database_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -37,36 +38,48 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     }
   }
 
-  Future<String> _getExportPath() async {
-    Directory? docDir = await getApplicationDocumentsDirectory();
-    return '${docDir.path}/qrostlina_export.json';
-  }
-
   void _export() async {
     try {
-      final path = await _getExportPath();
-      await MockDatabaseService.exportData(path);
-      setState(() => _statusMessage = 'Exported to Documents');
+      String? outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save Full Data Dump',
+        fileName: 'qrostlina_dump.json',
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (outputFile != null) {
+        await MockDatabaseService.exportData(outputFile);
+        setState(() => _statusMessage = 'Dumped to file');
+      }
     } catch (e) {
-      setState(() => _statusMessage = 'Export failed: $e');
+      setState(() => _statusMessage = 'Dump failed: $e');
     }
   }
 
   void _import() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+
+    if (result == null || result.files.single.path == null) return;
+
+    final path = result.files.single.path!;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('Import Data?', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'This will OVERWRITE all current data with the contents of qrostlina_export.json. Continue?',
-          style: TextStyle(color: Colors.white70),
+        title: const Text('Restore Data?', style: TextStyle(color: Colors.white)),
+        content: Text(
+          'This will OVERWRITE all current data with the contents of ${result.files.single.name}. Continue?',
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('IMPORT', style: TextStyle(color: Colors.red)),
+            child: const Text('RESTORE', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -74,11 +87,10 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
 
     if (confirmed == true) {
       try {
-        final path = await _getExportPath();
         await MockDatabaseService.importData(path);
-        setState(() => _statusMessage = 'Imported successfully');
+        setState(() => _statusMessage = 'Restored successfully');
       } catch (e) {
-        setState(() => _statusMessage = 'Import failed: $e');
+        setState(() => _statusMessage = 'Restore failed: $e');
       }
     }
   }
@@ -154,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('INTERNAL STORAGE:', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
+                  const Text('INTERNAL STORAGE (AUTO-SAVE):', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   SelectableText(_persistencePath, style: const TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
@@ -165,17 +177,18 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
           ElevatedButton.icon(
             onPressed: _export,
             icon: const Icon(Icons.upload),
-            label: const Text('EXPORT TO DOCUMENTS'),
+            label: const Text('DUMP ALL DATA (JSON)'),
             style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 80)),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _import,
             icon: const Icon(Icons.download),
-            label: const Text('IMPORT FROM DOCUMENTS'),
+            label: const Text('RESTORE ALL DATA (JSON)'),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 80),
               backgroundColor: Colors.orange,
+              foregroundColor: Colors.black,
             ),
           ),
           const Spacer(),
