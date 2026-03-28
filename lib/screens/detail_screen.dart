@@ -24,6 +24,11 @@ class _DetailScreenState extends State<DetailScreen> {
   Map<String, Species> _speciesMap = {};
   bool _loading = true;
 
+  // Summary counts
+  int _bedInstanceCount = 0;
+  int _crateInstanceCount = 0;
+  int _uniqueSpeciesInLocationCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +38,9 @@ class _DetailScreenState extends State<DetailScreen> {
   Future<void> _loadData() async {
     setState(() => _loading = true);
     _speciesMap = {};
+    _bedInstanceCount = 0;
+    _crateInstanceCount = 0;
+    _uniqueSpeciesInLocationCount = 0;
     
     switch (widget.type) {
       case ScannedType.species:
@@ -40,24 +48,36 @@ class _DetailScreenState extends State<DetailScreen> {
         if (_data != null) {
           _locations = await MockDatabaseService.getLocationsForSpecies(widget.id);
           _speciesMap[widget.id] = _data as Species;
+
+          for (var loc in _locations!) {
+            if (loc.startsWith('B-')) {
+              _bedInstanceCount++;
+            } else if (loc.startsWith('C-')) {
+              _crateInstanceCount++;
+            }
+          }
         }
         break;
       case ScannedType.bed:
         _data = await MockDatabaseService.getBedById(widget.id);
         if (_data != null) {
           final bed = _data as Bed;
+          final uniqueIds = <String>{};
           for (var sId in bed.speciesMap.values) {
+            uniqueIds.add(sId);
             if (!_speciesMap.containsKey(sId)) {
               final s = await MockDatabaseService.getSpeciesById(sId);
               if (s != null) _speciesMap[sId] = s;
             }
           }
+          _uniqueSpeciesInLocationCount = uniqueIds.length;
         }
         break;
       case ScannedType.crate:
         _data = await MockDatabaseService.getCrateById(widget.id);
         if (_data != null) {
           final crate = _data as Crate;
+          _uniqueSpeciesInLocationCount = crate.speciesIds.length;
           for (var sId in crate.speciesIds) {
             if (!_speciesMap.containsKey(sId)) {
               final s = await MockDatabaseService.getSpeciesById(sId);
@@ -67,7 +87,6 @@ class _DetailScreenState extends State<DetailScreen> {
         }
         break;
       case ScannedType.plant:
-        // Plant entity is removed, but we might still scan a P- ID
         _data = null; 
         break;
       case ScannedType.unknown:
@@ -207,9 +226,17 @@ class _DetailScreenState extends State<DetailScreen> {
           _buildInfoCard(),
           if (_data is Bed) ...[
             const SizedBox(height: 24),
-            const Text(
-              'VISUAL MAP',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+            Row(
+              children: [
+                const Text(
+                  'VISUAL MAP',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+                ),
+                const Spacer(),
+                _countBadge(Icons.grid_view, '$_uniqueSpeciesInLocationCount Species', Colors.orange),
+                const SizedBox(width: 8),
+                _countBadge(Icons.check_circle_outline, '${(_data as Bed).speciesMap.length}/${(_data as Bed).totalCells}', Colors.green),
+              ],
             ),
             const Divider(color: Colors.yellow),
             const SizedBox(height: 8),
@@ -217,10 +244,18 @@ class _DetailScreenState extends State<DetailScreen> {
           ],
           if (widget.type == ScannedType.species) ...[
              const SizedBox(height: 24),
-             const Text(
-              'LOCATIONS',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
-            ),
+             Row(
+               children: [
+                 const Text(
+                  'LOCATIONS',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+                ),
+                const Spacer(),
+                _countBadge(Icons.grid_view, _bedInstanceCount.toString(), Colors.orange),
+                const SizedBox(width: 8),
+                _countBadge(Icons.inventory_2, _crateInstanceCount.toString(), Colors.blue),
+               ],
+             ),
             const Divider(color: Colors.yellow),
             const SizedBox(height: 8),
             _buildLocationsList(),
@@ -228,15 +263,19 @@ class _DetailScreenState extends State<DetailScreen> {
           if (_data is Crate) ...[
             const SizedBox(height: 24),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   'SPECIES IN CRATE',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
                 ),
+                const Spacer(),
+                _countBadge(Icons.local_florist, _uniqueSpeciesInLocationCount.toString(), Colors.blue),
+                const SizedBox(width: 8),
                 IconButton(
                   onPressed: _addSpeciesToCrate,
                   icon: const Icon(Icons.add, color: Colors.yellow, size: 32),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                 ),
               ],
             ),
@@ -313,7 +352,6 @@ class _DetailScreenState extends State<DetailScreen> {
                     if (speciesId == null) {
                       _selectSpeciesForCell(lineIdx, rowIdx);
                     } else {
-                      // Option to change or remove
                       _showCellActions(lineIdx, rowIdx, speciesId);
                     }
                   },
@@ -481,8 +519,6 @@ class _DetailScreenState extends State<DetailScreen> {
               _infoRow('Field Row', b.row ?? '-'),
               _infoRow('Length', '${b.length} Meters'),
               _infoRow('Layout', '${b.layout.name.toUpperCase()} (2 Lines x ${b.rowsPerMeterEffective} Rows/m)'),
-              _infoRow('Total Cells', '${b.totalCells} cells'),
-              _infoRow('Occupied', '${b.speciesMap.length} cells'),
             ],
           ),
         ),
@@ -498,7 +534,6 @@ class _DetailScreenState extends State<DetailScreen> {
             children: [
               _infoRow('Name', c.name),
               _infoRow('Type', c.type),
-              _infoRow('Species Count', '${c.speciesIds.length} types'),
             ],
           ),
         ),
@@ -536,7 +571,7 @@ class _DetailScreenState extends State<DetailScreen> {
           title: Text(locStr, style: const TextStyle(fontWeight: FontWeight.bold)),
           trailing: const Icon(Icons.chevron_right, color: Colors.yellow),
           onTap: () {
-            final id = locStr.split('-').take(2).join('-'); // Extract B-001 or C-001
+            final id = locStr.split('-').take(2).join('-'); 
             final type = id.startsWith('B-') ? ScannedType.bed : ScannedType.crate;
             Navigator.push(context, MaterialPageRoute(
               builder: (context) => DetailScreen(id: id, type: type)));
@@ -577,6 +612,25 @@ class _DetailScreenState extends State<DetailScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _countBadge(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+        ],
+      ),
     );
   }
 }
