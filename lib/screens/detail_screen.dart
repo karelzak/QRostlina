@@ -540,25 +540,37 @@ class _DetailScreenState extends State<DetailScreen> {
       final s = _data as Species;
       return Card(
         color: Colors.grey[900],
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPhotoHeader(s),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _infoRow('Name', s.name),
-                  _infoRow('Latin', s.latinName ?? '-'),
-                  _infoRow('Color', s.color ?? '-'),
-                  const SizedBox(height: 8),
-                  const Text('Description:', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
-                  Text(s.description ?? 'No description', style: const TextStyle(fontSize: 18)),
+                  Expanded(
+                    flex: 3,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _infoRow('Name', s.name),
+                        _infoRow('Latin', s.latinName ?? '-'),
+                        _infoRow('Color', s.color ?? '-'),
+                        const SizedBox(height: 16),
+                        const Text('Description:', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
+                        Text(s.description ?? 'No description', style: const TextStyle(fontSize: 18)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: _buildPhotoHeader(s, height: 200),
+                  ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     } else if (_data is Bed) {
@@ -614,19 +626,19 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildPhotoHeader(Species species) {
+  Widget _buildPhotoHeader(Species species, {double height = 250}) {
     if (species.photoUrl == null) return const SizedBox();
 
     return Container(
-      height: 250,
+      height: height,
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.black,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.yellow, width: 1),
       ),
       child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+        borderRadius: BorderRadius.circular(7),
         child: LocalImageService.isRemoteUrl(species.photoUrl!)
             ? CachedNetworkImage(
                 imageUrl: species.photoUrl!,

@@ -148,8 +148,6 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
           key: _formKey,
           child: Column(
             children: [
-              _buildPhotoPicker(),
-              const SizedBox(height: 24),
               IdInputField(
                 controller: _idController,
                 label: 'Species ID (S-XXX)',
@@ -173,10 +171,23 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
               const SizedBox(height: 16),
               _buildTextField(controller: _colorController, label: 'Color'),
               const SizedBox(height: 16),
-              _buildTextField(
-                controller: _descriptionController,
-                label: 'Description',
-                maxLines: 3,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: _buildTextField(
+                      controller: _descriptionController,
+                      label: 'Description',
+                      maxLines: 8,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: _buildPhotoPicker(),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
               ElevatedButton(
