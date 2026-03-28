@@ -121,7 +121,15 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
       await MockDatabaseService.addSpecies(species);
       
       if (mounted) {
-        Navigator.pop(context, species.id);
+        // A tiny delay can help if the framework is locked during a transition/build
+        Future.delayed(Duration.zero, () {
+          if (mounted) {
+            final navigator = Navigator.of(context);
+            if (navigator.canPop()) {
+              navigator.pop(species.id);
+            }
+          }
+        });
       }
     }
   }
