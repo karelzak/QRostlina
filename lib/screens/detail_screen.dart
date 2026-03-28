@@ -384,7 +384,7 @@ class _DetailScreenState extends State<DetailScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: bed.totalLines,
-                childAspectRatio: bed.totalLines == 1 ? 2.5 : 1.1,
+                childAspectRatio: bed.totalLines == 1 ? 3.5 : 1.4,
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
               ),
@@ -442,23 +442,24 @@ class _DetailScreenState extends State<DetailScreen> {
                           child: speciesId != null
                               ? Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  child: Row(
                                     children: [
                                       if (species?.photoUrl != null) ...[
-                                        _buildGridThumbnail(species!, size: 80),
-                                        const SizedBox(height: 4),
+                                        _buildGridThumbnail(species!, size: 50),
+                                        const SizedBox(width: 8),
                                       ],
-                                      Text(
-                                        species?.name ?? speciesId,
-                                        style: const TextStyle(
-                                          color: Colors.black, 
-                                          fontSize: 14, 
-                                          fontWeight: FontWeight.bold,
-                                          overflow: TextOverflow.ellipsis
+                                      Expanded(
+                                        child: Text(
+                                          species?.name ?? speciesId,
+                                          style: const TextStyle(
+                                            color: Colors.black, 
+                                            fontSize: 14, 
+                                            fontWeight: FontWeight.bold,
+                                            overflow: TextOverflow.ellipsis
+                                          ),
+                                          textAlign: species?.photoUrl != null ? TextAlign.left : TextAlign.center,
+                                          maxLines: 2,
                                         ),
-                                        textAlign: TextAlign.center,
-                                        maxLines: species?.photoUrl != null ? 1 : 2,
                                       ),
                                     ],
                                   ),
