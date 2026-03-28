@@ -384,7 +384,7 @@ class _DetailScreenState extends State<DetailScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: bed.totalLines,
-                childAspectRatio: bed.totalLines == 1 ? 3.0 : 1.5,
+                childAspectRatio: bed.totalLines == 1 ? 2.5 : 1.1,
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
               ),
@@ -446,14 +446,14 @@ class _DetailScreenState extends State<DetailScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       if (species?.photoUrl != null) ...[
-                                        _buildGridThumbnail(species!, size: 45),
-                                        const SizedBox(height: 2),
+                                        _buildGridThumbnail(species!, size: 80),
+                                        const SizedBox(height: 4),
                                       ],
                                       Text(
                                         species?.name ?? speciesId,
                                         style: const TextStyle(
                                           color: Colors.black, 
-                                          fontSize: 12, 
+                                          fontSize: 14, 
                                           fontWeight: FontWeight.bold,
                                           overflow: TextOverflow.ellipsis
                                         ),
@@ -686,16 +686,16 @@ class _DetailScreenState extends State<DetailScreen> {
             ? CachedNetworkImage(
                 imageUrl: species.photoUrl!,
                 fit: BoxFit.cover,
-                memCacheWidth: 100, // Slightly higher for 45px icons
-                memCacheHeight: 100,
+                memCacheWidth: 160, // Much sharper for 80px icons
+                memCacheHeight: 160,
                 errorWidget: (context, url, error) => const Icon(Icons.broken_image, size: 10, color: Colors.red),
               )
             : _localThumbnails[species.id] != null
                 ? Image.file(
                     _localThumbnails[species.id]!,
                     fit: BoxFit.cover,
-                    cacheWidth: 100,
-                    cacheHeight: 100,
+                    cacheWidth: 160,
+                    cacheHeight: 160,
                   )
                 : const Icon(Icons.image, size: 10, color: Colors.white12),
       ),
