@@ -10,6 +10,7 @@ import 'qr_scanner_service.dart';
 class MockDatabaseService {
   static bool _initialized = false;
   static Completer<void>? _initCompleter;
+  static const _encoder = JsonEncoder.withIndent('  ');
 
   static final List<Species> _mockSpecies = [];
   static final List<Bed> _mockBeds = [];
@@ -28,7 +29,7 @@ class MockDatabaseService {
       'crates': _mockCrates.map((c) => c.toMap()).toList(),
     };
     final file = File(path);
-    await file.writeAsString(jsonEncode(data));
+    await file.writeAsString(_encoder.convert(data));
   }
 
   static Future<void> importData(String path) async {
@@ -108,7 +109,7 @@ class MockDatabaseService {
         'beds': _mockBeds.map((b) => b.toMap()).toList(),
         'crates': _mockCrates.map((c) => c.toMap()).toList(),
       };
-      await file.writeAsString(jsonEncode(data));
+      await file.writeAsString(_encoder.convert(data));
     } catch (e) {
       debugPrint('Error saving data: $e');
     }
