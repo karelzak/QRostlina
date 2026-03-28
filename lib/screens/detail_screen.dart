@@ -526,7 +526,12 @@ class _DetailScreenState extends State<DetailScreen> {
               _infoRow('Name', b.name),
               _infoRow('Label', b.row ?? '-'),
               _infoRow('Length', '${b.length} Meters'),
-              _infoRow('Layout', '${b.layout.name.toUpperCase()} (${b.totalLines} Line${b.totalLines > 1 ? 's' : ''} x ${b.rowsPerMeterEffective} Row${b.rowsPerMeterEffective > 1 ? 's' : ''}/m)'),
+              _infoRow(
+                'Layout', 
+                b.layout == BedLayout.grid 
+                  ? 'GRID (2 Lines x ${b.rowsPerMeterEffective} Rows/m)' 
+                  : 'LINEAR (1 Row/m)'
+              ),
             ],
           ),
         ),
