@@ -15,6 +15,7 @@ class Bed extends Location {
   final int rowsPerMeter; // 2 or 3 (ignored if linear)
   final BedLayout layout;
   final String? row; // The bed's identifier in the field (e.g. "Row A")
+  final Map<String, String> speciesMap; // "line-row" -> speciesId
 
   Bed({
     required super.id,
@@ -23,7 +24,8 @@ class Bed extends Location {
     this.rowsPerMeter = 2,
     this.layout = BedLayout.grid,
     this.row,
-  });
+    Map<String, String>? speciesMap,
+  }) : speciesMap = speciesMap ?? {};
 
   int get totalLines => 2; // Always 2 lines (Left/Right)
   int get rowsPerMeterEffective => layout == BedLayout.grid ? rowsPerMeter : 1;
@@ -31,8 +33,6 @@ class Bed extends Location {
   int get totalCells => totalLines * totalRows;
 
   bool get isConsistent {
-    // A linear bed should ideally have only 1 line, but our model currently forces 2.
-    // If it's linear and has 2 lines, it's inconsistent.
     if (layout == BedLayout.linear && totalLines > 1) return false;
     return true;
   }
@@ -41,14 +41,14 @@ class Bed extends Location {
     if (row == null) return 'N/A';
     
     int meter = ((row - 1) / rowsPerMeterEffective).floor() + 1;
-    String lineStr = line == 1 ? 'Left' : 'Right';
+    String lineStr = line == 1 ? 'L' : 'R';
 
     if (layout == BedLayout.linear) {
-      return '${this.row ?? id}-$lineStr-${meter}m';
+      return '$id-${meter}M-$lineStr';
     }
 
     int subRow = ((row - 1) % rowsPerMeterEffective) + 1;
-    return '${this.row ?? id}-$lineStr-${meter}m-$subRow';
+    return '$id-${meter}M-$subRow$lineStr';
   }
 
   Map<String, dynamic> toMap() {
@@ -59,6 +59,7 @@ class Bed extends Location {
       'rowsPerMeter': rowsPerMeter,
       'layout': layout.name,
       'row': row,
+      'speciesMap': speciesMap,
       'type': 'bed',
     };
   }
@@ -71,24 +72,28 @@ class Bed extends Location {
       rowsPerMeter: map['rowsPerMeter'] ?? 2,
       layout: BedLayout.values.byName(map['layout'] ?? 'grid'),
       row: map['row'],
+      speciesMap: Map<String, String>.from(map['speciesMap'] ?? {}),
     );
   }
 }
 
 class Crate extends Location {
   final String type; // e.g., 'wooden', 'plastic'
+  final List<String> speciesIds;
 
   Crate({
     required super.id, // Prefix C-
     required super.name,
     required this.type,
-  });
+    List<String>? speciesIds,
+  }) : speciesIds = speciesIds ?? [];
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'name': name,
       'type': type,
+      'speciesIds': speciesIds,
       'locationType': 'crate',
     };
   }
@@ -98,6 +103,7 @@ class Crate extends Location {
       id: map['id'],
       name: map['name'],
       type: map['type'],
+      speciesIds: List<String>.from(map['speciesIds'] ?? []),
     );
   }
 }

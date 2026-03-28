@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/species.dart';
-import '../models/plant_unit.dart';
 import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
+import '../widgets/search_dialog.dart';
 import 'edit_species_screen.dart';
-import 'edit_plant_screen.dart';
 import 'edit_location_screen.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -21,8 +20,7 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   dynamic _data;
-  Location? _parentLocation;
-  List<PlantUnit>? _children;
+  List<String>? _locations; // For Species
   Map<String, Species> _speciesMap = {};
   bool _loading = true;
 
@@ -40,38 +38,18 @@ class _DetailScreenState extends State<DetailScreen> {
       case ScannedType.species:
         _data = await MockDatabaseService.getSpeciesById(widget.id);
         if (_data != null) {
-          _children = await MockDatabaseService.getPlantsBySpecies(widget.id);
+          _locations = await MockDatabaseService.getLocationsForSpecies(widget.id);
           _speciesMap[widget.id] = _data as Species;
-        }
-        break;
-      case ScannedType.plant:
-        _data = await MockDatabaseService.getPlantById(widget.id);
-        if (_data != null) {
-          final p = _data as PlantUnit;
-          final s = await MockDatabaseService.getSpeciesById(p.speciesId);
-          if (s != null) _speciesMap[p.speciesId] = s;
-
-          if (p.locationId != null) {
-            final locId = p.locationId!;
-            if (locId.startsWith('B-')) {
-              _parentLocation = await MockDatabaseService.getBedById(locId);
-            } else if (locId.startsWith('C-')) {
-              _parentLocation = await MockDatabaseService.getCrateById(locId);
-            }
-          }
         }
         break;
       case ScannedType.bed:
         _data = await MockDatabaseService.getBedById(widget.id);
         if (_data != null) {
-          _children = await MockDatabaseService.getPlantsByLocation(widget.id);
-          // Fetch species for all plants in this bed
-          if (_children != null) {
-            for (var p in _children!) {
-              if (!_speciesMap.containsKey(p.speciesId)) {
-                final s = await MockDatabaseService.getSpeciesById(p.speciesId);
-                if (s != null) _speciesMap[p.speciesId] = s;
-              }
+          final bed = _data as Bed;
+          for (var sId in bed.speciesMap.values) {
+            if (!_speciesMap.containsKey(sId)) {
+              final s = await MockDatabaseService.getSpeciesById(sId);
+              if (s != null) _speciesMap[sId] = s;
             }
           }
         }
@@ -79,16 +57,18 @@ class _DetailScreenState extends State<DetailScreen> {
       case ScannedType.crate:
         _data = await MockDatabaseService.getCrateById(widget.id);
         if (_data != null) {
-          _children = await MockDatabaseService.getPlantsByLocation(widget.id);
-          if (_children != null) {
-            for (var p in _children!) {
-              if (!_speciesMap.containsKey(p.speciesId)) {
-                final s = await MockDatabaseService.getSpeciesById(p.speciesId);
-                if (s != null) _speciesMap[p.speciesId] = s;
-              }
+          final crate = _data as Crate;
+          for (var sId in crate.speciesIds) {
+            if (!_speciesMap.containsKey(sId)) {
+              final s = await MockDatabaseService.getSpeciesById(sId);
+              if (s != null) _speciesMap[sId] = s;
             }
           }
         }
+        break;
+      case ScannedType.plant:
+        // Plant entity is removed, but we might still scan a P- ID
+        _data = null; 
         break;
       case ScannedType.unknown:
         break;
@@ -98,26 +78,26 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
-  void _confirmDeletePlant(BuildContext context, String id) async {
+  void _confirmClearLocation() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('Plant Die?', style: TextStyle(color: Colors.white)),
-        content: Text('Are you sure you want to delete plant $id?', style: const TextStyle(color: Colors.white70)),
+        title: const Text('Clear Location?', style: TextStyle(color: Colors.white)),
+        content: const Text('Are you sure you want to remove ALL species from this location?', style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('YES, DELETE', style: TextStyle(color: Colors.red)),
+            child: const Text('YES, CLEAR ALL', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
 
     if (confirmed == true && mounted) {
-      await MockDatabaseService.deletePlant(id);
-      if (mounted) Navigator.pop(context, true);
+      await MockDatabaseService.clearLocation(widget.id);
+      _loadData();
     }
   }
 
@@ -138,31 +118,15 @@ class _DetailScreenState extends State<DetailScreen> {
                   context,
                   MaterialPageRoute(builder: (context) => EditSpeciesScreen(species: _data as Species)),
                 );
-                if (result == true) {
-                  _loadData();
-                }
+                if (result == true) _loadData();
               },
             ),
-          if (widget.type == ScannedType.plant && _data != null) ...[
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () async {
-                final result = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(builder: (context) => EditPlantScreen(plant: _data as PlantUnit)),
-                );
-                if (result == true) {
-                  _loadData();
-                }
-              },
+          if ((widget.type == ScannedType.bed || widget.type == ScannedType.crate) && _data != null) ...[
+             IconButton(
+              icon: const Icon(Icons.delete_sweep, color: Colors.redAccent),
+              onPressed: _confirmClearLocation,
+              tooltip: 'Clear all species from this location',
             ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.redAccent),
-              onPressed: () => _confirmDeletePlant(context, widget.id),
-              tooltip: 'Mark as Dead/Delete',
-            ),
-          ],
-          if ((widget.type == ScannedType.bed || widget.type == ScannedType.crate) && _data != null)
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () async {
@@ -175,11 +139,10 @@ class _DetailScreenState extends State<DetailScreen> {
                     ),
                   ),
                 );
-                if (result == true) {
-                  _loadData();
-                }
+                if (result == true) _loadData();
               },
             ),
+          ],
         ],
       ),
       body: _loading
@@ -198,39 +161,38 @@ class _DetailScreenState extends State<DetailScreen> {
           const Icon(Icons.error_outline, size: 80, color: Colors.redAccent),
           const SizedBox(height: 16),
           Text(
-            '${widget.type.name.toUpperCase()} ${widget.id} not found.',
+            widget.type == ScannedType.plant 
+              ? 'Plant entities are no longer supported. Please scan a Species or Location.'
+              : '${widget.type.name.toUpperCase()} ${widget.id} not found.',
             style: const TextStyle(fontSize: 20),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () async {
-              Widget screen;
-              switch (widget.type) {
-                case ScannedType.species:
-                  screen = const EditSpeciesScreen();
-                  break;
-                case ScannedType.plant:
-                  screen = const EditPlantScreen();
-                  break;
-                case ScannedType.bed:
-                  screen = const EditLocationScreen(isBed: true);
-                  break;
-                case ScannedType.crate:
-                  screen = const EditLocationScreen(isBed: false);
-                  break;
-                case ScannedType.unknown:
-                  return;
-              }
-              final result = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(builder: (context) => screen),
-              );
-              if (result == true) {
-                _loadData();
-              }
-            },
-            child: const Text('CREATE NEW'),
-          ),
+          if (widget.type != ScannedType.plant)
+            ElevatedButton(
+              onPressed: () async {
+                Widget screen;
+                switch (widget.type) {
+                  case ScannedType.species:
+                    screen = const EditSpeciesScreen();
+                    break;
+                  case ScannedType.bed:
+                    screen = const EditLocationScreen(isBed: true);
+                    break;
+                  case ScannedType.crate:
+                    screen = const EditLocationScreen(isBed: false);
+                    break;
+                  default:
+                    return;
+                }
+                final result = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (context) => screen),
+                );
+                if (result == true) _loadData();
+              },
+              child: const Text('CREATE NEW'),
+            ),
         ],
       ),
     );
@@ -253,43 +215,34 @@ class _DetailScreenState extends State<DetailScreen> {
             const SizedBox(height: 8),
             _buildGridMap(),
           ],
-          if (_children != null && widget.type != ScannedType.bed) ...[
+          if (widget.type == ScannedType.species) ...[
+             const SizedBox(height: 24),
+             const Text(
+              'LOCATIONS',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+            ),
+            const Divider(color: Colors.yellow),
+            const SizedBox(height: 8),
+            _buildLocationsList(),
+          ],
+          if (_data is Crate) ...[
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  widget.type == ScannedType.species ? 'INSTANCES' : 'CONTENTS',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+                const Text(
+                  'SPECIES IN CRATE',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
                 ),
                 IconButton(
-                  onPressed: () async {
-                    final result = await Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditPlantScreen(
-                          initialSpeciesId: widget.type == ScannedType.species ? widget.id : null,
-                          plant: (widget.type == ScannedType.bed || widget.type == ScannedType.crate)
-                              ? PlantUnit(
-                                  id: 'P-',
-                                  speciesId: 'S-',
-                                  locationId: widget.id,
-                                )
-                              : null,
-                        ),
-                      ),
-                    );
-                    if (result == true) {
-                      _loadData();
-                    }
-                  },
+                  onPressed: _addSpeciesToCrate,
                   icon: const Icon(Icons.add, color: Colors.yellow, size: 32),
                 ),
               ],
             ),
             const Divider(color: Colors.yellow),
             const SizedBox(height: 8),
-            _buildChildrenList(),
+            _buildCrateSpeciesList(),
           ],
         ],
       ),
@@ -298,15 +251,6 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Widget _buildGridMap() {
     final bed = _data as Bed;
-    final Map<String, PlantUnit> occupancy = {};
-    if (_children != null) {
-      for (var p in _children!) {
-        if (p.gridRow != null) {
-          final key = "${p.gridLine ?? 1}-${p.gridRow}";
-          occupancy[key] = p;
-        }
-      }
-    }
 
     return ListView.builder(
       shrinkWrap: true,
@@ -343,54 +287,39 @@ class _DetailScreenState extends State<DetailScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 1.8, // Slightly taller for bigger font
+                childAspectRatio: 1.8,
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
               ),
               itemCount: 2 * bed.rowsPerMeterEffective,
               itemBuilder: (context, cellIdx) {
-                // Determine line and sub-row within this meter
                 int lineIdx = (cellIdx % 2) + 1;
                 int subRow = (cellIdx / 2).floor() + 1;
-                // Calculate absolute gridRow
                 int rowIdx = (meter - 1) * bed.rowsPerMeterEffective + subRow;
 
                 final key = "$lineIdx-$rowIdx";
-                final plant = occupancy[key];
-                final species = plant != null ? _speciesMap[plant.speciesId] : null;
+                final speciesId = bed.speciesMap[key];
+                final species = speciesId != null ? _speciesMap[speciesId] : null;
                 
                 String lineStr = lineIdx == 1 ? 'L' : 'R';
-                String cellLabel = bed.layout == BedLayout.grid ? "$subRow-$lineStr" : lineStr;
+                String cellLabel = bed.layout == BedLayout.grid ? "$subRow$lineStr" : lineStr;
 
                 return GestureDetector(
+                  onLongPress: speciesId != null ? () async {
+                    await MockDatabaseService.setSpeciesAtBedCell(bed.id, lineIdx, rowIdx, null);
+                    _loadData();
+                  } : null,
                   onTap: () async {
-                    if (plant != null) {
-                      final result = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(builder: (context) => DetailScreen(id: plant.id, type: ScannedType.plant)),
-                      );
-                      if (result == true) _loadData();
+                    if (speciesId == null) {
+                      _selectSpeciesForCell(lineIdx, rowIdx);
                     } else {
-                      final result = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditPlantScreen(
-                            plant: PlantUnit(
-                              id: 'P-',
-                              speciesId: 'S-',
-                              locationId: bed.id,
-                              gridLine: lineIdx,
-                              gridRow: rowIdx,
-                            ),
-                          ),
-                        ),
-                      );
-                      if (result == true) _loadData();
+                      // Option to change or remove
+                      _showCellActions(lineIdx, rowIdx, speciesId);
                     }
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: plant != null ? Colors.yellow : Colors.grey[900],
+                      color: speciesId != null ? Colors.yellow : Colors.grey[900],
                       border: Border.all(color: Colors.yellow, width: 1),
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -403,24 +332,20 @@ class _DetailScreenState extends State<DetailScreen> {
                             cellLabel,
                             style: TextStyle(
                               fontSize: 14,
-                              color: plant != null ? Colors.black54 : Colors.yellow.withOpacity(0.5),
+                              color: speciesId != null ? Colors.black54 : Colors.yellow.withOpacity(0.5),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                         Center(
-                          child: plant != null
+                          child: speciesId != null
                               ? Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        plant.id,
-                                        style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 12),
-                                      ),
-                                      Text(
-                                        species?.name ?? plant.speciesId,
+                                        species?.name ?? speciesId,
                                         style: const TextStyle(
                                           color: Colors.black, 
                                           fontSize: 14, 
@@ -447,6 +372,82 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
+  void _selectSpeciesForCell(int line, int row) async {
+    final allSpecies = await MockDatabaseService.getAllSpecies();
+    final items = allSpecies.map((s) => SearchItem(id: s.id, name: s.name, subtitle: s.latinName)).toList();
+
+    if (!mounted) return;
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => SearchDialog(title: 'SELECT SPECIES', items: items),
+    );
+
+    if (result != null && mounted) {
+      await MockDatabaseService.setSpeciesAtBedCell(widget.id, line, row, result);
+      _loadData();
+    }
+  }
+
+  void _showCellActions(int line, int row, String currentSpeciesId) async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Cell ${(_data as Bed).formatPosition(line, row)}', 
+              style: const TextStyle(color: Colors.yellow, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.info_outline, color: Colors.blue),
+              title: const Text('View Species Details', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => DetailScreen(id: currentSpeciesId, type: ScannedType.species)));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.swap_horiz, color: Colors.yellow),
+              title: const Text('Change Species', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _selectSpeciesForCell(line, row);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Remove (Plant Died)', style: TextStyle(color: Colors.white)),
+              onTap: () async {
+                Navigator.pop(context);
+                await MockDatabaseService.setSpeciesAtBedCell(widget.id, line, row, null);
+                _loadData();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _addSpeciesToCrate() async {
+    final allSpecies = await MockDatabaseService.getAllSpecies();
+    final items = allSpecies.map((s) => SearchItem(id: s.id, name: s.name, subtitle: s.latinName)).toList();
+
+    if (!mounted) return;
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => SearchDialog(title: 'ADD TO CRATE', items: items),
+    );
+
+    if (result != null && mounted) {
+      await MockDatabaseService.addSpeciesToCrate(widget.id, result);
+      _loadData();
+    }
+  }
+
   Widget _buildInfoCard() {
     if (_data is Species) {
       final s = _data as Species;
@@ -467,26 +468,6 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
         ),
       );
-    } else if (_data is PlantUnit) {
-      final p = _data as PlantUnit;
-      String locationStr = p.locationId ?? 'None';
-      if (p.locationId != null && _parentLocation is Bed) {
-        locationStr = (_parentLocation as Bed).formatPosition(p.gridLine, p.gridRow);
-      }
-      return Card(
-        color: Colors.grey[900],
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _infoRow('Species ID', p.speciesId),
-              _infoRow('Status', p.status.toUpperCase()),
-              _infoRow('Position', locationStr),
-            ],
-          ),
-        ),
-      );
     } else if (_data is Bed) {
       final b = _data as Bed;
       return Card(
@@ -501,6 +482,7 @@ class _DetailScreenState extends State<DetailScreen> {
               _infoRow('Length', '${b.length} Meters'),
               _infoRow('Layout', '${b.layout.name.toUpperCase()} (2 Lines x ${b.rowsPerMeterEffective} Rows/m)'),
               _infoRow('Total Cells', '${b.totalCells} cells'),
+              _infoRow('Occupied', '${b.speciesMap.length} cells'),
             ],
           ),
         ),
@@ -516,6 +498,7 @@ class _DetailScreenState extends State<DetailScreen> {
             children: [
               _infoRow('Name', c.name),
               _infoRow('Type', c.type),
+              _infoRow('Species Count', '${c.speciesIds.length} types'),
             ],
           ),
         ),
@@ -536,37 +519,61 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildChildrenList() {
-    if (_children == null || _children!.isEmpty) {
-      return const Text('No items found.', style: TextStyle(fontStyle: FontStyle.italic));
+  Widget _buildLocationsList() {
+    if (_locations == null || _locations!.isEmpty) {
+      return const Text('Not used in any location.', style: TextStyle(fontStyle: FontStyle.italic));
     }
 
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _children!.length,
+      itemCount: _locations!.length,
       itemBuilder: (context, index) {
-        final plant = _children![index];
-        String locStr = plant.locationId ?? '-';
-        if (plant.locationId != null && _data is Bed) {
-          locStr = (_data as Bed).formatPosition(plant.gridLine, plant.gridRow);
-        }
+        final locStr = _locations![index];
+        return ListTile(
+          tileColor: Colors.grey[900],
+          leading: Icon(locStr.startsWith('C-') ? Icons.inventory_2 : Icons.grid_view, color: Colors.yellow),
+          title: Text(locStr, style: const TextStyle(fontWeight: FontWeight.bold)),
+          trailing: const Icon(Icons.chevron_right, color: Colors.yellow),
+          onTap: () {
+            final id = locStr.split('-').take(2).join('-'); // Extract B-001 or C-001
+            final type = id.startsWith('B-') ? ScannedType.bed : ScannedType.crate;
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) => DetailScreen(id: id, type: type)));
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildCrateSpeciesList() {
+    final crate = _data as Crate;
+    if (crate.speciesIds.isEmpty) {
+      return const Text('Crate is empty.', style: TextStyle(fontStyle: FontStyle.italic));
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: crate.speciesIds.length,
+      itemBuilder: (context, index) {
+        final sId = crate.speciesIds[index];
+        final species = _speciesMap[sId];
         return ListTile(
           tileColor: Colors.grey[900],
           leading: const Icon(Icons.local_florist, color: Colors.yellow),
-          title: Text(plant.id, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text('Status: ${plant.status.toUpperCase()} | $locStr'),
-          trailing: const Icon(Icons.chevron_right, color: Colors.yellow),
-          onTap: () async {
-            final result = await Navigator.push<bool>(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DetailScreen(id: plant.id, type: ScannedType.plant),
-              ),
-            );
-            if (result == true) {
+          title: Text(species?.name ?? sId, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(sId),
+          trailing: IconButton(
+            icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+            onPressed: () async {
+              await MockDatabaseService.removeSpeciesFromCrate(crate.id, sId);
               _loadData();
-            }
+            },
+          ),
+          onTap: () {
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) => DetailScreen(id: sId, type: ScannedType.species)));
           },
         );
       },

@@ -1,37 +1,28 @@
-# QRostlina (HortiLog) - Project Agent Context
+# QRostlina - Agent Instructions
 
-This file serves as a persistent context for Gemini (or other AI agents) to understand the goals and state of the QRostlina project.
+## App Persona
+- Senior Flutter Developer & Agricultural Tech Expert.
+- Expert in high-contrast, accessibility-first UI for outdoor use.
+- Focused on offline-first reliability and simple data models.
 
-## Project Overview
-QRostlina is a mobile application (Flutter/Android) for managing a plant inventory (primarily dahlia tubers) in a nursery. It supports field work, data sharing via Firebase, and durable label printing.
+## User Context
+- The user is managing a plant nursery or research field.
+- Environment: Outdoors, bright sunlight, potentially wearing gloves.
+- Needs: Fast scanning, clear visual feedback, minimal typing.
 
-## Core Mandates
-- **Language:** Use English for all code, comments, and commit messages.
-- **Development Environment:** Linux (Fedora).
-- **Target Platform:** Android.
-- **Small Changes:** Commit often with descriptive messages in English.
-- **UI/UX:** High-contrast design for sunlight, large controls for gloved hands.
-- **Offline-first:** Local cache with Firebase synchronization.
-
-## Technical Stack
-- **Frontend:** Flutter (Dart)
-- **Backend:** Firebase (Firestore, Auth)
-- **Scanning:** QR code (S-, P-, B-, C- prefixes)
-- **Printing:** Bluetooth (Brother TZe)
-- **Export:** CSV/Excel
-
-## Data Model (Unique IDs required)
-- **Species (S-):** Variety name, Latin name, color, height, description, photo.
-- **Plant Unit (P-):** Instance of a species, status (in ground, stock, sold), location.
-- **Location:**
-    - **Bed (B-):** Name, row/position.
-    - **Crate (C-):** Type/ID.
-
-## Scanning Logic
-- **S-ID:** Open Species card, show instances, allow adding new P-ID.
-- **P-ID:** Open Plant card, allow location/species change.
-- **B-ID:** Show bed contents, allow moving to crates or adding new plants.
-- **C-ID:** Show crate contents, allow moving to beds or adding new plants.
+## Technical Architecture
+- **Language:** Dart 3.x
+- **Framework:** Flutter (Mobile/Linux)
+- **Data Model:**
+  - **Species (S-ID):** Name, latin name, description, color. (Root entity)
+  - **Location (B-ID / C-ID):** 
+    - **B-ID (Beds):** 2D Grid (Line L/R, Meter, Sub-row). Structured location tracking.
+    - **C-ID (Crates):** Simple list of species stored in the crate.
+- **Scanning Logic:**
+  - **S-ID:** Open Species card, show its locations.
+  - **P-ID:** (Deprecated) Notify user that individual plant tracking is no longer used.
+  - **B-ID:** Show bed visual map, allow adding/removing species to cells.
+  - **C-ID:** Show crate contents, allow adding/removing species from list.
 
 ## Development Environment
 - **OS:** Linux (Fedora)
@@ -44,27 +35,17 @@ QRostlina is a mobile application (Flutter/Android) for managing a plant invento
 2. [x] Create AGENT.md (this file).
 3. [x] Flutter application skeleton (Android & Linux).
 4. [x] High-contrast UI theme (Yellow/Black).
-5. [x] Data Models (Species, PlantUnit, Location).
+5. [x] Data Models (Species, Location with species mapping).
 6. [x] QR Scanner Service & Mock Scanner Screen.
-7. [x] Mock Database Service & Species List Screen.
+7. [x] Mock Database Service (In-memory + JSON persistence).
 8. [x] Android SDK setup (Command Line Tools preferred).
 9. [x] Script for Android deployment (`scripts/deploy_android.sh`).
 10. [ ] Firebase integration (Auth & Firestore).
 11. [x] Localization setup (English/Czech).
-    - Status: Local generation in `lib/l10n/` configured via `l10n.yaml`.
-12. [x] Detailed Cards for Species (S-), Plants (P-), Beds (B-), Crates (C-).
-13. [x] Bed/Crate content listing.
-14. [x] CRUD implementation for all entities.
-    - Status: Standardized via `IdInputField` (QR/Auto/Manual) with relation validation.
+12. [x] Detailed Cards for Species (S-), Beds (B-), Crates (C-).
+13. [x] Bed Visual Map & Crate Content List.
+14. [x] CRUD for species and locations, plus species-location mapping.
 15. [x] Visual Grid Map for Beds.
-    - Status: Organized by meter, supports 2-column layout (Left/Right), human-friendly indexing (e.g. A1-Left-8m-2), and species name display.
+    - Status: Organized by meter, supports 2-column layout (Left/Right), human-friendly indexing (e.g. B-001-8M-2L), and species name display.
 16. [x] Linear Bed Support.
     - Status: Support for "disorganized" beds with meter-only tracking.
-17. [ ] Logs for bed maintenance (fertilizing, care).
-18. [ ] Photo support for plants/species.
-19. [ ] Label printing (Bluetooth/Brother TZe).
-
-## Future Plans
-- Logs for bed maintenance (fertilizing, care).
-- AI (Gemini) integration for plant care consultation.
-- Care planning and scheduling.

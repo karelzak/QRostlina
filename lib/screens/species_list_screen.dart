@@ -35,7 +35,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
         backgroundColor: Colors.grey[900],
         title: const Text('Delete Species?', style: TextStyle(color: Colors.white)),
         content: Text(
-          'Are you sure you want to delete $id? This will also delete all associated plants!',
+          'Are you sure you want to delete $id? This will also remove all its location references!',
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [

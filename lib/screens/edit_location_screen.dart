@@ -75,12 +75,14 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
           length: _length,
           rowsPerMeter: _rowsPerMeter,
           layout: _layout,
+          speciesMap: widget.location is Bed ? (widget.location as Bed).speciesMap : null,
         );
       } else {
         loc = Crate(
           id: id,
           name: _nameController.text.trim(),
           type: _extraController.text.trim(),
+          speciesIds: widget.location is Crate ? (widget.location as Crate).speciesIds : null,
         );
       }
 

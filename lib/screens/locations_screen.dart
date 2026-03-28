@@ -78,7 +78,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
         backgroundColor: Colors.grey[900],
         title: const Text('Delete Location?', style: TextStyle(color: Colors.white)),
         content: Text(
-          'Are you sure you want to delete $id? Plants at this location will be moved to "stock" (no location).',
+          'Are you sure you want to delete $id? All species references at this location will be removed.',
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
