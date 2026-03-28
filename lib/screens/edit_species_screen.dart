@@ -72,6 +72,13 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
     }
   }
 
+  void _removePhoto() {
+    setState(() {
+      _localPhotoFile = null;
+      _photoUrl = null;
+    });
+  }
+
   @override
   void dispose() {
     _idController.dispose();
@@ -146,60 +153,60 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
             children: [
-              Expanded(
-                flex: 3,
-                child: Column(
-                  children: [
-                    IdInputField(
-                      controller: _idController,
-                      label: 'Species ID (S-XXX)',
-                      type: ScannedType.species,
-                      enabled: !isEditing,
-                      validator: (val) {
-                        if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('S-')) {
-                          return 'Required (e.g. S-001)';
-                        }
-                        return null;
-                      },
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Column(
+                      children: [
+                        IdInputField(
+                          controller: _idController,
+                          label: 'Species ID (S-XXX)',
+                          type: ScannedType.species,
+                          enabled: !isEditing,
+                          validator: (val) {
+                            if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('S-')) {
+                              return 'Required (e.g. S-001)';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _nameController,
+                          label: 'Variety Name',
+                          validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(controller: _latinNameController, label: 'Latin Name'),
+                        const SizedBox(height: 16),
+                        _buildTextField(controller: _colorController, label: 'Color'),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _descriptionController,
+                          label: 'Description',
+                          maxLines: 8,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _nameController,
-                      label: 'Variety Name',
-                      validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(controller: _latinNameController, label: 'Latin Name'),
-                    const SizedBox(height: 16),
-                    _buildTextField(controller: _colorController, label: 'Color'),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _descriptionController,
-                      label: 'Description',
-                      maxLines: 5,
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    flex: 2,
+                    child: _buildPhotoPicker(),
+                  ),
+                ],
               ),
-              const SizedBox(width: 24),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  children: [
-                    _buildPhotoPicker(),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: _save,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 80),
-                      ),
-                      child: const Text('SAVE'),
-                    ),
-                  ],
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: _save,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 80),
                 ),
+                child: const Text('SAVE SPECIES'),
               ),
             ],
           ),
@@ -211,22 +218,38 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
   Widget _buildPhotoPicker() {
     return Column(
       children: [
-        Container(
-          height: 200,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            border: Border.all(color: Colors.yellow),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: _localPhotoFile != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(7),
-                  child: Image.file(_localPhotoFile!, fit: BoxFit.cover),
-                )
-              : const Center(
-                  child: Icon(Icons.image_not_supported, size: 64, color: Colors.white24),
+        Stack(
+          children: [
+            Container(
+              height: 250,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                border: Border.all(color: Colors.yellow),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: _localPhotoFile != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(7),
+                      child: Image.file(_localPhotoFile!, fit: BoxFit.cover),
+                    )
+                  : const Center(
+                      child: Icon(Icons.image_not_supported, size: 64, color: Colors.white24),
+                    ),
+            ),
+            if (_localPhotoFile != null)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: CircleAvatar(
+                  backgroundColor: Colors.black54,
+                  child: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.redAccent),
+                    onPressed: _removePhoto,
+                  ),
                 ),
+              ),
+          ],
         ),
         const SizedBox(height: 8),
         Row(
