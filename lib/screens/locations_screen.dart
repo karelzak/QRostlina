@@ -15,11 +15,32 @@ class LocationsScreen extends StatefulWidget {
 
 class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  List<Bed>? _beds;
+  List<Crate>? _crates;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _refreshData(showLoading: true);
+  }
+
+  Future<void> _refreshData({bool showLoading = false}) async {
+    if (showLoading) {
+      setState(() => _loading = true);
+    }
+
+    final beds = await MockDatabaseService.getAllBeds();
+    final crates = await MockDatabaseService.getAllCrates();
+
+    if (mounted) {
+      setState(() {
+        _beds = beds;
+        _crates = crates;
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -47,7 +68,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
               } else if (value == 'import') {
                 final count = isBed ? await CSVService.importBeds() : await CSVService.importCrates();
                 if (count > 0) {
-                  setState(() {});
+                  _refreshData();
                 }
               }
             },
@@ -73,13 +94,15 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildBedsList(),
-          _buildCratesList(),
-        ],
-      ),
+      body: _loading && (_beds == null || _crates == null)
+          ? const Center(child: CircularProgressIndicator(color: Colors.yellow))
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildBedsList(),
+                _buildCratesList(),
+              ],
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final isBed = _tabController.index == 0;
@@ -90,7 +113,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
             ),
           );
           if (result != null) {
-            setState(() {});
+            _refreshData();
           }
         },
         backgroundColor: Colors.yellow,
@@ -122,80 +145,73 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
 
     if (confirmed == true) {
       await MockDatabaseService.deleteLocation(id);
-      setState(() {});
+      _refreshData();
     }
   }
 
   Widget _buildBedsList() {
-    return FutureBuilder<List<Bed>>(
-      future: MockDatabaseService.getAllBeds(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.yellow));
-        }
-        final beds = snapshot.data ?? [];
-        return ListView.builder(
-          itemCount: beds.length,
-          itemBuilder: (context, index) {
-            final bed = beds[index];
-            final uniqueSpeciesCount = bed.speciesMap.values.toSet().length;
-            final totalOccupancy = bed.speciesMap.length;
+    final beds = _beds ?? [];
+    return ListView.builder(
+      key: const PageStorageKey('beds_list'),
+      itemCount: beds.length,
+      itemBuilder: (context, index) {
+        final bed = beds[index];
+        final uniqueSpeciesCount = bed.speciesMap.values.toSet().length;
+        final totalOccupancy = bed.speciesMap.length;
 
-            return ListTile(
-              leading: const Icon(Icons.grid_view, color: Colors.yellow),
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Text(bed.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        return ListTile(
+          leading: const Icon(Icons.grid_view, color: Colors.yellow),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(bed.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+              if (!bed.isConsistent)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  if (!bed.isConsistent)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'DATA ERROR',
-                        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                      ),
-                    ),
+                  child: const Text(
+                    'DATA ERROR',
+                    style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${bed.id} | Row: ${bed.row ?? "-"}', style: const TextStyle(color: Colors.white70)),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  _countBadge('Species: $uniqueSpeciesCount', Colors.orange),
+                  const SizedBox(width: 8),
+                  _countBadge('Occupied: $totalOccupancy/${bed.totalCells}', Colors.green),
                 ],
               ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${bed.id} | Row: ${bed.row ?? "-"}', style: const TextStyle(color: Colors.white70)),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      _countBadge('Species: $uniqueSpeciesCount', Colors.orange),
-                      const SizedBox(width: 8),
-                      _countBadge('Occupied: $totalOccupancy/${bed.totalCells}', Colors.green),
-                    ],
-                  ),
-                ],
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                onPressed: () => _confirmDelete(bed.id),
               ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.redAccent),
-                    onPressed: () => _confirmDelete(bed.id),
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.yellow),
-                ],
+              const Icon(Icons.chevron_right, color: Colors.yellow),
+            ],
+          ),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DetailScreen(id: bed.id, type: ScannedType.bed),
               ),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailScreen(id: bed.id, type: ScannedType.bed),
-                  ),
-                );
-                setState(() {});
-              },
             );
+            _refreshData();
           },
         );
       },
@@ -203,50 +219,43 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
   }
 
   Widget _buildCratesList() {
-    return FutureBuilder<List<Crate>>(
-      future: MockDatabaseService.getAllCrates(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.yellow));
-        }
-        final crates = snapshot.data ?? [];
-        return ListView.builder(
-          itemCount: crates.length,
-          itemBuilder: (context, index) {
-            final crate = crates[index];
-            final speciesCount = crate.speciesIds.length;
+    final crates = _crates ?? [];
+    return ListView.builder(
+      key: const PageStorageKey('crates_list'),
+      itemCount: crates.length,
+      itemBuilder: (context, index) {
+        final crate = crates[index];
+        final speciesCount = crate.speciesIds.length;
 
-            return ListTile(
-              leading: const Icon(Icons.inventory_2, color: Colors.yellow),
-              title: Text(crate.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${crate.id} | Type: ${crate.type}', style: const TextStyle(color: Colors.white70)),
-                  const SizedBox(height: 4),
-                  _countBadge('Species: $speciesCount', Colors.blue),
-                ],
+        return ListTile(
+          leading: const Icon(Icons.inventory_2, color: Colors.yellow),
+          title: Text(crate.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${crate.id} | Type: ${crate.type}', style: const TextStyle(color: Colors.white70)),
+              const SizedBox(height: 4),
+              _countBadge('Species: $speciesCount', Colors.blue),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                onPressed: () => _confirmDelete(crate.id),
               ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.redAccent),
-                    onPressed: () => _confirmDelete(crate.id),
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.yellow),
-                ],
+              const Icon(Icons.chevron_right, color: Colors.yellow),
+            ],
+          ),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DetailScreen(id: crate.id, type: ScannedType.crate),
               ),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailScreen(id: crate.id, type: ScannedType.crate),
-                  ),
-                );
-                setState(() {});
-              },
             );
+            _refreshData();
           },
         );
       },

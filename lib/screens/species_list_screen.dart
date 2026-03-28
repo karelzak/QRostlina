@@ -18,35 +18,45 @@ class SpeciesListScreen extends StatefulWidget {
 }
 
 class _SpeciesListScreenState extends State<SpeciesListScreen> {
-  late Future<List<Species>> _speciesList;
+  List<Species>? _species;
   Map<String, int> _bedCounts = {};
   Map<String, int> _crateCounts = {};
   Map<String, File?> _localThumbnails = {};
+  bool _loading = true;
   bool _countsLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _refreshList();
+    _refreshList(showLoading: true);
   }
 
-  Future<void> _refreshList() async {
-    setState(() {
-      _speciesList = MockDatabaseService.getAllSpecies();
-      _countsLoading = true;
-      _localThumbnails = {};
-    });
+  Future<void> _refreshList({bool showLoading = false}) async {
+    if (showLoading) {
+      setState(() {
+        _loading = true;
+        _countsLoading = true;
+      });
+    }
 
-    final species = await _speciesList;
+    final species = await MockDatabaseService.getAllSpecies();
+    
+    // Create new local versions of data
+    Map<String, File?> newLocalThumbnails = {};
     for (var s in species) {
       if (s.photoUrl != null && !LocalImageService.isRemoteUrl(s.photoUrl!)) {
         final file = await LocalImageService.getLocalFile(s.photoUrl!);
-        if (mounted) {
-          setState(() {
-            _localThumbnails[s.id] = file;
-          });
-        }
+        newLocalThumbnails[s.id] = file;
       }
+    }
+
+    if (mounted) {
+      setState(() {
+        _species = species;
+        _localThumbnails = newLocalThumbnails;
+        _loading = false;
+        // Keep _countsLoading = true for now, load counts next
+      });
     }
 
     final beds = await MockDatabaseService.getAllBeds();
@@ -130,77 +140,68 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Species>>(
-        future: _speciesList,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.yellow));
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No species found.', style: TextStyle(color: Colors.white70)));
-          }
+      body: _loading && _species == null
+          ? const Center(child: CircularProgressIndicator(color: Colors.yellow))
+          : _species == null || _species!.isEmpty
+              ? const Center(child: Text('No species found.', style: TextStyle(color: Colors.white70)))
+              : ListView.builder(
+                  key: const PageStorageKey('species_list'),
+                  itemCount: _species!.length,
+                  itemBuilder: (context, index) {
+                    final s = _species![index];
+                    final bedCount = _bedCounts[s.id] ?? 0;
+                    final crateCount = _crateCounts[s.id] ?? 0;
 
-          final species = snapshot.data!;
-          return ListView.builder(
-            itemCount: species.length,
-            itemBuilder: (context, index) {
-              final s = species[index];
-              final bedCount = _bedCounts[s.id] ?? 0;
-              final crateCount = _crateCounts[s.id] ?? 0;
-
-              return Card(
-                color: Colors.grey[900],
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  leading: _buildThumbnail(s),
-                  title: Text(
-                    s.name.toUpperCase(),
-                    style: const TextStyle(color: Colors.yellow, fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(s.id, style: const TextStyle(color: Colors.white70, fontSize: 16)),
-                      const SizedBox(height: 4),
-                      if (!_countsLoading)
-                        Row(
+                    return Card(
+                      color: Colors.grey[900],
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        leading: _buildThumbnail(s),
+                        title: Text(
+                          s.name.toUpperCase(),
+                          style: const TextStyle(color: Colors.yellow, fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _countBadge(Icons.grid_view, bedCount.toString(), Colors.orange),
-                            const SizedBox(width: 8),
-                            _countBadge(Icons.inventory_2, crateCount.toString(), Colors.blue),
+                            Text(s.id, style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                            const SizedBox(height: 4),
+                            if (!_countsLoading)
+                              Row(
+                                children: [
+                                  _countBadge(Icons.grid_view, bedCount.toString(), Colors.orange),
+                                  const SizedBox(width: 8),
+                                  _countBadge(Icons.inventory_2, crateCount.toString(), Colors.blue),
+                                ],
+                              )
+                            else
+                              const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.yellow)),
                           ],
-                        )
-                      else
-                        const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.yellow)),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.redAccent),
-                        onPressed: () => _confirmDelete(s.id),
-                      ),
-                      const Icon(Icons.arrow_forward_ios, color: Colors.yellow),
-                    ],
-                  ),
-                  onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DetailScreen(id: s.id, type: ScannedType.species),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.redAccent),
+                              onPressed: () => _confirmDelete(s.id),
+                            ),
+                            const Icon(Icons.arrow_forward_ios, color: Colors.yellow),
+                          ],
+                        ),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DetailScreen(id: s.id, type: ScannedType.species),
+                            ),
+                          );
+                          await _refreshList();
+                        },
                       ),
                     );
-                    await _refreshList();
                   },
                 ),
-              );
-            },
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push<dynamic>(
