@@ -384,7 +384,7 @@ class _DetailScreenState extends State<DetailScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: bed.totalLines,
-                childAspectRatio: bed.totalLines == 1 ? 4.0 : 1.8,
+                childAspectRatio: bed.totalLines == 1 ? 3.0 : 1.5,
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
               ),
@@ -446,7 +446,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       if (species?.photoUrl != null) ...[
-                                        _buildGridThumbnail(species!),
+                                        _buildGridThumbnail(species!, size: 45),
                                         const SizedBox(height: 2),
                                       ],
                                       Text(
@@ -686,16 +686,16 @@ class _DetailScreenState extends State<DetailScreen> {
             ? CachedNetworkImage(
                 imageUrl: species.photoUrl!,
                 fit: BoxFit.cover,
-                memCacheWidth: 80, // High efficiency for tiny icons
-                memCacheHeight: 80,
+                memCacheWidth: 100, // Slightly higher for 45px icons
+                memCacheHeight: 100,
                 errorWidget: (context, url, error) => const Icon(Icons.broken_image, size: 10, color: Colors.red),
               )
             : _localThumbnails[species.id] != null
                 ? Image.file(
                     _localThumbnails[species.id]!,
                     fit: BoxFit.cover,
-                    cacheWidth: 80,
-                    cacheHeight: 80,
+                    cacheWidth: 100,
+                    cacheHeight: 100,
                   )
                 : const Icon(Icons.image, size: 10, color: Colors.white12),
       ),
