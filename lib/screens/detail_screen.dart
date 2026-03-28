@@ -519,17 +519,15 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   void _showCellActions(int line, int row, String currentSpeciesId) async {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.grey[900],
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text('Cell ${(_data as Bed).formatPosition(line, row)}', 
+          style: const TextStyle(color: Colors.yellow, fontSize: 18, fontWeight: FontWeight.bold)),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Cell ${(_data as Bed).formatPosition(line, row)}', 
-              style: const TextStyle(color: Colors.yellow, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.info_outline, color: Colors.blue),
               title: const Text('View Species Details', style: TextStyle(color: Colors.white)),
