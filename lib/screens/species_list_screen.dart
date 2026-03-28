@@ -3,6 +3,7 @@ import '../l10n/app_localizations.dart';
 import '../models/species.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
+import '../services/csv_service.dart';
 import 'detail_screen.dart';
 import 'edit_species_screen.dart';
 
@@ -90,7 +91,28 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.speciesList)),
+      appBar: AppBar(
+        title: Text(l10n.speciesList),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) async {
+              if (value == 'export') {
+                await CSVService.exportSpecies();
+              } else if (value == 'import') {
+                final count = await CSVService.importSpecies();
+                if (count > 0) {
+                  _refreshList();
+                }
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'export', child: Text('Export Species (CSV)')),
+              const PopupMenuItem(value: 'import', child: Text('Import Species (CSV)')),
+            ],
+          ),
+        ],
+      ),
       body: FutureBuilder<List<Species>>(
         future: _speciesList,
         builder: (context, snapshot) {

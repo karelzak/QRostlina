@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
+import '../services/csv_service.dart';
 import 'detail_screen.dart';
 import 'edit_location_screen.dart';
 
@@ -32,6 +33,34 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
     return Scaffold(
       appBar: AppBar(
         title: const Text('LOCATIONS'),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) async {
+              final isBed = _tabController.index == 0;
+              if (value == 'export') {
+                if (isBed) {
+                  await CSVService.exportBeds();
+                } else {
+                  await CSVService.exportCrates();
+                }
+              } else if (value == 'import') {
+                final count = isBed ? await CSVService.importBeds() : await CSVService.importCrates();
+                if (count > 0) {
+                  setState(() {});
+                }
+              }
+            },
+            itemBuilder: (context) {
+              final isBed = _tabController.index == 0;
+              final type = isBed ? 'Beds' : 'Crates';
+              return [
+                PopupMenuItem(value: 'export', child: Text('Export $type (CSV)')),
+                PopupMenuItem(value: 'import', child: Text('Import $type (CSV)')),
+              ];
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.black,

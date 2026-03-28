@@ -4,6 +4,7 @@ import '../models/species.dart';
 import '../models/location.dart';
 import '../services/mock_database_service.dart';
 import '../services/qr_scanner_service.dart';
+import '../services/csv_service.dart';
 import '../widgets/search_dialog.dart';
 import 'edit_species_screen.dart';
 import 'edit_location_screen.dart';
@@ -162,6 +163,36 @@ class _DetailScreenState extends State<DetailScreen> {
               },
             ),
           ],
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) async {
+              if (value == 'export_all') {
+                if (widget.type == ScannedType.species) {
+                  await CSVService.exportSpecies();
+                } else if (widget.type == ScannedType.bed) {
+                  await CSVService.exportBeds();
+                } else if (widget.type == ScannedType.crate) {
+                  await CSVService.exportCrates();
+                }
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'export_all',
+                child: Text('Export All ${widget.type.name.toUpperCase()}S (CSV)'),
+              ),
+              const PopupMenuItem(
+                value: 'log',
+                enabled: false,
+                child: Text('View Log (Soon)'),
+              ),
+              const PopupMenuItem(
+                value: 'ai',
+                enabled: false,
+                child: Text('Chat with AI (Soon)'),
+              ),
+            ],
+          ),
         ],
       ),
       body: _loading
