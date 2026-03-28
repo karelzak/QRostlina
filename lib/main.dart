@@ -64,7 +64,7 @@ class QRostlinaApp extends StatelessWidget {
           ),
         ),
         popupMenuTheme: PopupMenuThemeData(
-          backgroundColor: Colors.grey[900],
+          color: Colors.grey[900],
           surfaceTintColor: Colors.transparent,
           textStyle: const TextStyle(color: Colors.white, fontSize: 18),
         ),
