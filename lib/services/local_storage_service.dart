@@ -375,4 +375,20 @@ class LocalStorageService implements DatabaseService {
       }
     }
   }
+
+  @override
+  Future<List<String>> getAuthorizedUsers() async {
+    // Whitelisting is only for Cloud mode
+    return [];
+  }
+
+  @override
+  Future<void> authorizeUser(String email) async {
+    // No-op for local storage
+  }
+
+  @override
+  Future<void> deauthorizeUser(String email) async {
+    // No-op for local storage
+  }
 }

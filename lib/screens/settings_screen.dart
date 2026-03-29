@@ -22,7 +22,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _loadPath();
   }
 
@@ -112,6 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
             Tab(text: 'GENERAL'),
             Tab(text: 'DATA'),
             Tab(text: 'AUTH'),
+            Tab(text: 'ACCESS'),
           ],
         ),
       ),
@@ -121,6 +122,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
           _buildGeneralTab(),
           _buildDataTab(),
           _buildAuthTab(),
+          _buildAccessTab(),
         ],
       ),
     );
@@ -315,6 +317,136 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAccessTab() {
+    if (!locator.isCloudMode) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.lock_outline, size: 64, color: Colors.white24),
+              SizedBox(height: 16),
+              Text(
+                'Access Control',
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Whitelist management is only available in Cloud mode.',
+                style: TextStyle(color: Colors.white54),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return FutureBuilder<List<String>>(
+      future: locator.db.getAuthorizedUsers(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final users = snapshot.data ?? [];
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final emailController = TextEditingController();
+                  final result = await showDialog<String>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: Colors.grey[900],
+                      title: const Text('Authorize User', style: TextStyle(color: Colors.white)),
+                      content: TextField(
+                        controller: emailController,
+                        autofocus: true,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          hintText: 'user@gmail.com',
+                          hintStyle: TextStyle(color: Colors.white24),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, emailController.text),
+                          child: const Text('AUTHORIZE'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (result != null && result.isNotEmpty) {
+                    try {
+                      await locator.db.authorizeUser(result);
+                      setState(() => _statusMessage = 'Authorized $result');
+                    } catch (e) {
+                      setState(() => _statusMessage = 'Authorization failed: $e');
+                    }
+                  }
+                },
+                icon: const Icon(Icons.person_add),
+                label: const Text('AUTHORIZE NEW EMAIL'),
+                style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+              ),
+            ),
+            const Divider(color: Colors.white24),
+            Expanded(
+              child: users.isEmpty
+                  ? const Center(child: Text('No users authorized yet', style: TextStyle(color: Colors.white54)))
+                  : ListView.builder(
+                      itemCount: users.length,
+                      itemBuilder: (context, index) {
+                        final email = users[index];
+                        return ListTile(
+                          leading: const Icon(Icons.person, color: Colors.yellow),
+                          title: Text(email, style: const TextStyle(color: Colors.white)),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.redAccent),
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  backgroundColor: Colors.grey[900],
+                                  title: const Text('Remove User?', style: TextStyle(color: Colors.white)),
+                                  content: Text('Remove $email from authorized users?', style: const TextStyle(color: Colors.white70)),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      child: const Text('REMOVE', style: TextStyle(color: Colors.redAccent)),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirmed == true) {
+                                try {
+                                  await locator.db.deauthorizeUser(email);
+                                  setState(() => _statusMessage = 'Deauthorized $email');
+                                } catch (e) {
+                                  setState(() => _statusMessage = 'Deauthorization failed: $e');
+                                }
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

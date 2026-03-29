@@ -241,8 +241,26 @@ class FirestoreDatabaseService implements DatabaseService {
   Future<void> clearLocation(String id) async {
     final collection = id.startsWith('B-') ? 'beds' : 'crates';
     final field = id.startsWith('B-') ? 'speciesMap' : 'speciesIds';
-    final value = id.startsWith('B-') ? {} : [];
-    await _db.collection(collection).doc(id).update({field: value});
+    final Map<String, dynamic> data = id.startsWith('B-') ? {'speciesMap': {}} : {'speciesIds': []};
+    await _db.collection(collection).doc(id).update(data);
+  }
+
+  @override
+  Future<List<String>> getAuthorizedUsers() async {
+    final snapshot = await _db.collection('authorized_users').get();
+    return snapshot.docs.map((doc) => doc.id).toList();
+  }
+
+  @override
+  Future<void> authorizeUser(String email) async {
+    await _db.collection('authorized_users').doc(email.trim().toLowerCase()).set({
+      'addedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  @override
+  Future<void> deauthorizeUser(String email) async {
+    await _db.collection('authorized_users').doc(email.trim().toLowerCase()).delete();
   }
 
   @override

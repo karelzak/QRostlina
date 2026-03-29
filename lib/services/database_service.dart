@@ -23,6 +23,11 @@ abstract class DatabaseService {
   Future<void> addSpeciesToCrate(String crateId, String speciesId);
   Future<void> removeSpeciesFromCrate(String crateId, String speciesId);
   Future<void> clearLocation(String id);
+
+  // User Access Management
+  Future<List<String>> getAuthorizedUsers();
+  Future<void> authorizeUser(String email);
+  Future<void> deauthorizeUser(String email);
   
   // Import/Export (mostly for local mode or migration)
   Future<void> exportData(String path);
