@@ -151,6 +151,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ADD NEW SPECIES'**
   String get addNewSpecies;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'SETTINGS'**
+  String get settings;
+
+  /// No description provided for @general.
+  ///
+  /// In en, this message translates to:
+  /// **'GENERAL'**
+  String get general;
+
+  /// No description provided for @data.
+  ///
+  /// In en, this message translates to:
+  /// **'DATA'**
+  String get data;
+
+  /// No description provided for @auth.
+  ///
+  /// In en, this message translates to:
+  /// **'AUTH'**
+  String get auth;
+
+  /// No description provided for @access.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCESS'**
+  String get access;
+
+  /// No description provided for @cloudMode.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOUD MODE'**
+  String get cloudMode;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'SIGN OUT'**
+  String get signOut;
+
+  /// No description provided for @signInWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'SIGN IN WITH GOOGLE'**
+  String get signInWithGoogle;
+
+  /// No description provided for @storageStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'STORAGE STATUS:'**
+  String get storageStatus;
+
+  /// No description provided for @dumpData.
+  ///
+  /// In en, this message translates to:
+  /// **'DUMP ALL DATA (JSON)'**
+  String get dumpData;
+
+  /// No description provided for @restoreData.
+  ///
+  /// In en, this message translates to:
+  /// **'RESTORE ALL DATA (JSON)'**
+  String get restoreData;
+
+  /// No description provided for @cloudSync.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOUD SYNC:'**
+  String get cloudSync;
+
+  /// No description provided for @pushToCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'PUSH LOCAL DATA TO CLOUD'**
+  String get pushToCloud;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'CANCEL'**
+  String get cancel;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'RESTORE'**
+  String get restore;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE'**
+  String get delete;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'REMOVE'**
+  String get remove;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'SAVE'**
+  String get save;
+
+  /// No description provided for @camera.
+  ///
+  /// In en, this message translates to:
+  /// **'CAMERA'**
+  String get camera;
+
+  /// No description provided for @gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'GALLERY'**
+  String get gallery;
+
+  /// No description provided for @photo.
+  ///
+  /// In en, this message translates to:
+  /// **'PHOTO'**
+  String get photo;
+
+  /// No description provided for @idExists.
+  ///
+  /// In en, this message translates to:
+  /// **'ID {id} already exists!'**
+  String idExists(String id);
+
+  /// No description provided for @authorize.
+  ///
+  /// In en, this message translates to:
+  /// **'AUTHORIZE'**
+  String get authorize;
+
+  /// No description provided for @authorizeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorize User'**
+  String get authorizeUser;
+
+  /// No description provided for @authorizeNewEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'AUTHORIZE NEW EMAIL'**
+  String get authorizeNewEmail;
+
+  /// No description provided for @noUsersAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'No users authorized yet'**
+  String get noUsersAuthorized;
+
+  /// No description provided for @removeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove User?'**
+  String get removeUser;
+
+  /// No description provided for @clearLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Location?'**
+  String get clearLocation;
+
+  /// No description provided for @clearLocationConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove ALL species from this location?'**
+  String get clearLocationConfirm;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'YES, CLEAR ALL'**
+  String get clearAll;
+
+  /// No description provided for @createNew.
+  ///
+  /// In en, this message translates to:
+  /// **'CREATE NEW'**
+  String get createNew;
+
+  /// No description provided for @viewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get viewDetails;
+
+  /// No description provided for @changeSpecies.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Species'**
+  String get changeSpecies;
+
+  /// No description provided for @removeDied.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove (Died)'**
+  String get removeDied;
+
+  /// No description provided for @meters.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Meters'**
+  String meters(int count);
+
+  /// No description provided for @grid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid (2 Lines)'**
+  String get grid;
+
+  /// No description provided for @linear.
+  ///
+  /// In en, this message translates to:
+  /// **'Linear (Meters only)'**
+  String get linear;
+
+  /// No description provided for @density.
+  ///
+  /// In en, this message translates to:
+  /// **'{rows}x{cols} ({total} per meter)'**
+  String density(int rows, int cols, int total);
+
+  /// No description provided for @deleteLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Location?'**
+  String get deleteLocation;
+
+  /// No description provided for @export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export {type} (CSV)'**
+  String export(String type);
+
+  /// No description provided for @import.
+  ///
+  /// In en, this message translates to:
+  /// **'Import {type} (CSV)'**
+  String import(String type);
+
+  /// No description provided for @scannerNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanner not available on Desktop.'**
+  String get scannerNotAvailable;
+
+  /// No description provided for @invalidLabelType.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid label type. Expected {type}'**
+  String invalidLabelType(String type);
+
+  /// No description provided for @notSpeciesQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a Species QR code (S-xxx expected)'**
+  String get notSpeciesQr;
+
+  /// No description provided for @noMatchesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches found.'**
+  String get noMatchesFound;
 }
 
 class _AppLocalizationsDelegate
