@@ -42,6 +42,12 @@
   "authorizeNewEmail": "AUTHORIZE NEW EMAIL",
   "noUsersAuthorized": "No users authorized yet",
   "removeUser": "Remove User?",
+  "removeUserConfirm": "Remove {email} from authorized users?",
+  "@removeUserConfirm": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
   "clearLocation": "Clear Location?",
   "clearLocationConfirm": "Are you sure you want to remove ALL species from this location?",
   "clearAll": "YES, CLEAR ALL",
@@ -88,5 +94,25 @@
     }
   },
   "notSpeciesQr": "Not a Species QR code (S-xxx expected)",
-  "noMatchesFound": "No matches found."
+  "noMatchesFound": "No matches found.",
+  "name": "Name",
+  "latin": "Latin",
+  "color": "Color",
+  "description": "Description",
+  "length": "Length",
+  "type": "Type",
+  "label": "Label",
+  "noDescription": "No description",
+  "notUsedInLocation": "Not used in any location.",
+  "crateIsEmpty": "Crate is empty.",
+  "noBedsFound": "No beds found.",
+  "noCratesFound": "No crates found.",
+  "noSpeciesFound": "No species found.",
+  "deleteSpecies": "Delete Species?",
+  "deleteSpeciesConfirm": "Are you sure you want to delete {id}? This will also remove all its location references!",
+  "@deleteSpeciesConfirm": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  }
 }

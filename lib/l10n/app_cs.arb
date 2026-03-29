@@ -42,6 +42,12 @@
   "authorizeNewEmail": "AUTORIZOVAT NOVÝ EMAIL",
   "noUsersAuthorized": "Zatím žádní autorizovaní uživatelé",
   "removeUser": "Odebrat uživatele?",
+  "removeUserConfirm": "Odebrat {email} z autorizovaných uživatelů?",
+  "@removeUserConfirm": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
   "clearLocation": "Vyčistit umístění?",
   "clearLocationConfirm": "Opravdu chcete odebrat VŠECHNY odrůdy z tohoto umístění?",
   "clearAll": "ANO, VYČISTIT VŠE",
@@ -88,5 +94,25 @@
     }
   },
   "notSpeciesQr": "Toto není QR kód odrůdy (očekáváno S-xxx)",
-  "noMatchesFound": "Nebyly nalezeny žádné výsledky."
+  "noMatchesFound": "Nebyly nalezeny žádné výsledky.",
+  "name": "Název",
+  "latin": "Latinský název",
+  "color": "Barva",
+  "description": "Popis",
+  "length": "Délka",
+  "type": "Typ",
+  "label": "Označení",
+  "noDescription": "Bez popisu",
+  "notUsedInLocation": "Není v žádném umístění.",
+  "crateIsEmpty": "Přepravka je prázdná.",
+  "noBedsFound": "Žádné záhony nenalezeny.",
+  "noCratesFound": "Žádné přepravky nenalezeny.",
+  "noSpeciesFound": "Žádné odrůdy nenalezeny.",
+  "deleteSpecies": "Smazat odrůdu?",
+  "deleteSpeciesConfirm": "Opravdu chcete smazat {id}? Tím se také odstraní všechny odkazy na toto umístění!",
+  "@deleteSpeciesConfirm": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  }
 }

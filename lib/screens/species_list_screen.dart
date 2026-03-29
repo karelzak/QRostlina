@@ -93,9 +93,9 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: Text('Delete Species?', style: const TextStyle(color: Colors.white)),
+        title: Text(l10n.deleteSpecies, style: const TextStyle(color: Colors.white)),
         content: Text(
-          'Are you sure you want to delete $id? This will also remove all its location references!',
+          l10n.deleteSpeciesConfirm(id),
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -143,7 +143,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
       body: _loading && _species == null
           ? const Center(child: CircularProgressIndicator(color: Colors.yellow))
           : _species == null || _species!.isEmpty
-              ? const Center(child: Text('No species found.', style: TextStyle(color: Colors.white70)))
+              ? Center(child: Text(l10n.noSpeciesFound, style: const TextStyle(color: Colors.white70)))
               : ListView.builder(
                   key: const PageStorageKey('species_list'),
                   itemCount: _species!.length,

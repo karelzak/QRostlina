@@ -422,7 +422,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                                 builder: (context) => AlertDialog(
                                   backgroundColor: Colors.grey[900],
                                   title: Text(l10n.removeUser, style: const TextStyle(color: Colors.white)),
-                                  content: Text('Remove $email from authorized users?', style: const TextStyle(color: Colors.white70)),
+                                  content: Text(l10n.removeUserConfirm(email), style: const TextStyle(color: Colors.white70)),
                                   actions: [
                                     TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
                                     TextButton(

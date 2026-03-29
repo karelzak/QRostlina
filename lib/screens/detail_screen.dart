@@ -165,7 +165,8 @@ class _DetailScreenState extends State<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    String title = '${widget.type.name.toUpperCase()}: ${widget.id}';
+    String typeStr = widget.type == ScannedType.species ? l10n.speciesList : l10n.locations;
+    String title = '${typeStr.toUpperCase()}: ${widget.id}';
 
     return Scaffold(
       appBar: AppBar(
@@ -220,7 +221,7 @@ class _DetailScreenState extends State<DetailScreen> {
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: 'export_all',
-                child: Text('Export All ${widget.type.name.toUpperCase()}S (CSV)'),
+                child: Text(l10n.export(widget.type.name.toUpperCase())),
               ),
               const PopupMenuItem(
                 value: 'log',
@@ -306,7 +307,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
                 ),
                 const Spacer(),
-                _countBadge(Icons.grid_view, '$_uniqueSpeciesInLocationCount Species', Colors.orange),
+                _countBadge(Icons.grid_view, '$_uniqueSpeciesInLocationCount ${l10n.speciesList}', Colors.orange),
                 const SizedBox(width: 8),
                 _countBadge(Icons.check_circle_outline, '${(_data as Bed).speciesMap.length}/${(_data as Bed).totalCells}', Colors.green),
               ],
@@ -386,7 +387,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   const Icon(Icons.straighten, color: Colors.yellow, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    "METER $meter",
+                    "${l10n.meters(1).split(' ').last.toUpperCase()} $meter",
                     style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   const Expanded(child: Divider(indent: 16, color: Colors.white24)),
@@ -394,14 +395,14 @@ class _DetailScreenState extends State<DetailScreen> {
               ),
             ),
             if (bed.totalLines > 1)
-              Row(
+              const Row(
                 children: [
-                  Expanded(child: Center(child: Text("LEFT", style: TextStyle(color: Colors.yellow.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)))),
-                  Expanded(child: Center(child: Text("RIGHT", style: TextStyle(color: Colors.yellow.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold)))),
+                  Expanded(child: Center(child: Text("LEFT", style: TextStyle(color: Colors.white24, fontSize: 12, fontWeight: FontWeight.bold)))),
+                  Expanded(child: Center(child: Text("RIGHT", style: TextStyle(color: Colors.white24, fontSize: 12, fontWeight: FontWeight.bold)))),
                 ],
               )
             else
-              Center(child: Text("CENTER", style: TextStyle(color: Colors.yellow.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold))),
+              const Center(child: Text("CENTER", style: TextStyle(color: Colors.white24, fontSize: 12, fontWeight: FontWeight.bold))),
             const SizedBox(height: 4),
             GridView.builder(
               shrinkWrap: true,
@@ -427,7 +428,7 @@ class _DetailScreenState extends State<DetailScreen> {
                    String lineStr = lineIdx == 1 ? 'L' : 'R';
                    cellLabel = "$subRow$lineStr";
                 } else {
-                   cellLabel = "METER $meter";
+                   cellLabel = "${l10n.meters(1).split(' ').last.toUpperCase()} $meter";
                 }
 
                 return GestureDetector(
@@ -593,12 +594,12 @@ class _DetailScreenState extends State<DetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _infoRow('Name', s.name),
-                        _infoRow('Latin', s.latinName ?? '-'),
-                        _infoRow('Color', s.color ?? '-'),
+                        _infoRow(l10n.name, s.name),
+                        _infoRow(l10n.latin, s.latinName ?? '-'),
+                        _infoRow(l10n.color, s.color ?? '-'),
                         const SizedBox(height: 16),
-                        const Text('Description:', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
-                        Text(s.description ?? 'No description', style: const TextStyle(fontSize: 18)),
+                        Text('${l10n.description}:', style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
+                        Text(s.description ?? l10n.noDescription, style: const TextStyle(fontSize: 18)),
                       ],
                     ),
                   ),
@@ -622,12 +623,12 @@ class _DetailScreenState extends State<DetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _infoRow('Name', b.name),
-              _infoRow('Label', b.row ?? '-'),
-              _infoRow('Length', '${b.length} Meters'),
-              _infoRow('Type', b.layout.name.toUpperCase()),
+              _infoRow(l10n.name, b.name),
+              _infoRow(l10n.label, b.row ?? '-'),
+              _infoRow(l10n.length, l10n.meters(b.length)),
+              _infoRow(l10n.type, b.layout.name.toUpperCase()),
               if (b.layout == BedLayout.grid)
-                _infoRow('Grid', '${b.totalLines} lines x ${b.rowsPerMeter} rows'),
+                _infoRow(l10n.grid.split(' ').first, '${b.totalLines} lines x ${b.rowsPerMeter} rows'),
             ],
           ),
         ),
@@ -641,8 +642,8 @@ class _DetailScreenState extends State<DetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _infoRow('Name', c.name),
-              _infoRow('Type', c.type),
+              _infoRow(l10n.name, c.name),
+              _infoRow(l10n.type, c.type),
             ],
           ),
         ),
@@ -726,7 +727,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Widget _buildLocationsList(AppLocalizations l10n) {
     if (_locations == null || _locations!.isEmpty) {
-      return const Text('Not used in any location.', style: TextStyle(fontStyle: FontStyle.italic));
+      return Text(l10n.notUsedInLocation, style: const TextStyle(fontStyle: FontStyle.italic));
     }
 
     return ListView.builder(
@@ -754,7 +755,7 @@ class _DetailScreenState extends State<DetailScreen> {
   Widget _buildCrateSpeciesList(AppLocalizations l10n) {
     final crate = _data as Crate;
     if (crate.speciesIds.isEmpty) {
-      return const Text('Crate is empty.', style: TextStyle(fontStyle: FontStyle.italic));
+      return Text(l10n.crateIsEmpty, style: const TextStyle(fontStyle: FontStyle.italic));
     }
 
     return ListView.builder(

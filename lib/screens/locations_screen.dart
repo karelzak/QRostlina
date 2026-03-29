@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../l10n/app_localizations.dart';
 import '../models/location.dart';
 import '../services/service_locator.dart';
@@ -72,9 +73,9 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
           indicatorColor: Colors.black,
           labelColor: Colors.black,
           unselectedLabelColor: Colors.black54,
-          tabs: const [
-            Tab(text: 'BEDS'),
-            Tab(text: 'CRATES'),
+          tabs: [
+            Tab(text: l10n.meters(2).split(' ').last.toUpperCase() == 'METERS' ? 'BEDS' : 'ZÁHONY'),
+            Tab(text: l10n.meters(2).split(' ').last.toUpperCase() == 'METERS' ? 'CRATES' : 'PŘEPRAVKY'),
           ],
         ),
       ),
@@ -104,7 +105,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
 
   Widget _buildBedsList(AppLocalizations l10n) {
     if (_beds == null || _beds!.isEmpty) {
-      return const Center(child: Text('No beds found.', style: TextStyle(color: Colors.white70)));
+      return Center(child: Text(l10n.noBedsFound, style: const TextStyle(color: Colors.white70)));
     }
     return ListView.builder(
       itemCount: _beds!.length,
@@ -113,7 +114,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
         return ListTile(
           leading: const Icon(Icons.grid_view, color: Colors.yellow),
           title: Text(bed.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text('${bed.id} | Row: ${bed.row ?? "-"}', style: const TextStyle(color: Colors.white70)),
+          subtitle: Text('${bed.id} | ${l10n.label}: ${bed.row ?? "-"}', style: const TextStyle(color: Colors.white70)),
           trailing: IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
             onPressed: () => _deleteLocation(bed.id, l10n),
@@ -126,7 +127,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
 
   Widget _buildCratesList(AppLocalizations l10n) {
     if (_crates == null || _crates!.isEmpty) {
-      return const Center(child: Text('No crates found.', style: TextStyle(color: Colors.white70)));
+      return Center(child: Text(l10n.noCratesFound, style: const TextStyle(color: Colors.white70)));
     }
     return ListView.builder(
       itemCount: _crates!.length,
@@ -135,7 +136,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
         return ListTile(
           leading: const Icon(Icons.inventory_2, color: Colors.yellow),
           title: Text(crate.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text('${crate.id} | Type: ${crate.type}', style: const TextStyle(color: Colors.white70)),
+          subtitle: Text('${crate.id} | ${l10n.type}: ${crate.type}', style: const TextStyle(color: Colors.white70)),
           trailing: IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
             onPressed: () => _deleteLocation(crate.id, l10n),
