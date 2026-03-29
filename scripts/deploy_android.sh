@@ -13,7 +13,7 @@ show_help() {
     echo "Options:"
     echo "  -r, --run       Run the app in debug mode on a connected device (Live development)"
     echo "  -i, --install   Build release APK and install to a connected device (Default)"
-    echo "  -b, --build     Build release APKs for distribution (Generates split APKs in build/app/outputs/flutter-apk/)"
+    echo "  -b, --build     Build all release APKs (Universal 'fat' APK + Optimized split APKs)"
     echo "  -h, --help      Show this help message"
 }
 
@@ -33,11 +33,18 @@ case "$1" in
         $FLUTTER run -d "$DEVICE_ID"
         ;;
     -b|--build)
-        echo "--- Building Release APKs for Distribution ---"
+        echo "--- Building Universal (Fat) APK ---"
+        $FLUTTER build apk --release
+        
+        echo "--- Building Optimized Split APKs ---"
         $FLUTTER build apk --release --split-per-abi
+        
         echo "--- Build Complete! ---"
         echo "Find your APKs in: build/app/outputs/flutter-apk/"
-        echo "Tip: app-release-arm64-v8a.apk is usually the best for modern phones."
+        echo ""
+        echo "Files available:"
+        echo "  - app-release.apk (Universal/Fat - Best for Firebase/General use)"
+        echo "  - app-arm64-v8a-release.apk (Optimized - Best for modern phones via Signal/WhatsApp)"
         ;;
     -h|--help)
         show_help
