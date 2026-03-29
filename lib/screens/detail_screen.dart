@@ -302,9 +302,9 @@ class _DetailScreenState extends State<DetailScreen> {
             const SizedBox(height: 24),
             Row(
               children: [
-                const Text(
-                  'VISUAL MAP',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+                Text(
+                  l10n.visualMap,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
                 ),
                 const Spacer(),
                 _countBadge(Icons.grid_view, '$_uniqueSpeciesInLocationCount ${l10n.speciesList}', Colors.orange),
@@ -343,9 +343,9 @@ class _DetailScreenState extends State<DetailScreen> {
             const SizedBox(height: 24),
             Row(
               children: [
-                const Text(
-                  'SPECIES IN CRATE',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+                Text(
+                  l10n.speciesInCrate,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
                 ),
                 const Spacer(),
                 _countBadge(Icons.local_florist, _uniqueSpeciesInLocationCount.toString(), Colors.blue),
@@ -387,7 +387,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   const Icon(Icons.straighten, color: Colors.yellow, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    "${l10n.meters(1).split(' ').last.toUpperCase()} $meter",
+                    l10n.meterLabel(meter),
                     style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   const Expanded(child: Divider(indent: 16, color: Colors.white24)),
@@ -395,14 +395,14 @@ class _DetailScreenState extends State<DetailScreen> {
               ),
             ),
             if (bed.totalLines > 1)
-              const Row(
+              Row(
                 children: [
-                  Expanded(child: Center(child: Text("LEFT", style: TextStyle(color: Colors.white24, fontSize: 12, fontWeight: FontWeight.bold)))),
-                  Expanded(child: Center(child: Text("RIGHT", style: TextStyle(color: Colors.white24, fontSize: 12, fontWeight: FontWeight.bold)))),
+                  Expanded(child: Center(child: Text(l10n.left, style: const TextStyle(color: Colors.white24, fontSize: 12, fontWeight: FontWeight.bold)))),
+                  Expanded(child: Center(child: Text(l10n.right, style: const TextStyle(color: Colors.white24, fontSize: 12, fontWeight: FontWeight.bold)))),
                 ],
               )
             else
-              const Center(child: Text("CENTER", style: TextStyle(color: Colors.white24, fontSize: 12, fontWeight: FontWeight.bold))),
+              Center(child: Text(l10n.center, style: const TextStyle(color: Colors.white24, fontSize: 12, fontWeight: FontWeight.bold))),
             const SizedBox(height: 4),
             GridView.builder(
               shrinkWrap: true,
@@ -428,7 +428,7 @@ class _DetailScreenState extends State<DetailScreen> {
                    String lineStr = lineIdx == 1 ? 'L' : 'R';
                    cellLabel = "$subRow$lineStr";
                 } else {
-                   cellLabel = "${l10n.meters(1).split(' ').last.toUpperCase()} $meter";
+                   cellLabel = l10n.meterLabel(meter);
                 }
 
                 return GestureDetector(

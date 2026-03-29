@@ -60,7 +60,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
               // Handle CSV import/export for current tab
             },
             itemBuilder: (context) {
-              final type = _tabController.index == 0 ? 'Beds' : 'Crates';
+              final type = _tabController.index == 0 ? l10n.beds : l10n.crates;
               return [
                 PopupMenuItem(value: 'export', child: Text(l10n.export(type))),
                 PopupMenuItem(value: 'import', child: Text(l10n.import(type))),
@@ -74,8 +74,8 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
           labelColor: Colors.black,
           unselectedLabelColor: Colors.black54,
           tabs: [
-            Tab(text: l10n.meters(2).split(' ').last.toUpperCase() == 'METERS' ? 'BEDS' : 'ZÁHONY'),
-            Tab(text: l10n.meters(2).split(' ').last.toUpperCase() == 'METERS' ? 'CRATES' : 'PŘEPRAVKY'),
+            Tab(text: l10n.beds.toUpperCase()),
+            Tab(text: l10n.crates.toUpperCase()),
           ],
         ),
       ),

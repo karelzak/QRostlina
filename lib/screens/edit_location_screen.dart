@@ -97,7 +97,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isEditing = widget.location != null;
-    final typeLabel = widget.isBed ? 'BED' : 'CRATE';
+    final typeLabel = widget.isBed ? l10n.bed.toUpperCase() : l10n.crate.toUpperCase();
 
     return Scaffold(
       appBar: AppBar(title: Text(isEditing ? 'EDIT $typeLabel' : 'ADD NEW $typeLabel')),
@@ -123,22 +123,22 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _nameController,
-                label: 'Name',
+                label: l10n.name,
                 validator: (val) => (val == null || val.isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _extraController,
-                label: widget.isBed ? 'Label (e.g. A)' : 'Crate Type (e.g. Plastic)',
+                label: widget.isBed ? '${l10n.label} (e.g. A)' : '${l10n.type} (e.g. Plastic)',
               ),
               if (widget.isBed) ...[
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
                   value: _length,
-                  decoration: const InputDecoration(
-                    labelText: 'Bed Length',
-                    labelStyle: TextStyle(color: Colors.yellow),
-                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                  decoration: InputDecoration(
+                    labelText: l10n.bedLength,
+                    labelStyle: const TextStyle(color: Colors.yellow),
+                    enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                   ),
                   dropdownColor: Colors.black,
                   style: const TextStyle(color: Colors.white, fontSize: 18),
@@ -151,10 +151,10 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<BedLayout>(
                   value: _layout,
-                  decoration: const InputDecoration(
-                    labelText: 'Layout Type',
-                    labelStyle: TextStyle(color: Colors.yellow),
-                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                  decoration: InputDecoration(
+                    labelText: l10n.layoutType,
+                    labelStyle: const TextStyle(color: Colors.yellow),
+                    enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                   ),
                   dropdownColor: Colors.black,
                   style: const TextStyle(color: Colors.white, fontSize: 18),
@@ -177,10 +177,10 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
                     value: _rowsPerMeter,
-                    decoration: const InputDecoration(
-                      labelText: 'Fragmentation (Density)',
-                      labelStyle: TextStyle(color: Colors.yellow),
-                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                    decoration: InputDecoration(
+                      labelText: l10n.fragmentationDensity,
+                      labelStyle: const TextStyle(color: Colors.yellow),
+                      enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                     ),
                     dropdownColor: Colors.black,
                     style: const TextStyle(color: Colors.white, fontSize: 18),

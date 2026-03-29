@@ -314,6 +314,12 @@ abstract class AppLocalizations {
   /// **'Remove User?'**
   String get removeUser;
 
+  /// No description provided for @removeUserConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {email} from authorized users?'**
+  String removeUserConfirm(String email);
+
   /// No description provided for @clearLocation.
   ///
   /// In en, this message translates to:
@@ -421,6 +427,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No matches found.'**
   String get noMatchesFound;
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @latin.
+  ///
+  /// In en, this message translates to:
+  /// **'Latin'**
+  String get latin;
+
+  /// No description provided for @color.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get color;
+
+  /// No description provided for @description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description;
+
+  /// No description provided for @length.
+  ///
+  /// In en, this message translates to:
+  /// **'Length'**
+  String get length;
+
+  /// No description provided for @type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get type;
+
+  /// No description provided for @label.
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get label;
+
+  /// No description provided for @noDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'No description'**
+  String get noDescription;
+
+  /// No description provided for @notUsedInLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Not used in any location.'**
+  String get notUsedInLocation;
+
+  /// No description provided for @crateIsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Crate is empty.'**
+  String get crateIsEmpty;
+
+  /// No description provided for @noBedsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No beds found.'**
+  String get noBedsFound;
+
+  /// No description provided for @noCratesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No crates found.'**
+  String get noCratesFound;
+
+  /// No description provided for @noSpeciesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No species found.'**
+  String get noSpeciesFound;
+
+  /// No description provided for @deleteSpecies.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Species?'**
+  String get deleteSpecies;
+
+  /// No description provided for @deleteSpeciesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {id}? This will also remove all its location references!'**
+  String deleteSpeciesConfirm(String id);
 }
 
 class _AppLocalizationsDelegate

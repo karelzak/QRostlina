@@ -45,7 +45,9 @@
   "removeUserConfirm": "Odebrat {email} z autorizovaných uživatelů?",
   "@removeUserConfirm": {
     "placeholders": {
-      "email": { "type": "String" }
+      "email": {
+        "type": "String"
+      }
     }
   },
   "clearLocation": "Vyčistit umístění?",
@@ -68,29 +70,41 @@
   "density": "{rows}x{cols} ({total} na metr)",
   "@density": {
     "placeholders": {
-      "rows": { "type": "int" },
-      "cols": { "type": "int" },
-      "total": { "type": "int" }
+      "rows": {
+        "type": "int"
+      },
+      "cols": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "deleteLocation": "Smazat umístění?",
   "export": "Exportovat {type} (CSV)",
   "@export": {
     "placeholders": {
-      "type": { "type": "String" }
+      "type": {
+        "type": "String"
+      }
     }
   },
   "import": "Importovat {type} (CSV)",
   "@import": {
     "placeholders": {
-      "type": { "type": "String" }
+      "type": {
+        "type": "String"
+      }
     }
   },
   "scannerNotAvailable": "Skener není dostupný na desktopu.",
   "invalidLabelType": "Neplatný typ štítku. Očekáváno {type}",
   "@invalidLabelType": {
     "placeholders": {
-      "type": { "type": "String" }
+      "type": {
+        "type": "String"
+      }
     }
   },
   "notSpeciesQr": "Toto není QR kód odrůdy (očekáváno S-xxx)",
@@ -112,7 +126,30 @@
   "deleteSpeciesConfirm": "Opravdu chcete smazat {id}? Tím se také odstraní všechny odkazy na toto umístění!",
   "@deleteSpeciesConfirm": {
     "placeholders": {
-      "id": { "type": "String" }
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "beds": "ZÁHONY",
+  "crates": "PŘEPRAVKY",
+  "bed": "ZÁHON",
+  "crate": "PŘEPRAVKA",
+  "row": "Řádek",
+  "bedLength": "Délka záhonu",
+  "layoutType": "Typ rozložení",
+  "fragmentationDensity": "Fragmentace (hustota)",
+  "visualMap": "VIZUÁLNÍ MAPA",
+  "speciesInCrate": "ODRŮDY V PŘEPRAVCE",
+  "left": "LEVÁ",
+  "right": "PRAVÁ",
+  "center": "STŘED",
+  "meterLabel": "METR {number}",
+  "@meterLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
     }
   }
 }

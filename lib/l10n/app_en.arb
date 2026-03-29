@@ -45,7 +45,9 @@
   "removeUserConfirm": "Remove {email} from authorized users?",
   "@removeUserConfirm": {
     "placeholders": {
-      "email": { "type": "String" }
+      "email": {
+        "type": "String"
+      }
     }
   },
   "clearLocation": "Clear Location?",
@@ -68,29 +70,41 @@
   "density": "{rows}x{cols} ({total} per meter)",
   "@density": {
     "placeholders": {
-      "rows": { "type": "int" },
-      "cols": { "type": "int" },
-      "total": { "type": "int" }
+      "rows": {
+        "type": "int"
+      },
+      "cols": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "deleteLocation": "Delete Location?",
   "export": "Export {type} (CSV)",
   "@export": {
     "placeholders": {
-      "type": { "type": "String" }
+      "type": {
+        "type": "String"
+      }
     }
   },
   "import": "Import {type} (CSV)",
   "@import": {
     "placeholders": {
-      "type": { "type": "String" }
+      "type": {
+        "type": "String"
+      }
     }
   },
   "scannerNotAvailable": "Scanner not available on Desktop.",
   "invalidLabelType": "Invalid label type. Expected {type}",
   "@invalidLabelType": {
     "placeholders": {
-      "type": { "type": "String" }
+      "type": {
+        "type": "String"
+      }
     }
   },
   "notSpeciesQr": "Not a Species QR code (S-xxx expected)",
@@ -112,7 +126,30 @@
   "deleteSpeciesConfirm": "Are you sure you want to delete {id}? This will also remove all its location references!",
   "@deleteSpeciesConfirm": {
     "placeholders": {
-      "id": { "type": "String" }
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "beds": "BEDS",
+  "crates": "CRATES",
+  "bed": "BED",
+  "crate": "CRATE",
+  "row": "Row",
+  "bedLength": "Bed Length",
+  "layoutType": "Layout Type",
+  "fragmentationDensity": "Fragmentation (Density)",
+  "visualMap": "VISUAL MAP",
+  "speciesInCrate": "SPECIES IN CRATE",
+  "left": "LEFT",
+  "right": "RIGHT",
+  "center": "CENTER",
+  "meterLabel": "METER {number}",
+  "@meterLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
     }
   }
 }

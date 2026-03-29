@@ -120,6 +120,11 @@ class AppLocalizationsCs extends AppLocalizations {
   String get removeUser => 'Odebrat uživatele?';
 
   @override
+  String removeUserConfirm(String email) {
+    return 'Odebrat $email z autorizovaných uživatelů?';
+  }
+
+  @override
   String get clearLocation => 'Vyčistit umístění?';
 
   @override
@@ -183,4 +188,51 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get noMatchesFound => 'Nebyly nalezeny žádné výsledky.';
+
+  @override
+  String get name => 'Název';
+
+  @override
+  String get latin => 'Latinský název';
+
+  @override
+  String get color => 'Barva';
+
+  @override
+  String get description => 'Popis';
+
+  @override
+  String get length => 'Délka';
+
+  @override
+  String get type => 'Typ';
+
+  @override
+  String get label => 'Označení';
+
+  @override
+  String get noDescription => 'Bez popisu';
+
+  @override
+  String get notUsedInLocation => 'Není v žádném umístění.';
+
+  @override
+  String get crateIsEmpty => 'Přepravka je prázdná.';
+
+  @override
+  String get noBedsFound => 'Žádné záhony nenalezeny.';
+
+  @override
+  String get noCratesFound => 'Žádné přepravky nenalezeny.';
+
+  @override
+  String get noSpeciesFound => 'Žádné odrůdy nenalezeny.';
+
+  @override
+  String get deleteSpecies => 'Smazat odrůdu?';
+
+  @override
+  String deleteSpeciesConfirm(String id) {
+    return 'Opravdu chcete smazat $id? Tím se také odstraní všechny odkazy na toto umístění!';
+  }
 }

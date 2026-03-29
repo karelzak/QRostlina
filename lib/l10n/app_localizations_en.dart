@@ -120,6 +120,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeUser => 'Remove User?';
 
   @override
+  String removeUserConfirm(String email) {
+    return 'Remove $email from authorized users?';
+  }
+
+  @override
   String get clearLocation => 'Clear Location?';
 
   @override
@@ -183,4 +188,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noMatchesFound => 'No matches found.';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get latin => 'Latin';
+
+  @override
+  String get color => 'Color';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get length => 'Length';
+
+  @override
+  String get type => 'Type';
+
+  @override
+  String get label => 'Label';
+
+  @override
+  String get noDescription => 'No description';
+
+  @override
+  String get notUsedInLocation => 'Not used in any location.';
+
+  @override
+  String get crateIsEmpty => 'Crate is empty.';
+
+  @override
+  String get noBedsFound => 'No beds found.';
+
+  @override
+  String get noCratesFound => 'No crates found.';
+
+  @override
+  String get noSpeciesFound => 'No species found.';
+
+  @override
+  String get deleteSpecies => 'Delete Species?';
+
+  @override
+  String deleteSpeciesConfirm(String id) {
+    return 'Are you sure you want to delete $id? This will also remove all its location references!';
+  }
 }
