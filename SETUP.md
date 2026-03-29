@@ -29,10 +29,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Master Admin check (Hardcoded failsafe)
+    function isMasterAdmin() {
+      return request.auth != null && 
+             request.auth.token.email == 'karel.zak.007@gmail.com';
+    }
+
     // Helper function to check if the user's email is on the whitelist
     function isWhitelisted() {
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/authorized_users/$(request.auth.token.email));
+      return request.auth != null && (
+        isMasterAdmin() ||
+        exists(/databases/$(database)/documents/authorized_users/$(request.auth.token.email))
+      );
     }
 
     // Protect species data
