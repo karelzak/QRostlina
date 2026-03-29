@@ -166,14 +166,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteLocation => 'Delete Location?';
 
   @override
-  String export(String type) {
-    return 'Export $type (CSV)';
-  }
+  String get export => 'Export';
 
   @override
-  String import(String type) {
-    return 'Import $type (CSV)';
-  }
+  String get import => 'Import';
 
   @override
   String get scannerNotAvailable => 'Scanner not available on Desktop.';

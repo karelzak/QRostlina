@@ -166,14 +166,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get deleteLocation => 'Smazat umístění?';
 
   @override
-  String export(String type) {
-    return 'Exportovat $type (CSV)';
-  }
+  String get export => 'Exportovat';
 
   @override
-  String import(String type) {
-    return 'Importovat $type (CSV)';
-  }
+  String get import => 'Importovat';
 
   @override
   String get scannerNotAvailable => 'Skener není dostupný na desktopu.';

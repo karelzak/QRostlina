@@ -395,14 +395,14 @@ abstract class AppLocalizations {
   /// No description provided for @export.
   ///
   /// In en, this message translates to:
-  /// **'Export {type} (CSV)'**
-  String export(String type);
+  /// **'Export'**
+  String get export;
 
   /// No description provided for @import.
   ///
   /// In en, this message translates to:
-  /// **'Import {type} (CSV)'**
-  String import(String type);
+  /// **'Import'**
+  String get import;
 
   /// No description provided for @scannerNotAvailable.
   ///
