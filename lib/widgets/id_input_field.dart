@@ -45,7 +45,7 @@ class IdInputField extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.qr_code_scanner, color: Colors.yellow, size: 30),
             onPressed: () async {
-              final result = await showDialog<ScannedResult>(
+              final result = await showDialog<QRResult>(
                 context: context,
                 builder: (context) => const QRScannerDialog(),
               );

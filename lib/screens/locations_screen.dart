@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/location.dart';
 import '../services/service_locator.dart';
+import '../services/qr_scanner_service.dart';
 import 'detail_screen.dart';
 import 'edit_location_screen.dart';
 
