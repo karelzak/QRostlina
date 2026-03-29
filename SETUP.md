@@ -100,3 +100,21 @@ If `flutter devices` shows your device as "unsupported" or `adb devices` shows "
     adb devices
     ```
     Once done, check your phone for the "Allow USB Debugging?" prompt.
+
+## 7. Android Distribution Scenarios
+If you want to share the app with other gardeners without using the Google Play Store:
+
+### Scenario A: Direct APK Sharing (Easiest)
+1.  **Build**: Run `./scripts/deploy_android.sh --build`.
+2.  **File**: Send the generated `app-release-arm64-v8a.apk` (found in `build/app/outputs/flutter-apk/`) to the user via Signal, WhatsApp, or email.
+3.  **Install**: The user opens the file on their phone and selects "Allow installation from unknown sources".
+
+### Scenario B: GitHub Releases (Semi-Public)
+1.  Tag a version: `git tag v1.0.0 && git push origin v1.0.0`.
+2.  Create a **Release** on GitHub and upload the `.apk` files there.
+3.  Users can download the latest version from the repository's "Releases" page.
+
+### Scenario C: Firebase App Distribution (Private/Controlled)
+1.  In the **Firebase Console**, go to **Release & Monitor** -> **App Distribution**.
+2.  Upload the `app-release.apk`.
+3.  Add the gardeners' emails. They will receive an invitation to install the "App Tester" and get updates automatically.

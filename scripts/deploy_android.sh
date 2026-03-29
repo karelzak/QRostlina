@@ -2,36 +2,53 @@
 set -e
 
 # QRostlina Android Management Script
-# Usage: ./scripts/deploy_android.sh [--run | --install]
+# Usage: ./scripts/deploy_android.sh [OPTION]
 
 FLUTTER="/home/work/flutter/bin/flutter"
 ADB="/home/work/Android/Sdk/platform-tools/adb"
-MODE="install"
 
-if [[ "$1" == "--run" || "$1" == "-r" ]]; then
-    MODE="run"
-fi
+show_help() {
+    echo "Usage: $0 [OPTION]"
+    echo ""
+    echo "Options:"
+    echo "  -r, --run       Run the app in debug mode on a connected device (Live development)"
+    echo "  -i, --install   Build release APK and install to a connected device (Default)"
+    echo "  -b, --build     Build release APKs for distribution (Generates split APKs in build/app/outputs/flutter-apk/)"
+    echo "  -h, --help      Show this help message"
+}
 
-echo "--- Checking for connected Android devices ---"
-DEVICE_ID=$($FLUTTER devices | grep "mobile" | awk -F '•' '{print $2}' | awk '{print $1}')
+get_device_id() {
+    DEVICE_ID=$($FLUTTER devices | grep "mobile" | awk -F '•' '{print $2}' | awk '{print $1}' | head -n 1)
+    if [ -z "$DEVICE_ID" ]; then
+        echo "Error: No Android device found via 'flutter devices'."
+        exit 1
+    fi
+    echo "$DEVICE_ID"
+}
 
-if [ -z "$DEVICE_ID" ]; then
-    echo "No Android device found via 'flutter devices'."
-    exit 1
-fi
-
-if [ "$MODE" == "run" ]; then
-    echo "--- Starting Live Run on $DEVICE_ID ---"
-    echo "Use 'r' for Hot Reload, 'R' for Hot Restart, 'q' to Quit."
-    $FLUTTER run -d "$DEVICE_ID"
-else
-    echo "--- Building APK (Release) ---"
-    $FLUTTER build apk --release
-
-    echo "--- Deploying to device: $DEVICE_ID ---"
-    $FLUTTER install -d "$DEVICE_ID"
-
-    echo "--- Launching app ---"
-    $ADB -s "$DEVICE_ID" shell monkey -p com.example.qrostlina -c android.intent.category.LAUNCHER 1
-    echo "--- Done! ---"
-fi
+case "$1" in
+    -r|--run)
+        DEVICE_ID=$(get_device_id)
+        echo "--- Starting Live Run on $DEVICE_ID ---"
+        $FLUTTER run -d "$DEVICE_ID"
+        ;;
+    -b|--build)
+        echo "--- Building Release APKs for Distribution ---"
+        $FLUTTER build apk --release --split-per-abi
+        echo "--- Build Complete! ---"
+        echo "Find your APKs in: build/app/outputs/flutter-apk/"
+        echo "Tip: app-release-arm64-v8a.apk is usually the best for modern phones."
+        ;;
+    -h|--help)
+        show_help
+        ;;
+    -i|--install|*)
+        DEVICE_ID=$(get_device_id)
+        echo "--- Building Release APK and Installing to $DEVICE_ID ---"
+        $FLUTTER build apk --release
+        $FLUTTER install -d "$DEVICE_ID"
+        echo "--- Launching app ---"
+        $ADB -s "$DEVICE_ID" shell monkey -p com.example.qrostlina -c android.intent.category.LAUNCHER 1
+        echo "--- Done! ---"
+        ;;
+esac
