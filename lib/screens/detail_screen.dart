@@ -208,21 +208,9 @@ class _DetailScreenState extends State<DetailScreen> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) async {
-              if (value == 'export_all') {
-                if (widget.type == ScannedType.species) {
-                  await CSVService.exportSpecies();
-                } else if (widget.type == ScannedType.bed) {
-                  await CSVService.exportBeds();
-                } else if (widget.type == ScannedType.crate) {
-                  await CSVService.exportCrates();
-                }
-              }
+              // Handle other menu actions here
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'export_all',
-                child: Text(l10n.export),
-              ),
               const PopupMenuItem(
                 value: 'log',
                 enabled: false,
