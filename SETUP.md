@@ -73,3 +73,30 @@ Because the rules block everyone not on the whitelist, you must manually add the
 3.  Go to **General** and toggle **Cloud Mode** to ON.
 4.  Go to **Data** and click **Push Local Data to Cloud** if you have existing local data.
 5.  Go to **Access** to manage other authorized users.
+
+## 6. Linux (Fedora/RHEL/Modern) USB Troubleshooting
+If `flutter devices` shows your device as "unsupported" or `adb devices` shows "no permissions", follow these steps:
+
+1.  **Identify your Device ID:**
+    Run `lsusb`. Look for your device (e.g., `ID 18d1:4ee7`).
+2.  **Create/Edit the udev rule:**
+    ```bash
+    sudo vi /etc/udev/rules.d/51-android.rules
+    ```
+    Add the following line (replacing IDs if necessary):
+    ```text
+    SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", ATTR{idProduct}=="4ee7", MODE="0666", TAG+="uaccess"
+    ```
+    *(Note: Using `TAG+="uaccess"` grants permissions to the currently logged-in user on modern systems like Fedora.)*
+3.  **Reload and Trigger:**
+    ```bash
+    sudo udevadm control --reload-rules && sudo udevadm trigger
+    ```
+4.  **Reconnect Device:**
+    **Unplug your phone and plug it back in** for the new rules to apply to the device.
+5.  **Restart ADB:**
+    ```bash
+    adb kill-server
+    adb devices
+    ```
+    Once done, check your phone for the "Allow USB Debugging?" prompt.
