@@ -7,5 +7,86 @@
   "submitId": "ODESLAT ID",
   "cameraOnlyMobile": "Kamera je dostupná pouze na Android/iOS.\nPro testování na Linuxu použijte manuální vstup.",
   "scanned": "Naskenováno",
-  "addNewSpecies": "PŘIDAT NOVOU ODRŮDU"
+  "addNewSpecies": "PŘIDAT NOVOU ODRŮDU",
+  "settings": "NASTAVENÍ",
+  "general": "OBECNÉ",
+  "data": "DATA",
+  "auth": "AUTENTIZACE",
+  "access": "PŘÍSTUP",
+  "cloudMode": "CLOUDOVÝ REŽIM",
+  "signOut": "ODHLÁSIT SE",
+  "signInWithGoogle": "PŘIHLÁSIT SE PŘES GOOGLE",
+  "storageStatus": "STAV ÚLOŽIŠTĚ:",
+  "dumpData": "EXPORTOVAT VŠECHNA DATA (JSON)",
+  "restoreData": "OBNOVIT VŠECHNA DATA (JSON)",
+  "cloudSync": "SYNCHRONIZACE S CLOUDEM:",
+  "pushToCloud": "NAHRÁT LOKÁLNÍ DATA DO CLOUDU",
+  "cancel": "ZRUŠIT",
+  "restore": "OBNOVIT",
+  "delete": "SMAZAT",
+  "remove": "ODEBRAT",
+  "save": "ULOŽIT",
+  "camera": "FOTOAPARÁT",
+  "gallery": "GALERIE",
+  "photo": "FOTKA",
+  "idExists": "ID {id} již existuje!",
+  "@idExists": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "authorize": "AUTORIZOVAT",
+  "authorizeUser": "Autorizovat uživatele",
+  "authorizeNewEmail": "AUTORIZOVAT NOVÝ EMAIL",
+  "noUsersAuthorized": "Zatím žádní autorizovaní uživatelé",
+  "removeUser": "Odebrat uživatele?",
+  "clearLocation": "Vyčistit umístění?",
+  "clearLocationConfirm": "Opravdu chcete odebrat VŠECHNY odrůdy z tohoto umístění?",
+  "clearAll": "ANO, VYČISTIT VŠE",
+  "createNew": "VYTVOŘIT NOVÝ",
+  "viewDetails": "Zobrazit detaily",
+  "changeSpecies": "Změnit odrůdu",
+  "removeDied": "Odebrat (uhynulo)",
+  "meters": "{count} metrů",
+  "@meters": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "grid": "Mřížka (2 řádky)",
+  "linear": "Lineární (pouze metry)",
+  "density": "{rows}x{cols} ({total} na metr)",
+  "@density": {
+    "placeholders": {
+      "rows": { "type": "int" },
+      "cols": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "deleteLocation": "Smazat umístění?",
+  "export": "Exportovat {type} (CSV)",
+  "@export": {
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
+  "import": "Importovat {type} (CSV)",
+  "@import": {
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
+  "scannerNotAvailable": "Skener není dostupný na desktopu.",
+  "invalidLabelType": "Neplatný typ štítku. Očekáváno {type}",
+  "@invalidLabelType": {
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
+  "notSpeciesQr": "Toto není QR kód odrůdy (očekáváno S-xxx)",
+  "noMatchesFound": "Nebyly nalezeny žádné výsledky."
 }

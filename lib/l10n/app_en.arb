@@ -7,5 +7,86 @@
   "submitId": "SUBMIT ID",
   "cameraOnlyMobile": "Camera only available on Android/iOS.\nUse manual input below for Linux testing.",
   "scanned": "Scanned",
-  "addNewSpecies": "ADD NEW SPECIES"
+  "addNewSpecies": "ADD NEW SPECIES",
+  "settings": "SETTINGS",
+  "general": "GENERAL",
+  "data": "DATA",
+  "auth": "AUTH",
+  "access": "ACCESS",
+  "cloudMode": "CLOUD MODE",
+  "signOut": "SIGN OUT",
+  "signInWithGoogle": "SIGN IN WITH GOOGLE",
+  "storageStatus": "STORAGE STATUS:",
+  "dumpData": "DUMP ALL DATA (JSON)",
+  "restoreData": "RESTORE ALL DATA (JSON)",
+  "cloudSync": "CLOUD SYNC:",
+  "pushToCloud": "PUSH LOCAL DATA TO CLOUD",
+  "cancel": "CANCEL",
+  "restore": "RESTORE",
+  "delete": "DELETE",
+  "remove": "REMOVE",
+  "save": "SAVE",
+  "camera": "CAMERA",
+  "gallery": "GALLERY",
+  "photo": "PHOTO",
+  "idExists": "ID {id} already exists!",
+  "@idExists": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "authorize": "AUTHORIZE",
+  "authorizeUser": "Authorize User",
+  "authorizeNewEmail": "AUTHORIZE NEW EMAIL",
+  "noUsersAuthorized": "No users authorized yet",
+  "removeUser": "Remove User?",
+  "clearLocation": "Clear Location?",
+  "clearLocationConfirm": "Are you sure you want to remove ALL species from this location?",
+  "clearAll": "YES, CLEAR ALL",
+  "createNew": "CREATE NEW",
+  "viewDetails": "View Details",
+  "changeSpecies": "Change Species",
+  "removeDied": "Remove (Died)",
+  "meters": "{count} Meters",
+  "@meters": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "grid": "Grid (2 Lines)",
+  "linear": "Linear (Meters only)",
+  "density": "{rows}x{cols} ({total} per meter)",
+  "@density": {
+    "placeholders": {
+      "rows": { "type": "int" },
+      "cols": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "deleteLocation": "Delete Location?",
+  "export": "Export {type} (CSV)",
+  "@export": {
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
+  "import": "Import {type} (CSV)",
+  "@import": {
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
+  "scannerNotAvailable": "Scanner not available on Desktop.",
+  "invalidLabelType": "Invalid label type. Expected {type}",
+  "@invalidLabelType": {
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
+  "notSpeciesQr": "Not a Species QR code (S-xxx expected)",
+  "noMatchesFound": "No matches found."
 }

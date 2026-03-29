@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/location.dart';
 import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
@@ -51,6 +52,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
   }
 
   void _save() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       final id = _idController.text.trim().toUpperCase();
 
@@ -59,7 +61,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
         if (!isUnique) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('ID $id already exists!')),
+              SnackBar(content: Text(l10n.idExists(id))),
             );
           }
           return;
@@ -93,6 +95,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEditing = widget.location != null;
     final typeLabel = widget.isBed ? 'BED' : 'CRATE';
 
@@ -139,9 +142,9 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                   ),
                   dropdownColor: Colors.black,
                   style: const TextStyle(color: Colors.white, fontSize: 18),
-                  items: const [
-                    DropdownMenuItem(value: 10, child: Text('10 Meters')),
-                    DropdownMenuItem(value: 20, child: Text('20 Meters')),
+                  items: [
+                    DropdownMenuItem(value: 10, child: Text(l10n.meters(10))),
+                    DropdownMenuItem(value: 20, child: Text(l10n.meters(20))),
                   ],
                   onChanged: (val) => setState(() => _length = val!),
                 ),
@@ -155,9 +158,9 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                   ),
                   dropdownColor: Colors.black,
                   style: const TextStyle(color: Colors.white, fontSize: 18),
-                  items: const [
-                    DropdownMenuItem(value: BedLayout.grid, child: Text('Grid (2 Lines)')),
-                    DropdownMenuItem(value: BedLayout.linear, child: Text('Linear (Meters only)')),
+                  items: [
+                    DropdownMenuItem(value: BedLayout.grid, child: Text(l10n.grid)),
+                    DropdownMenuItem(value: BedLayout.linear, child: Text(l10n.linear)),
                   ],
                   onChanged: (val) {
                     setState(() {
@@ -181,9 +184,9 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                     ),
                     dropdownColor: Colors.black,
                     style: const TextStyle(color: Colors.white, fontSize: 18),
-                    items: const [
-                      DropdownMenuItem(value: 2, child: Text('2x2 (4 per meter)')),
-                      DropdownMenuItem(value: 3, child: Text('2x3 (6 per meter)')),
+                    items: [
+                      DropdownMenuItem(value: 2, child: Text(l10n.density(2, 2, 4))),
+                      DropdownMenuItem(value: 3, child: Text(l10n.density(2, 3, 6))),
                     ],
                     onChanged: (val) => setState(() => _rowsPerMeter = val!),
                   ),
@@ -193,7 +196,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
               ElevatedButton(
                 onPressed: _save,
                 style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 60)),
-                child: Text('SAVE $typeLabel'),
+                child: Text('${l10n.save} $typeLabel'),
               ),
             ],
           ),

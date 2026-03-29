@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/species.dart';
 import '../models/location.dart';
 import '../services/service_locator.dart';
@@ -139,18 +139,18 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
-  void _confirmClearLocation() async {
+  void _confirmClearLocation(AppLocalizations l10n) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('Clear Location?', style: TextStyle(color: Colors.white)),
-        content: const Text('Are you sure you want to remove ALL species from this location?', style: TextStyle(color: Colors.white70)),
+        title: Text(l10n.clearLocation, style: const TextStyle(color: Colors.white)),
+        content: Text(l10n.clearLocationConfirm, style: const TextStyle(color: Colors.white70)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('YES, CLEAR ALL', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.clearAll, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -185,7 +185,7 @@ class _DetailScreenState extends State<DetailScreen> {
           if ((widget.type == ScannedType.bed || widget.type == ScannedType.crate) && _data != null) ...[
              IconButton(
               icon: const Icon(Icons.delete_sweep, color: Colors.redAccent),
-              onPressed: _confirmClearLocation,
+              onPressed: () => _confirmClearLocation(l10n),
               tooltip: 'Clear all species from this location',
             ),
             IconButton(
@@ -282,7 +282,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 );
                 if (result == true) _loadData();
               },
-              child: const Text('CREATE NEW'),
+              child: Text(l10n.createNew),
             ),
         ],
       ),
@@ -296,7 +296,7 @@ class _DetailScreenState extends State<DetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoCard(),
+          _buildInfoCard(l10n),
           if (_data is Bed) ...[
             const SizedBox(height: 24),
             Row(
@@ -316,7 +316,7 @@ class _DetailScreenState extends State<DetailScreen> {
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 800),
-                child: _buildGridMap(),
+                child: _buildGridMap(l10n),
               ),
             ),
           ],
@@ -324,9 +324,9 @@ class _DetailScreenState extends State<DetailScreen> {
              const SizedBox(height: 24),
              Row(
                children: [
-                 const Text(
-                  'LOCATIONS',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
+                 Text(
+                  l10n.locations,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
                 ),
                 const Spacer(),
                 _countBadge(Icons.grid_view, _bedInstanceCount.toString(), Colors.orange),
@@ -336,7 +336,7 @@ class _DetailScreenState extends State<DetailScreen> {
              ),
             const Divider(color: Colors.yellow),
             const SizedBox(height: 8),
-            _buildLocationsList(),
+            _buildLocationsList(l10n),
           ],
           if (_data is Crate) ...[
             const SizedBox(height: 24),
@@ -350,7 +350,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 _countBadge(Icons.local_florist, _uniqueSpeciesInLocationCount.toString(), Colors.blue),
                 const SizedBox(width: 8),
                 IconButton(
-                  onPressed: _addSpeciesToCrate,
+                  onPressed: () => _addSpeciesToCrate(l10n),
                   icon: const Icon(Icons.add, color: Colors.yellow, size: 32),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -359,7 +359,7 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
             const Divider(color: Colors.yellow),
             const SizedBox(height: 8),
-            _buildCrateSpeciesList(),
+            _buildCrateSpeciesList(l10n),
           ],
         ],
       ),
@@ -367,7 +367,7 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
 
-  Widget _buildGridMap() {
+  Widget _buildGridMap(AppLocalizations l10n) {
     final bed = _data as Bed;
 
     return ListView.builder(
@@ -437,9 +437,9 @@ class _DetailScreenState extends State<DetailScreen> {
                   } : null,
                   onTap: () async {
                     if (speciesId == null) {
-                      _selectSpeciesForCell(lineIdx, rowIdx);
+                      _selectSpeciesForCell(l10n, lineIdx, rowIdx);
                     } else {
-                      _showCellActions(lineIdx, rowIdx, speciesId);
+                      _showCellActions(l10n, lineIdx, rowIdx, speciesId);
                     }
                   },
                   child: Container(
@@ -501,7 +501,7 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  void _selectSpeciesForCell(int line, int row) async {
+  void _selectSpeciesForCell(AppLocalizations l10n, int line, int row) async {
     final allSpecies = await locator.db.getAllSpecies();
     final items = allSpecies.map((s) => SearchItem(id: s.id, name: s.name, subtitle: s.latinName)).toList();
 
@@ -517,7 +517,7 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
-  void _showCellActions(int line, int row, String currentSpeciesId) async {
+  void _showCellActions(AppLocalizations l10n, int line, int row, String currentSpeciesId) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -529,7 +529,7 @@ class _DetailScreenState extends State<DetailScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.info_outline, color: Colors.blue),
-              title: const Text('View Species Details', style: TextStyle(color: Colors.white)),
+              title: Text(l10n.viewDetails, style: const TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(context, MaterialPageRoute(
@@ -538,15 +538,15 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.swap_horiz, color: Colors.yellow),
-              title: const Text('Change Species', style: TextStyle(color: Colors.white)),
+              title: Text(l10n.changeSpecies, style: const TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
-                _selectSpeciesForCell(line, row);
+                _selectSpeciesForCell(l10n, line, row);
               },
             ),
             ListTile(
               leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Remove (Died)', style: TextStyle(color: Colors.white)),
+              title: Text(l10n.removeDied, style: const TextStyle(color: Colors.white)),
               onTap: () async {
                 Navigator.pop(context);
                 await locator.db.setSpeciesAtBedCell(widget.id, line, row, null);
@@ -559,7 +559,7 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  void _addSpeciesToCrate() async {
+  void _addSpeciesToCrate(AppLocalizations l10n) async {
     final allSpecies = await locator.db.getAllSpecies();
     final items = allSpecies.map((s) => SearchItem(id: s.id, name: s.name, subtitle: s.latinName)).toList();
 
@@ -575,7 +575,7 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(AppLocalizations l10n) {
     if (_data is Species) {
       final s = _data as Species;
       return Card(
@@ -724,7 +724,7 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildLocationsList() {
+  Widget _buildLocationsList(AppLocalizations l10n) {
     if (_locations == null || _locations!.isEmpty) {
       return const Text('Not used in any location.', style: TextStyle(fontStyle: FontStyle.italic));
     }
@@ -751,7 +751,7 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildCrateSpeciesList() {
+  Widget _buildCrateSpeciesList(AppLocalizations l10n) {
     final crate = _data as Crate;
     if (crate.speciesIds.isEmpty) {
       return const Text('Crate is empty.', style: TextStyle(fontStyle: FontStyle.italic));

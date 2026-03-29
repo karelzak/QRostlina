@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/species.dart';
 import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
@@ -88,21 +88,21 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
     }
   }
 
-  void _confirmDelete(String id) async {
+  void _confirmDelete(String id, AppLocalizations l10n) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('Delete Species?', style: TextStyle(color: Colors.white)),
+        title: Text('Delete Species?', style: const TextStyle(color: Colors.white)),
         content: Text(
           'Are you sure you want to delete $id? This will also remove all its location references!',
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('DELETE', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -134,8 +134,8 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'export', child: Text('Export Species (CSV)')),
-              const PopupMenuItem(value: 'import', child: Text('Import Species (CSV)')),
+              PopupMenuItem(value: 'export', child: Text(l10n.export('Species'))),
+              PopupMenuItem(value: 'import', child: Text(l10n.import('Species'))),
             ],
           ),
         ],
@@ -184,7 +184,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.delete, color: Colors.redAccent),
-                              onPressed: () => _confirmDelete(s.id),
+                              onPressed: () => _confirmDelete(s.id, l10n),
                             ),
                             const Icon(Icons.arrow_forward_ios, color: Colors.yellow),
                           ],

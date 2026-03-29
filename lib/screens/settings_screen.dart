@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../services/service_locator.dart';
 import '../services/auth_service.dart';
 import '../services/local_storage_service.dart';
@@ -60,6 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
   }
 
   void _import() async {
+    final l10n = AppLocalizations.of(context)!;
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
@@ -73,16 +75,16 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('Restore Data?', style: TextStyle(color: Colors.white)),
+        title: Text(l10n.restore, style: const TextStyle(color: Colors.white)),
         content: Text(
-          'This will OVERWRITE all current data with the contents of ${result.files.single.name}. Continue?',
+          '${l10n.restoreData} ${result.files.single.name}. Continue?',
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('RESTORE', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.restore, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -100,41 +102,42 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SETTINGS'),
+        title: Text(l10n.settings),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.black,
           labelColor: Colors.black,
           unselectedLabelColor: Colors.black54,
-          tabs: const [
-            Tab(text: 'GENERAL'),
-            Tab(text: 'DATA'),
-            Tab(text: 'AUTH'),
-            Tab(text: 'ACCESS'),
+          tabs: [
+            Tab(text: l10n.general),
+            Tab(text: l10n.data),
+            Tab(text: l10n.auth),
+            Tab(text: l10n.access),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildGeneralTab(),
-          _buildDataTab(),
-          _buildAuthTab(),
-          _buildAccessTab(),
+          _buildGeneralTab(l10n),
+          _buildDataTab(l10n),
+          _buildAuthTab(l10n),
+          _buildAccessTab(l10n),
         ],
       ),
     );
   }
 
-  Widget _buildGeneralTab() {
+  Widget _buildGeneralTab(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
           SwitchListTile(
-            title: const Text('CLOUD MODE', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
+            title: Text(l10n.cloudMode, style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
             subtitle: Text(
               authService.isSupported 
                 ? 'Enable Firestore & Cloud Storage' 
@@ -153,7 +156,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildAuthTab() {
+  Widget _buildAuthTab(AppLocalizations l10n) {
     return StreamBuilder<User?>(
       stream: authService.userStream,
       builder: (context, snapshot) {
@@ -179,15 +182,15 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                     setState(() {});
                   },
                   icon: const Icon(Icons.logout),
-                  label: const Text('SIGN OUT'),
+                  label: Text(l10n.signOut),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
                 ),
               ] else ...[
                 const Icon(Icons.cloud_off, size: 64, color: Colors.white24),
                 const SizedBox(height: 16),
-                const Text(
-                  'Google Cloud Authentication',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.auth,
+                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -206,7 +209,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                     }
                   } : null,
                   icon: const Icon(Icons.login),
-                  label: const Text('SIGN IN WITH GOOGLE'),
+                  label: Text(l10n.signInWithGoogle),
                 ),
                 if (!authService.isSupported)
                   const Padding(
@@ -224,7 +227,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildDataTab() {
+  Widget _buildDataTab(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SingleChildScrollView(
@@ -238,7 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('STORAGE STATUS:', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
+                    Text(l10n.storageStatus, style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Text(
                       locator.isCloudMode ? 'CLOUD (FIRESTORE)' : 'LOCAL (JSON FILE)',
@@ -257,14 +260,14 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
             ElevatedButton.icon(
               onPressed: _export,
               icon: const Icon(Icons.upload),
-              label: const Text('DUMP ALL DATA (JSON)'),
+              label: Text(l10n.dumpData),
               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 80)),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _import,
               icon: const Icon(Icons.download),
-              label: const Text('RESTORE ALL DATA (JSON)'),
+              label: Text(l10n.restoreData),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 80),
                 backgroundColor: Colors.orange,
@@ -275,7 +278,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
               const SizedBox(height: 32),
               const Divider(color: Colors.white24),
               const SizedBox(height: 16),
-              const Text('CLOUD SYNC:', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
+              Text(l10n.cloudSync, style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               ElevatedButton.icon(
                 onPressed: () async {
@@ -297,7 +300,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                   }
                 },
                 icon: const Icon(Icons.cloud_upload),
-                label: const Text('PUSH LOCAL DATA TO CLOUD'),
+                label: Text(l10n.pushToCloud),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 60),
                   backgroundColor: Colors.blueGrey,
@@ -320,22 +323,22 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildAccessTab() {
+  Widget _buildAccessTab(AppLocalizations l10n) {
     if (!locator.isCloudMode) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.lock_outline, size: 64, color: Colors.white24),
-              SizedBox(height: 16),
+              const Icon(Icons.lock_outline, size: 64, color: Colors.white24),
+              const SizedBox(height: 16),
               Text(
-                'Access Control',
-                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                l10n.access,
+                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 8),
-              Text(
+              const SizedBox(height: 8),
+              const Text(
                 'Whitelist management is only available in Cloud mode.',
                 style: TextStyle(color: Colors.white54),
                 textAlign: TextAlign.center,
@@ -366,7 +369,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                     context: context,
                     builder: (context) => AlertDialog(
                       backgroundColor: Colors.grey[900],
-                      title: const Text('Authorize User', style: TextStyle(color: Colors.white)),
+                      title: Text(l10n.authorizeUser, style: const TextStyle(color: Colors.white)),
                       content: TextField(
                         controller: emailController,
                         autofocus: true,
@@ -377,10 +380,10 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                         ),
                       ),
                       actions: [
-                        TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+                        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
                         TextButton(
                           onPressed: () => Navigator.pop(context, emailController.text),
-                          child: const Text('AUTHORIZE'),
+                          child: Text(l10n.authorize),
                         ),
                       ],
                     ),
@@ -396,14 +399,14 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                   }
                 },
                 icon: const Icon(Icons.person_add),
-                label: const Text('AUTHORIZE NEW EMAIL'),
+                label: Text(l10n.authorizeNewEmail),
                 style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
               ),
             ),
             const Divider(color: Colors.white24),
             Expanded(
               child: users.isEmpty
-                  ? const Center(child: Text('No users authorized yet', style: TextStyle(color: Colors.white54)))
+                  ? Center(child: Text(l10n.noUsersAuthorized, style: const TextStyle(color: Colors.white54)))
                   : ListView.builder(
                       itemCount: users.length,
                       itemBuilder: (context, index) {
@@ -418,13 +421,13 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                                 context: context,
                                 builder: (context) => AlertDialog(
                                   backgroundColor: Colors.grey[900],
-                                  title: const Text('Remove User?', style: TextStyle(color: Colors.white)),
+                                  title: Text(l10n.removeUser, style: const TextStyle(color: Colors.white)),
                                   content: Text('Remove $email from authorized users?', style: const TextStyle(color: Colors.white70)),
                                   actions: [
-                                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+                                    TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
                                     TextButton(
                                       onPressed: () => Navigator.pop(context, true),
-                                      child: const Text('REMOVE', style: TextStyle(color: Colors.redAccent)),
+                                      child: Text(l10n.remove, style: const TextStyle(color: Colors.redAccent)),
                                     ),
                                   ],
                                 ),

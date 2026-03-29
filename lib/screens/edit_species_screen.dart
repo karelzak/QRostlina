@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/species.dart';
 import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
@@ -90,6 +91,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
   }
 
   void _save() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       final id = _idController.text.trim().toUpperCase();
       
@@ -99,7 +101,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
         if (!isUnique) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('ID $id already exists!')),
+              SnackBar(content: Text(l10n.idExists(id))),
             );
           }
           return;
@@ -143,11 +145,12 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEditing = widget.species != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'EDIT SPECIES' : 'ADD NEW SPECIES'),
+        title: Text(isEditing ? 'EDIT SPECIES' : l10n.addNewSpecies),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -186,17 +189,17 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
               const SizedBox(height: 24),
               const Divider(color: Colors.yellow, thickness: 1),
               const SizedBox(height: 16),
-              const Text('SPECIES PHOTO', 
-                style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(l10n.photo.toUpperCase(), 
+                style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 16),
-              _buildPhotoPicker(),
+              _buildPhotoPicker(l10n),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _save,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 80),
                 ),
-                child: const Text('SAVE SPECIES'),
+                child: Text(l10n.save.toUpperCase()),
               ),
             ],
           ),
@@ -205,7 +208,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
     );
   }
 
-  Widget _buildPhotoPicker() {
+  Widget _buildPhotoPicker(AppLocalizations l10n) {
     return Column(
       children: [
         Stack(
@@ -250,7 +253,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
               child: ElevatedButton.icon(
                 onPressed: () => _pickImage(ImageSource.camera),
                 icon: const Icon(Icons.camera_alt),
-                label: const Text('CAMERA'),
+                label: Text(l10n.camera),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[800],
                   foregroundColor: Colors.white,
@@ -263,7 +266,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
               child: ElevatedButton.icon(
                 onPressed: () => _pickImage(ImageSource.gallery),
                 icon: const Icon(Icons.photo_library),
-                label: const Text('GALLERY'),
+                label: Text(l10n.gallery),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[800],
                   foregroundColor: Colors.white,
