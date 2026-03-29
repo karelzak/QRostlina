@@ -235,4 +235,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String deleteSpeciesConfirm(String id) {
     return 'Are you sure you want to delete $id? This will also remove all its location references!';
   }
+
+  @override
+  String get beds => 'BEDS';
+
+  @override
+  String get crates => 'CRATES';
+
+  @override
+  String get bed => 'BED';
+
+  @override
+  String get crate => 'CRATE';
+
+  @override
+  String get row => 'Row';
+
+  @override
+  String get bedLength => 'Bed Length';
+
+  @override
+  String get layoutType => 'Layout Type';
+
+  @override
+  String get fragmentationDensity => 'Fragmentation (Density)';
+
+  @override
+  String get visualMap => 'VISUAL MAP';
+
+  @override
+  String get speciesInCrate => 'SPECIES IN CRATE';
+
+  @override
+  String get left => 'LEFT';
+
+  @override
+  String get right => 'RIGHT';
+
+  @override
+  String get center => 'CENTER';
+
+  @override
+  String meterLabel(int number) {
+    return 'METER $number';
+  }
 }

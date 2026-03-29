@@ -61,8 +61,8 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
             itemBuilder: (context) {
               final type = _tabController.index == 0 ? l10n.beds : l10n.crates;
               return [
-                PopupMenuItem(value: 'export', child: Text(l10n.export(type))),
-                PopupMenuItem(value: 'import', child: Text(l10n.import(type))),
+                PopupMenuItem(value: 'export', child: Text(l10n.export)),
+                PopupMenuItem(value: 'import', child: Text(l10n.import)),
               ];
             },
           ),

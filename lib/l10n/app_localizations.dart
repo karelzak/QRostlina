@@ -517,6 +517,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete {id}? This will also remove all its location references!'**
   String deleteSpeciesConfirm(String id);
+
+  /// No description provided for @beds.
+  ///
+  /// In en, this message translates to:
+  /// **'BEDS'**
+  String get beds;
+
+  /// No description provided for @crates.
+  ///
+  /// In en, this message translates to:
+  /// **'CRATES'**
+  String get crates;
+
+  /// No description provided for @bed.
+  ///
+  /// In en, this message translates to:
+  /// **'BED'**
+  String get bed;
+
+  /// No description provided for @crate.
+  ///
+  /// In en, this message translates to:
+  /// **'CRATE'**
+  String get crate;
+
+  /// No description provided for @row.
+  ///
+  /// In en, this message translates to:
+  /// **'Row'**
+  String get row;
+
+  /// No description provided for @bedLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Bed Length'**
+  String get bedLength;
+
+  /// No description provided for @layoutType.
+  ///
+  /// In en, this message translates to:
+  /// **'Layout Type'**
+  String get layoutType;
+
+  /// No description provided for @fragmentationDensity.
+  ///
+  /// In en, this message translates to:
+  /// **'Fragmentation (Density)'**
+  String get fragmentationDensity;
+
+  /// No description provided for @visualMap.
+  ///
+  /// In en, this message translates to:
+  /// **'VISUAL MAP'**
+  String get visualMap;
+
+  /// No description provided for @speciesInCrate.
+  ///
+  /// In en, this message translates to:
+  /// **'SPECIES IN CRATE'**
+  String get speciesInCrate;
+
+  /// No description provided for @left.
+  ///
+  /// In en, this message translates to:
+  /// **'LEFT'**
+  String get left;
+
+  /// No description provided for @right.
+  ///
+  /// In en, this message translates to:
+  /// **'RIGHT'**
+  String get right;
+
+  /// No description provided for @center.
+  ///
+  /// In en, this message translates to:
+  /// **'CENTER'**
+  String get center;
+
+  /// No description provided for @meterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'METER {number}'**
+  String meterLabel(int number);
 }
 
 class _AppLocalizationsDelegate

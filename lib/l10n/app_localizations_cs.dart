@@ -235,4 +235,48 @@ class AppLocalizationsCs extends AppLocalizations {
   String deleteSpeciesConfirm(String id) {
     return 'Opravdu chcete smazat $id? Tím se také odstraní všechny odkazy na toto umístění!';
   }
+
+  @override
+  String get beds => 'ZÁHONY';
+
+  @override
+  String get crates => 'PŘEPRAVKY';
+
+  @override
+  String get bed => 'ZÁHON';
+
+  @override
+  String get crate => 'PŘEPRAVKA';
+
+  @override
+  String get row => 'Řádek';
+
+  @override
+  String get bedLength => 'Délka záhonu';
+
+  @override
+  String get layoutType => 'Typ rozložení';
+
+  @override
+  String get fragmentationDensity => 'Fragmentace (hustota)';
+
+  @override
+  String get visualMap => 'VIZUÁLNÍ MAPA';
+
+  @override
+  String get speciesInCrate => 'ODRŮDY V PŘEPRAVCE';
+
+  @override
+  String get left => 'LEVÁ';
+
+  @override
+  String get right => 'PRAVÁ';
+
+  @override
+  String get center => 'STŘED';
+
+  @override
+  String meterLabel(int number) {
+    return 'METR $number';
+  }
 }

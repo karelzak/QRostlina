@@ -82,22 +82,8 @@
     }
   },
   "deleteLocation": "Delete Location?",
-  "export": "Export {type} (CSV)",
-  "@export": {
-    "placeholders": {
-      "type": {
-        "type": "String"
-      }
-    }
-  },
-  "import": "Import {type} (CSV)",
-  "@import": {
-    "placeholders": {
-      "type": {
-        "type": "String"
-      }
-    }
-  },
+  "export": "Export",
+  "import": "Import",
   "scannerNotAvailable": "Scanner not available on Desktop.",
   "invalidLabelType": "Invalid label type. Expected {type}",
   "@invalidLabelType": {

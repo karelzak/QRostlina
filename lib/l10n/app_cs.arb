@@ -82,22 +82,8 @@
     }
   },
   "deleteLocation": "Smazat umístění?",
-  "export": "Exportovat {type} (CSV)",
-  "@export": {
-    "placeholders": {
-      "type": {
-        "type": "String"
-      }
-    }
-  },
-  "import": "Importovat {type} (CSV)",
-  "@import": {
-    "placeholders": {
-      "type": {
-        "type": "String"
-      }
-    }
-  },
+  "export": "Exportovat",
+  "import": "Importovat",
   "scannerNotAvailable": "Skener není dostupný na desktopu.",
   "invalidLabelType": "Neplatný typ štítku. Očekáváno {type}",
   "@invalidLabelType": {

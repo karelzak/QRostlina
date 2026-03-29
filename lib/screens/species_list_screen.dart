@@ -134,8 +134,8 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'export', child: Text(l10n.export('Species'))),
-              PopupMenuItem(value: 'import', child: Text(l10n.import('Species'))),
+              PopupMenuItem(value: 'export', child: Text(l10n.export)),
+              PopupMenuItem(value: 'import', child: Text(l10n.import)),
             ],
           ),
         ],

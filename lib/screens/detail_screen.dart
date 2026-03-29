@@ -221,7 +221,7 @@ class _DetailScreenState extends State<DetailScreen> {
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: 'export_all',
-                child: Text(l10n.export(widget.type.name.toUpperCase())),
+                child: Text(l10n.export),
               ),
               const PopupMenuItem(
                 value: 'log',
