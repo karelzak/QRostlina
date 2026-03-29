@@ -115,6 +115,6 @@ If you want to share the app with other gardeners without using the Google Play 
 3.  Users can download the latest version from the repository's "Releases" page.
 
 ### Scenario C: Firebase App Distribution (Private/Controlled)
-1.  In the **Firebase Console**, go to **Release & Monitor** -> **App Distribution**.
+1.  In the **Firebase Console**, navigate to the left sidebar: **Release & Monitor** -> **App Distribution** (sometimes found under **DevOps & Engagement**).
 2.  Upload the `app-release.apk`.
 3.  Add the gardeners' emails. They will receive an invitation to install the "App Tester" and get updates automatically.
