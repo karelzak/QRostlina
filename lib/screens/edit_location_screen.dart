@@ -239,13 +239,17 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                   onChanged: (val) {
                     setState(() {
                       _layout = val!;
+                      final maxL = _layout == BedLayout.grid ? 3 : 20;
+                      final maxR = _layout == BedLayout.grid ? 3 : 20;
+                      if (_linesPerMeter > maxL) _linesPerMeter = 1;
+                      if (_rowsPerMeter > maxR) _rowsPerMeter = 1;
                     });
                   },
                 ),
                 if (_layout != BedLayout.rand) ...[
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
-                    value: _linesPerMeter > (_layout == BedLayout.grid ? 3 : 20) ? 1 : _linesPerMeter,
+                    value: _linesPerMeter,
                     decoration: InputDecoration(
                       labelText: l10n.lines,
                       labelStyle: const TextStyle(color: Colors.yellow),
@@ -260,7 +264,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
-                    value: _rowsPerMeter > (_layout == BedLayout.grid ? 3 : 20) ? 1 : _rowsPerMeter,
+                    value: _rowsPerMeter,
                     decoration: InputDecoration(
                       labelText: _layout == BedLayout.grid ? l10n.rows : l10n.plantsPerMeter,
                       labelStyle: const TextStyle(color: Colors.yellow),
