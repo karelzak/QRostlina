@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/qr_scanner_service.dart';
+import '../services/service_locator.dart';
 import 'qr_scanner_dialog.dart';
 
 class IdInputField extends StatelessWidget {
@@ -43,6 +44,15 @@ class IdInputField extends StatelessWidget {
         if (enabled) ...[
           const SizedBox(width: 8),
           IconButton(
+            icon: const Icon(Icons.auto_fix_high, color: Colors.yellow, size: 30),
+            onPressed: () async {
+              final nextId = await locator.db.generateNextId(type);
+              controller.text = nextId;
+            },
+            tooltip: 'Generate Next ID',
+          ),
+          const SizedBox(width: 4),
+          IconButton(
             icon: const Icon(Icons.qr_code_scanner, color: Colors.yellow, size: 30),
             onPressed: () async {
               final result = await showDialog<QRResult>(
@@ -62,6 +72,7 @@ class IdInputField extends StatelessWidget {
                 }
               }
             },
+            tooltip: 'Scan QR Code',
           ),
         ],
       ],

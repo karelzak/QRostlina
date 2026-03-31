@@ -21,6 +21,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
   late TextEditingController _nameController;
   late TextEditingController _extraController; // Row for Bed, Type for Crate
   int _length = 10;
+  int _linesPerMeter = 2;
   int _rowsPerMeter = 2;
   BedLayout _layout = BedLayout.grid;
 
@@ -35,6 +36,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
     if (loc is Bed) {
       extra = loc.row ?? '';
       _length = loc.length;
+      _linesPerMeter = loc.linesPerMeter;
       _rowsPerMeter = loc.rowsPerMeter;
       _layout = loc.layout;
     } else if (loc is Crate) {
@@ -56,6 +58,48 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
     if (_formKey.currentState!.validate()) {
       final id = _idController.text.trim().toUpperCase();
 
+      // If editing an existing bed, check if structural changes are allowed
+      if (widget.location is Bed) {
+        final bed = widget.location as Bed;
+        final layoutChanged = bed.layout != _layout;
+        
+        // For Grid: layout change OR lines/rows change requires a check
+        // For others: only layout change requires a check
+        bool structuralChange = layoutChanged;
+        if (bed.layout == BedLayout.grid && _layout == BedLayout.grid) {
+          if (bed.linesPerMeter != _linesPerMeter || bed.rowsPerMeter != _rowsPerMeter) {
+            structuralChange = true;
+          }
+        }
+
+        if (structuralChange) {
+          bool hasSpecies = bed.speciesMap.isNotEmpty || bed.randSpeciesIds.isNotEmpty;
+          
+          if (hasSpecies) {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                backgroundColor: Colors.grey[900],
+                title: const Text('Change Bed Structure?', style: TextStyle(color: Colors.white)),
+                content: const Text(
+                  'Changing the layout or grid dimensions will reset all plantings in this bed. Proceed?',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('PROCEED', style: TextStyle(color: Colors.redAccent)),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirm != true) return;
+          }
+        }
+      }
+
       if (widget.location == null) {
         final isUnique = await locator.db.isIdUnique(id);
         if (!isUnique) {
@@ -70,14 +114,27 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
 
       Location loc;
       if (widget.isBed) {
+        final bed = widget.location as Bed?;
+        bool structuralChange = false;
+        if (bed != null) {
+          structuralChange = bed.layout != _layout;
+          if (bed.layout == BedLayout.grid && _layout == BedLayout.grid) {
+            if (bed.linesPerMeter != _linesPerMeter || bed.rowsPerMeter != _rowsPerMeter) {
+              structuralChange = true;
+            }
+          }
+        }
+
         loc = Bed(
           id: id,
           name: _nameController.text.trim(),
           row: _extraController.text.trim(),
           length: _length,
-          rowsPerMeter: _layout == BedLayout.grid ? _rowsPerMeter : 1,
+          linesPerMeter: _layout == BedLayout.rand ? 1 : _linesPerMeter,
+          rowsPerMeter: _rowsPerMeter,
           layout: _layout,
-          speciesMap: widget.location is Bed ? (widget.location as Bed).speciesMap : null,
+          speciesMap: structuralChange ? null : (widget.location is Bed ? (widget.location as Bed).speciesMap : null),
+          randSpeciesIds: structuralChange ? null : (widget.location is Bed ? (widget.location as Bed).randSpeciesIds : null),
         );
       } else {
         loc = Crate(
@@ -89,7 +146,13 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
       }
 
       await locator.db.saveLocation(loc);
-      if (mounted) Navigator.pop(context, loc.id);
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(context).pop(loc.id);
+          }
+        });
+      }
     }
   }
 
@@ -161,34 +224,52 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                   items: [
                     DropdownMenuItem(value: BedLayout.grid, child: Text(l10n.grid)),
                     DropdownMenuItem(value: BedLayout.linear, child: Text(l10n.linear)),
+                    DropdownMenuItem(value: BedLayout.rand, child: Text(l10n.rand)),
                   ],
                   onChanged: (val) {
                     setState(() {
                       _layout = val!;
-                      if (_layout == BedLayout.linear) {
-                        _rowsPerMeter = 1;
-                      } else if (_rowsPerMeter == 1) {
-                        _rowsPerMeter = 2; // Default for grid
-                      }
                     });
                   },
                 ),
-                if (_layout == BedLayout.grid) ...[
+                if (_layout != BedLayout.rand) ...[
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
-                    value: _rowsPerMeter,
+                    value: _linesPerMeter > (_layout == BedLayout.grid ? 3 : 20) ? 1 : _linesPerMeter,
                     decoration: InputDecoration(
-                      labelText: l10n.fragmentationDensity,
+                      labelText: l10n.lines,
                       labelStyle: const TextStyle(color: Colors.yellow),
                       enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                     ),
                     dropdownColor: Colors.black,
                     style: const TextStyle(color: Colors.white, fontSize: 18),
-                    items: [
-                      DropdownMenuItem(value: 2, child: Text(l10n.density(2, 2, 4))),
-                      DropdownMenuItem(value: 3, child: Text(l10n.density(2, 3, 6))),
-                    ],
+                    items: List.generate(_layout == BedLayout.grid ? 3 : 20, (index) => index + 1)
+                        .map((val) => DropdownMenuItem(value: val, child: Text(val.toString())))
+                        .toList(),
+                    onChanged: (val) => setState(() => _linesPerMeter = val!),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    value: _rowsPerMeter > (_layout == BedLayout.grid ? 3 : 20) ? 1 : _rowsPerMeter,
+                    decoration: InputDecoration(
+                      labelText: _layout == BedLayout.grid ? l10n.rows : l10n.plantsPerMeter,
+                      labelStyle: const TextStyle(color: Colors.yellow),
+                      enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                    ),
+                    dropdownColor: Colors.black,
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                    items: List.generate(_layout == BedLayout.grid ? 3 : 20, (index) => index + 1)
+                        .map((val) => DropdownMenuItem(value: val, child: Text(val.toString())))
+                        .toList(),
                     onChanged: (val) => setState(() => _rowsPerMeter = val!),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'TOTAL: ${_linesPerMeter * _rowsPerMeter} plants per meter',
+                      style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ],

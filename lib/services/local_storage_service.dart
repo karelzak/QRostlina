@@ -258,6 +258,7 @@ class LocalStorageService implements DatabaseService {
     // Remove from all beds
     for (var bed in _beds) {
       bed.speciesMap.removeWhere((key, value) => value == id);
+      bed.randSpeciesIds.removeWhere((value) => value == id);
     }
     // Remove from all crates
     for (var crate in _crates) {
@@ -304,14 +305,20 @@ class LocalStorageService implements DatabaseService {
     List<String> locations = [];
     
     for (var bed in _beds) {
-      bed.speciesMap.forEach((key, sId) {
-        if (sId == speciesId) {
-          final parts = key.split('-');
-          final line = int.tryParse(parts[0]);
-          final row = int.tryParse(parts[1]);
-          locations.add(bed.formatPosition(line, row));
+      if (bed.layout == BedLayout.rand) {
+        if (bed.randSpeciesIds.contains(speciesId)) {
+          locations.add(bed.id);
         }
-      });
+      } else {
+        bed.speciesMap.forEach((key, sId) {
+          if (sId == speciesId) {
+            final parts = key.split('-');
+            final line = int.tryParse(parts[0]);
+            final row = int.tryParse(parts[1]);
+            locations.add(bed.formatPosition(line, row));
+          }
+        });
+      }
     }
 
     for (var crate in _crates) {
@@ -334,6 +341,26 @@ class LocalStorageService implements DatabaseService {
       } else {
         bed.speciesMap[key] = speciesId;
       }
+      await _saveData();
+    }
+  }
+
+  @override
+  Future<void> addSpeciesToRandBed(String bedId, String speciesId) async {
+    await _ensureInitialized();
+    final bed = await getBedById(bedId);
+    if (bed != null) {
+      bed.randSpeciesIds.add(speciesId);
+      await _saveData();
+    }
+  }
+
+  @override
+  Future<void> removeSpeciesFromRandBed(String bedId, String speciesId) async {
+    await _ensureInitialized();
+    final bed = await getBedById(bedId);
+    if (bed != null) {
+      bed.randSpeciesIds.remove(speciesId);
       await _saveData();
     }
   }
@@ -365,6 +392,7 @@ class LocalStorageService implements DatabaseService {
       final bed = await getBedById(id);
       if (bed != null) {
         bed.speciesMap.clear();
+        bed.randSpeciesIds.clear();
         await _saveData();
       }
     } else if (id.startsWith('C-')) {

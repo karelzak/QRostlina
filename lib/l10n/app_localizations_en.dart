@@ -152,14 +152,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get grid => 'Grid (2 Lines)';
+  String get grid => 'Grid';
 
   @override
-  String get linear => 'Linear (Meters only)';
+  String get linear => 'Linear';
 
   @override
-  String density(int rows, int cols, int total) {
-    return '${rows}x$cols ($total per meter)';
+  String get rand => 'Random / Disorganized';
+
+  @override
+  String fragments(int count) {
+    return '$count Fragments per meter';
   }
 
   @override
@@ -255,6 +258,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fragmentationDensity => 'Fragmentation (Density)';
+
+  @override
+  String get lines => 'Lines';
+
+  @override
+  String get rows => 'Rows';
+
+  @override
+  String get plantsPerMeter => 'Plants per meter';
+
+  @override
+  String get density => 'Density';
+
+  @override
+  String densityValue(int lines, int rows) {
+    return '$lines x $rows /m';
+  }
 
   @override
   String get visualMap => 'VISUAL MAP';

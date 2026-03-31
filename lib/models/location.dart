@@ -7,44 +7,60 @@ abstract class Location {
 
 enum BedLayout {
   grid,   // 2 lines, X rows per meter
-  linear, // Just meters, no sub-grid
+  linear, // 1 line, X fragments per meter
+  rand,   // Random / disorganized: flat list of species, no meters
 }
 
 class Bed extends Location {
   final int length; // 10 or 20 meters
-  final int rowsPerMeter; // 2 or 3 (ignored if linear)
+  final int linesPerMeter; // grid: 1-3, linear: 1, rand: N/A
+  final int rowsPerMeter; // grid: 1-5, linear: plants per meter, rand: N/A
   final BedLayout layout;
   final String? row; // The bed's identifier in the field (e.g. "Row A")
-  final Map<String, String> speciesMap; // "line-row" -> speciesId
+  final Map<String, String> speciesMap; // grid: "line-row" -> speciesId, linear: "1-meter" -> speciesId
+  final List<String> randSpeciesIds; // rand: flat list of speciesIds
 
   Bed({
     required super.id,
     required super.name,
     required this.length,
+    this.linesPerMeter = 2,
     this.rowsPerMeter = 2,
     this.layout = BedLayout.grid,
     this.row,
     Map<String, String>? speciesMap,
-  }) : speciesMap = speciesMap ?? {};
+    List<String>? randSpeciesIds,
+  }) : speciesMap = speciesMap ?? {},
+       randSpeciesIds = randSpeciesIds ?? [];
 
-  int get totalLines => layout == BedLayout.grid ? 2 : 1;
-  int get rowsPerMeterEffective => layout == BedLayout.grid ? rowsPerMeter : 1;
-  int get totalRows => length * rowsPerMeterEffective;
-  int get totalCells => totalLines * totalRows;
+  int get totalLines => layout == BedLayout.grid ? linesPerMeter : 1;
+  
+  int get totalCells {
+    if (layout == BedLayout.rand) return -1;
+    return length * linesPerMeter * rowsPerMeter;
+  }
 
-  bool get isConsistent => true; // Now that totalLines is dynamic
+  int get filledCells {
+    if (layout == BedLayout.rand) return randSpeciesIds.length;
+    if (layout == BedLayout.linear) {
+      return speciesMap.length * linesPerMeter * rowsPerMeter;
+    }
+    return speciesMap.length;
+  }
+
+  bool get isConsistent => true;
 
   String formatPosition(int? line, int? row) {
+    if (layout == BedLayout.rand) return id;
     if (row == null) return 'N/A';
     
-    int meter = ((row - 1) / rowsPerMeterEffective).floor() + 1;
-
     if (layout == BedLayout.linear) {
-      return '$id-${meter}M';
+      return '$id-${row}M (${linesPerMeter * rowsPerMeter}pcs)';
     }
 
-    String lineStr = line == 1 ? 'L' : 'R';
-    int subRow = ((row - 1) % rowsPerMeterEffective) + 1;
+    int meter = ((row - 1) / rowsPerMeter).floor() + 1;
+    String lineStr = line == 1 ? 'L' : (line == 2 ? 'R' : 'C');
+    int subRow = ((row - 1) % rowsPerMeter) + 1;
     return '$id-${meter}M-$subRow$lineStr';
   }
 
@@ -53,10 +69,12 @@ class Bed extends Location {
       'id': id,
       'name': name,
       'length': length,
+      'linesPerMeter': linesPerMeter,
       'rowsPerMeter': rowsPerMeter,
       'layout': layout.name,
       'row': row,
       'speciesMap': speciesMap,
+      'randSpeciesIds': randSpeciesIds,
       'type': 'bed',
     };
   }
@@ -66,10 +84,12 @@ class Bed extends Location {
       id: map['id'],
       name: map['name'],
       length: map['length'] ?? 10,
+      linesPerMeter: map['linesPerMeter'] ?? 2,
       rowsPerMeter: map['rowsPerMeter'] ?? 2,
       layout: BedLayout.values.byName(map['layout'] ?? 'grid'),
       row: map['row'],
       speciesMap: Map<String, String>.from(map['speciesMap'] ?? {}),
+      randSpeciesIds: List<String>.from(map['randSpeciesIds'] ?? []),
     );
   }
 }

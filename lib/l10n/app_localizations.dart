@@ -371,20 +371,26 @@ abstract class AppLocalizations {
   /// No description provided for @grid.
   ///
   /// In en, this message translates to:
-  /// **'Grid (2 Lines)'**
+  /// **'Grid'**
   String get grid;
 
   /// No description provided for @linear.
   ///
   /// In en, this message translates to:
-  /// **'Linear (Meters only)'**
+  /// **'Linear'**
   String get linear;
 
-  /// No description provided for @density.
+  /// No description provided for @rand.
   ///
   /// In en, this message translates to:
-  /// **'{rows}x{cols} ({total} per meter)'**
-  String density(int rows, int cols, int total);
+  /// **'Random / Disorganized'**
+  String get rand;
+
+  /// No description provided for @fragments.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Fragments per meter'**
+  String fragments(int count);
 
   /// No description provided for @deleteLocation.
   ///
@@ -565,6 +571,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fragmentation (Density)'**
   String get fragmentationDensity;
+
+  /// No description provided for @lines.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines'**
+  String get lines;
+
+  /// No description provided for @rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows'**
+  String get rows;
+
+  /// No description provided for @plantsPerMeter.
+  ///
+  /// In en, this message translates to:
+  /// **'Plants per meter'**
+  String get plantsPerMeter;
+
+  /// No description provided for @density.
+  ///
+  /// In en, this message translates to:
+  /// **'Density'**
+  String get density;
+
+  /// No description provided for @densityValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{lines} x {rows} /m'**
+  String densityValue(int lines, int rows);
 
   /// No description provided for @visualMap.
   ///

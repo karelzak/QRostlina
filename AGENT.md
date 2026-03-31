@@ -18,49 +18,65 @@
   - **Cloud Mode (Android/Sync):** Uses Firestore for text data and Firebase Storage for images.
   - **Coexistence:** The app must seamlessly switch between Local and Cloud modes based on settings or platform capabilities. Linux defaults to Local JSON, while Android supports both.
 
-## Phase 2: Cloud Support & Synchronization (In Progress)
-1. **Infrastructure:**
-   - Add Firebase dependencies (`firebase_core`, `cloud_firestore`, `firebase_storage`, `firebase_auth`).
-   - Platform-specific setup (`google-services.json`).
-2. **Data Layer Refactor:**
-   - Abstract `DatabaseService` into an interface.
-   - Implement `FirestoreDatabaseService`.
-   - Implement `LocalStorageService` (formerly `MockDatabaseService`).
-3. **Authentication:**
-   - Implement Google Sign-In in `AuthService`.
-   - Update `SettingsScreen` (AUTH tab) with login/logout and Cloud/Local toggle.
-4. **Image Handling:**
-   - Update `LocalImageService` to handle Firebase Storage uploads/downloads.
-   - Use `cached_network_image` for efficient cloud image display.
-5. **Synchronization:**
-   - Implement "Sync to Cloud" and "Download from Cloud" manual actions in the DATA tab.
-- **Scanning Logic:**
-  - **S-ID:** Open Species card, show its locations.
-  - **B-ID:** Show bed visual map, allow adding/removing species to cells.
-  - **C-ID:** Show crate contents, allow adding/removing species from list.
+## Project Structure & Files
+- `lib/main.dart`: App entry point, theme definition, and service initialization.
+- `lib/models/`:
+  - `species.dart`: `Species` model (S-ID, name, description, photoUrl, etc.).
+  - `location.dart`: `Location` base class, `Bed` and `Crate` models. `Bed` supports `grid`, `linear`, and `rand` layouts.
+- `lib/screens/`:
+  - `species_list_screen.dart`: Main list of all species with search.
+  - `locations_screen.dart`: Tabs for Beds and Crates list.
+  - `detail_screen.dart`: Unified detail view for S-, B-, and C- IDs. Handles Visual Map for Beds.
+  - `edit_species_screen.dart` / `edit_location_screen.dart`: CRUD forms.
+  - `scanner_screen.dart`: QR scanner interface (mobile) or manual ID entry (desktop).
+  - `settings_screen.dart`: Auth, Data (Sync/Backup), and Language settings.
+- `lib/services/`:
+  - `database_service.dart`: Interface for data operations.
+  - `firestore_database_service.dart`: Implementation for Firebase/Cloud mode.
+  - `local_storage_service.dart`: Implementation for Local/Offline mode (JSON).
+  - `auth_service.dart`: Firebase Auth & Google Sign-In.
+  - `service_locator.dart`: GetIt setup for dependency injection.
+- `lib/widgets/`: Reusable UI components (ID inputs, dialogs).
+- `lib/l10n/`: Localization files (`.arb` and generated `.dart`).
 
-## Development Environment
-- **OS:** Linux (Fedora)
-- **Flutter SDK Path:** `/home/work/flutter/bin`
-- **Project Path:** `/home/work/QRostlina`
-- **Environment Note:** Flutter has been added to `~/.bashrc`. If the `flutter` command is not found in a new session, ensure `/home/work/flutter/bin` is in the `PATH`.
+## Bed Structure & Layouts
+Beds (B-ID) are managed via three distinct layouts, each with specific logic for capacity and visualization:
+
+1. **Grid Layout (Organized)**
+   - **Purpose:** Precise mapping of individual plants.
+   - **Structure:** Defined by `Lines` (max 3) and `Rows` (max 3) *per meter*.
+   - **Data Mapping:** Each entry in `speciesMap` (key: "line-row") represents **1 specific plant**.
+   - **Capacity:** `Length * Lines * Rows`.
+   - **Visual Map:** Shows a full sub-grid for every meter (e.g., 2 columns if 2 lines).
+   - **Constraints:** Any structural change (Layout, Lines, or Rows) on a non-empty bed requires user confirmation and resets all plantings.
+
+2. **Linear Layout (Density-based)**
+   - **Purpose:** High-density planting where one species covers an entire meter.
+   - **Structure:** Defined by `Lines` (max 20) and `Rows` (max 20) *per meter*.
+   - **Data Mapping:** Each entry in `speciesMap` (key: "1-meterIdx") represents **all plants in that meter**.
+   - **Capacity:** `Length * Lines * Rows`. (e.g., 10 lines x 15 rows = 150 plants/m).
+   - **Visual Map:** Simplified UI showing **one large cell per meter**. The cell displays the species name and total plant count (e.g., "150pcs").
+   - **Constraints:** Layout changes on non-empty beds require confirmation. However, `Lines` and `Rows` can be adjusted freely as they only affect the density/count calculation, not the mapping.
+
+3. **Random / Disorganized Layout**
+   - **Purpose:** Quick tracking of species in a bed without any spatial organization.
+   - **Structure:** No meters, no grid.
+   - **Data Mapping:** Uses a flat list `randSpeciesIds`.
+   - **Capacity:** Infinite / Not applicable.
+   - **Visual Map:** Replaced with a simple list of species (similar to a Crate).
+   - **Constraints:** Layout changes on non-empty beds require confirmation.
+
+## Phase 2: Cloud Support & Synchronization (In Progress)
+...
+16. [x] Linear Bed Support.
+    - Status: High-density support (Lines x Rows) implemented.
+17. [x] Random (Disorganized) Bed Support.
+    - Status: Implemented as flat species list.
 
 ## MVP Scope (Phase 1)
-1. [x] Infrastructure, directory structure, git initialization.
-2. [x] Create AGENT.md (this file).
-3. [x] Flutter application skeleton (Android & Linux).
-4. [x] High-contrast UI theme (Yellow/Black).
-5. [x] Data Models (Species, Location with species mapping).
-6. [x] QR Scanner Service & Mock Scanner Screen.
-7. [x] Mock Database Service (In-memory + JSON persistence).
-8. [x] Android SDK setup (Command Line Tools preferred).
-9. [x] Script for Android deployment (`scripts/deploy_android.sh`).
-10. [ ] Firebase integration (Auth & Firestore).
-11. [x] Localization setup (English/Czech).
-12. [x] Detailed Cards for Species (S-), Beds (B-), Crates (C-).
-13. [x] Bed Visual Map & Crate Content List.
-14. [x] CRUD for species and locations, plus species-location mapping.
+...
 15. [x] Visual Grid Map for Beds.
-    - Status: Organized by meter, supports 2-column layout (Left/Right), human-friendly indexing (e.g. B-001-8M-2L), and species name display.
-16. [x] Linear Bed Support.
-    - Status: Support for "disorganized" beds with meter-only tracking.
+    - Status: Organized by meter, supports sub-grid layouts and human-friendly indexing.
+16. [x] Linear Bed Support with High-Density Calculation.
+17. [x] Random Bed Support (List view).
+

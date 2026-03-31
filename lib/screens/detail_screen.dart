@@ -82,7 +82,12 @@ class _DetailScreenState extends State<DetailScreen> {
         if (newData != null) {
           final bed = newData as Bed;
           final uniqueIds = <String>{};
-          for (var sId in bed.speciesMap.values) {
+          
+          final idsToFetch = bed.layout == BedLayout.rand 
+              ? bed.randSpeciesIds 
+              : bed.speciesMap.values;
+
+          for (var sId in idsToFetch) {
             uniqueIds.add(sId);
             if (!newSpeciesMap.containsKey(sId)) {
               final s = await locator.db.getSpeciesById(sId);
@@ -192,7 +197,7 @@ class _DetailScreenState extends State<DetailScreen> {
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () async {
-                final result = await Navigator.push<bool>(
+                final result = await Navigator.push<dynamic>(
                   context,
                   MaterialPageRoute(
                     builder: (context) => EditLocationScreen(
@@ -201,7 +206,7 @@ class _DetailScreenState extends State<DetailScreen> {
                     ),
                   ),
                 );
-                if (result == true) _loadData(showLoading: false);
+                if (result != null) _loadData(showLoading: false);
               },
             ),
           ],
@@ -265,11 +270,11 @@ class _DetailScreenState extends State<DetailScreen> {
                   default:
                     return;
                 }
-                final result = await Navigator.push<bool>(
+                final result = await Navigator.push<dynamic>(
                   context,
                   MaterialPageRoute(builder: (context) => screen),
                 );
-                if (result == true) _loadData();
+                if (result != null) _loadData();
               },
               child: Text(l10n.createNew),
             ),
@@ -291,23 +296,34 @@ class _DetailScreenState extends State<DetailScreen> {
             Row(
               children: [
                 Text(
-                  l10n.visualMap,
+                  (_data as Bed).layout == BedLayout.rand ? l10n.speciesList : l10n.visualMap,
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.yellow),
                 ),
                 const Spacer(),
                 _countBadge(Icons.grid_view, '$_uniqueSpeciesInLocationCount ${l10n.speciesList}', Colors.orange),
                 const SizedBox(width: 8),
-                _countBadge(Icons.check_circle_outline, '${(_data as Bed).speciesMap.length}/${(_data as Bed).totalCells}', Colors.green),
+                if ((_data as Bed).layout != BedLayout.rand)
+                  _countBadge(Icons.check_circle_outline, '${(_data as Bed).filledCells}/${(_data as Bed).totalCells}', Colors.green)
+                else
+                  IconButton(
+                    onPressed: () => _addSpeciesToRandBed(l10n),
+                    icon: const Icon(Icons.add, color: Colors.yellow, size: 32),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
               ],
             ),
             const Divider(color: Colors.yellow),
             const SizedBox(height: 8),
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: _buildGridMap(l10n),
+            if ((_data as Bed).layout == BedLayout.rand)
+              _buildRandSpeciesList(l10n)
+            else
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: _buildGridMap(l10n),
+                ),
               ),
-            ),
           ],
           if (widget.type == ScannedType.species) ...[
              const SizedBox(height: 24),
@@ -396,16 +412,16 @@ class _DetailScreenState extends State<DetailScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: bed.totalLines,
-                childAspectRatio: bed.totalLines == 1 ? 3.5 : 1.0,
+                crossAxisCount: bed.layout == BedLayout.grid ? bed.linesPerMeter : 1,
+                childAspectRatio: bed.layout == BedLayout.grid ? (bed.linesPerMeter == 1 ? 3.5 : 1.0) : 3.5,
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
               ),
-              itemCount: bed.totalLines * bed.rowsPerMeterEffective,
+              itemCount: bed.layout == BedLayout.grid ? bed.linesPerMeter * bed.rowsPerMeter : 1,
               itemBuilder: (context, cellIdx) {
-                int lineIdx = (cellIdx % bed.totalLines) + 1;
-                int subRow = (cellIdx / bed.totalLines).floor() + 1;
-                int rowIdx = (meter - 1) * bed.rowsPerMeterEffective + subRow;
+                int lineIdx = bed.layout == BedLayout.grid ? (cellIdx % bed.linesPerMeter) + 1 : 1;
+                int subRow = bed.layout == BedLayout.grid ? (cellIdx / bed.linesPerMeter).floor() + 1 : 1;
+                int rowIdx = bed.layout == BedLayout.grid ? (meter - 1) * bed.rowsPerMeter + subRow : meter;
 
                 final key = "$lineIdx-$rowIdx";
                 final speciesId = bed.speciesMap[key];
@@ -413,7 +429,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 
                 String cellLabel = "";
                 if (bed.layout == BedLayout.grid) {
-                   String lineStr = lineIdx == 1 ? 'L' : 'R';
+                   String lineStr = lineIdx == 1 ? 'L' : (lineIdx == 2 ? 'R' : 'C');
                    cellLabel = "$subRow$lineStr";
                 } else {
                    cellLabel = l10n.meterLabel(meter);
@@ -451,6 +467,19 @@ class _DetailScreenState extends State<DetailScreen> {
                             ),
                           ),
                         ),
+                        if (bed.layout == BedLayout.linear && speciesId != null)
+                          Positioned(
+                            top: 2,
+                            right: 4,
+                            child: Text(
+                              "${bed.linesPerMeter * bed.rowsPerMeter}pcs",
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.black54,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         Center(
                           child: speciesId != null
                               ? Padding(
@@ -504,6 +533,58 @@ class _DetailScreenState extends State<DetailScreen> {
       await locator.db.setSpeciesAtBedCell(widget.id, line, row, result);
       _loadData(showLoading: false);
     }
+  }
+
+  void _addSpeciesToRandBed(AppLocalizations l10n) async {
+    final allSpecies = await locator.db.getAllSpecies();
+    final items = allSpecies.map((s) => SearchItem(id: s.id, name: s.name, subtitle: s.latinName)).toList();
+
+    if (!mounted) return;
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => SearchDialog(title: 'ADD TO BED', items: items),
+    );
+
+    if (result != null && mounted) {
+      await locator.db.addSpeciesToRandBed(widget.id, result);
+      _loadData(showLoading: false);
+    }
+  }
+
+  Widget _buildRandSpeciesList(AppLocalizations l10n) {
+    final bed = _data as Bed;
+    if (bed.randSpeciesIds.isEmpty) {
+      return Text(l10n.crateIsEmpty, style: const TextStyle(fontStyle: FontStyle.italic));
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: bed.randSpeciesIds.length,
+      itemBuilder: (context, index) {
+        final sId = bed.randSpeciesIds[index];
+        final species = _speciesMap[sId];
+        return ListTile(
+          tileColor: Colors.grey[900],
+          leading: species != null && species.photoUrl != null 
+            ? _buildGridThumbnail(species, size: 40)
+            : const Icon(Icons.local_florist, color: Colors.yellow),
+          title: Text(species?.name ?? sId, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(sId),
+          trailing: IconButton(
+            icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+            onPressed: () async {
+              await locator.db.removeSpeciesFromRandBed(bed.id, sId);
+              _loadData(showLoading: false);
+            },
+          ),
+          onTap: () {
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) => DetailScreen(id: sId, type: ScannedType.species)));
+          },
+        );
+      },
+    );
   }
 
   void _showCellActions(AppLocalizations l10n, int line, int row, String currentSpeciesId) async {
@@ -615,8 +696,8 @@ class _DetailScreenState extends State<DetailScreen> {
               _infoRow(l10n.label, b.row ?? '-'),
               _infoRow(l10n.length, l10n.meters(b.length)),
               _infoRow(l10n.type, b.layout.name.toUpperCase()),
-              if (b.layout == BedLayout.grid)
-                _infoRow(l10n.grid.split(' ').first, '${b.totalLines} lines x ${b.rowsPerMeter} rows'),
+              if (b.layout != BedLayout.rand)
+                _infoRow(l10n.density, l10n.densityValue(b.linesPerMeter, b.rowsPerMeter)),
             ],
           ),
         ),

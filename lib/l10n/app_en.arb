@@ -65,18 +65,13 @@
       }
     }
   },
-  "grid": "Grid (2 Lines)",
-  "linear": "Linear (Meters only)",
-  "density": "{rows}x{cols} ({total} per meter)",
-  "@density": {
+  "grid": "Grid",
+  "linear": "Linear",
+  "rand": "Random / Disorganized",
+  "fragments": "{count} Fragments per meter",
+  "@fragments": {
     "placeholders": {
-      "rows": {
-        "type": "int"
-      },
-      "cols": {
-        "type": "int"
-      },
-      "total": {
+      "count": {
         "type": "int"
       }
     }
@@ -125,6 +120,21 @@
   "bedLength": "Bed Length",
   "layoutType": "Layout Type",
   "fragmentationDensity": "Fragmentation (Density)",
+  "lines": "Lines",
+  "rows": "Rows",
+  "plantsPerMeter": "Plants per meter",
+  "density": "Density",
+  "densityValue": "{lines} x {rows} /m",
+  "@densityValue": {
+    "placeholders": {
+      "lines": {
+        "type": "int"
+      },
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
   "visualMap": "VISUAL MAP",
   "speciesInCrate": "SPECIES IN CRATE",
   "left": "LEFT",

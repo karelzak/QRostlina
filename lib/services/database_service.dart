@@ -20,6 +20,8 @@ abstract class DatabaseService {
   Future<void> saveLocation(Location location);
   Future<List<String>> getLocationsForSpecies(String speciesId);
   Future<void> setSpeciesAtBedCell(String bedId, int line, int row, String? speciesId);
+  Future<void> addSpeciesToRandBed(String bedId, String speciesId);
+  Future<void> removeSpeciesFromRandBed(String bedId, String speciesId);
   Future<void> addSpeciesToCrate(String crateId, String speciesId);
   Future<void> removeSpeciesFromCrate(String crateId, String speciesId);
   Future<void> clearLocation(String id);

@@ -65,18 +65,13 @@
       }
     }
   },
-  "grid": "Mřížka (2 řádky)",
-  "linear": "Lineární (pouze metry)",
-  "density": "{rows}x{cols} ({total} na metr)",
-  "@density": {
+  "grid": "Mřížka",
+  "linear": "Lineární",
+  "rand": "Náhodné / Neorganizované",
+  "fragments": "{count} Fragmentů na metr",
+  "@fragments": {
     "placeholders": {
-      "rows": {
-        "type": "int"
-      },
-      "cols": {
-        "type": "int"
-      },
-      "total": {
+      "count": {
         "type": "int"
       }
     }
@@ -124,7 +119,22 @@
   "row": "Řádek",
   "bedLength": "Délka záhonu",
   "layoutType": "Typ rozložení",
-  "fragmentationDensity": "Fragmentace (hustota)",
+  "fragmentationDensity": "Fragmentace (Hustota)",
+  "lines": "Řady (Lines)",
+  "rows": "Sloupce (Rows)",
+  "plantsPerMeter": "Počet rostlin na metr",
+  "density": "Hustota",
+  "densityValue": "{lines} x {rows} /m",
+  "@densityValue": {
+    "placeholders": {
+      "lines": {
+        "type": "int"
+      },
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
   "visualMap": "VIZUÁLNÍ MAPA",
   "speciesInCrate": "ODRŮDY V PŘEPRAVCE",
   "left": "LEVÁ",

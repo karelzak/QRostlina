@@ -152,14 +152,17 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get grid => 'Mřížka (2 řádky)';
+  String get grid => 'Mřížka';
 
   @override
-  String get linear => 'Lineární (pouze metry)';
+  String get linear => 'Lineární';
 
   @override
-  String density(int rows, int cols, int total) {
-    return '${rows}x$cols ($total na metr)';
+  String get rand => 'Náhodné / Neorganizované';
+
+  @override
+  String fragments(int count) {
+    return '$count Fragmentů na metr';
   }
 
   @override
@@ -254,7 +257,24 @@ class AppLocalizationsCs extends AppLocalizations {
   String get layoutType => 'Typ rozložení';
 
   @override
-  String get fragmentationDensity => 'Fragmentace (hustota)';
+  String get fragmentationDensity => 'Fragmentace (Hustota)';
+
+  @override
+  String get lines => 'Řady (Lines)';
+
+  @override
+  String get rows => 'Sloupce (Rows)';
+
+  @override
+  String get plantsPerMeter => 'Počet rostlin na metr';
+
+  @override
+  String get density => 'Hustota';
+
+  @override
+  String densityValue(int lines, int rows) {
+    return '$lines x $rows /m';
+  }
 
   @override
   String get visualMap => 'VIZUÁLNÍ MAPA';

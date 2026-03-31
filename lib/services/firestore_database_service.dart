@@ -155,6 +155,10 @@ class FirestoreDatabaseService implements DatabaseService {
         bed.speciesMap.removeWhere((key, value) => value == id);
         await bedDoc.reference.update({'speciesMap': bed.speciesMap});
       }
+      if (bed.randSpeciesIds.contains(id)) {
+        bed.randSpeciesIds.removeWhere((value) => value == id);
+        await bedDoc.reference.update({'randSpeciesIds': bed.randSpeciesIds});
+      }
     }
     
     final crates = await _db.collection('crates').get();
@@ -189,14 +193,20 @@ class FirestoreDatabaseService implements DatabaseService {
     final beds = await _db.collection('beds').get();
     for (var doc in beds.docs) {
       final bed = Bed.fromMap({...doc.data(), 'id': doc.id});
-      bed.speciesMap.forEach((key, sId) {
-        if (sId == speciesId) {
-          final parts = key.split('-');
-          final line = int.tryParse(parts[0]);
-          final row = int.tryParse(parts[1]);
-          locations.add(bed.formatPosition(line, row));
+      if (bed.layout == BedLayout.rand) {
+        if (bed.randSpeciesIds.contains(speciesId)) {
+          locations.add(bed.id);
         }
-      });
+      } else {
+        bed.speciesMap.forEach((key, sId) {
+          if (sId == speciesId) {
+            final parts = key.split('-');
+            final line = int.tryParse(parts[0]);
+            final row = int.tryParse(parts[1]);
+            locations.add(bed.formatPosition(line, row));
+          }
+        });
+      }
     }
 
     final crates = await _db.collection('crates').where('speciesIds', arrayContains: speciesId).get();
@@ -224,6 +234,20 @@ class FirestoreDatabaseService implements DatabaseService {
   }
 
   @override
+  Future<void> addSpeciesToRandBed(String bedId, String speciesId) async {
+    await _db.collection('beds').doc(bedId).update({
+      'randSpeciesIds': FieldValue.arrayUnion([speciesId])
+    });
+  }
+
+  @override
+  Future<void> removeSpeciesFromRandBed(String bedId, String speciesId) async {
+    await _db.collection('beds').doc(bedId).update({
+      'randSpeciesIds': FieldValue.arrayRemove([speciesId])
+    });
+  }
+
+  @override
   Future<void> addSpeciesToCrate(String crateId, String speciesId) async {
     await _db.collection('crates').doc(crateId).update({
       'speciesIds': FieldValue.arrayUnion([speciesId])
@@ -240,8 +264,9 @@ class FirestoreDatabaseService implements DatabaseService {
   @override
   Future<void> clearLocation(String id) async {
     final collection = id.startsWith('B-') ? 'beds' : 'crates';
-    final field = id.startsWith('B-') ? 'speciesMap' : 'speciesIds';
-    final Map<String, dynamic> data = id.startsWith('B-') ? {'speciesMap': {}} : {'speciesIds': []};
+    final Map<String, dynamic> data = id.startsWith('B-') 
+        ? {'speciesMap': {}, 'randSpeciesIds': []} 
+        : {'speciesIds': []};
     await _db.collection(collection).doc(id).update(data);
   }
 
