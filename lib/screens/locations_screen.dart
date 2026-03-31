@@ -110,10 +110,29 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
       itemCount: _beds!.length,
       itemBuilder: (context, index) {
         final bed = _beds![index];
+        final uniqueSpecies = bed.layout == BedLayout.rand 
+            ? bed.randSpeciesIds.toSet().length 
+            : bed.speciesMap.values.toSet().length;
+
         return ListTile(
           leading: const Icon(Icons.grid_view, color: Colors.yellow),
           title: Text(bed.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text('${bed.id} | ${l10n.label}: ${bed.row ?? "-"}', style: const TextStyle(color: Colors.white70)),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${bed.id} | ${l10n.label}: ${bed.row ?? "-"}', style: const TextStyle(color: Colors.white70)),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  _countBadge(Icons.local_florist, uniqueSpecies.toString(), Colors.orange),
+                  if (bed.layout != BedLayout.rand) ...[
+                    const SizedBox(width: 8),
+                    _countBadge(Icons.check_circle_outline, '${bed.filledCells}/${bed.totalCells}', Colors.green),
+                  ],
+                ],
+              ),
+            ],
+          ),
           trailing: IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
             onPressed: () => _deleteLocation(bed.id, l10n),
@@ -132,10 +151,19 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
       itemCount: _crates!.length,
       itemBuilder: (context, index) {
         final crate = _crates![index];
+        final uniqueSpecies = crate.speciesIds.toSet().length;
+
         return ListTile(
           leading: const Icon(Icons.inventory_2, color: Colors.yellow),
           title: Text(crate.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text('${crate.id} | ${l10n.type}: ${crate.type}', style: const TextStyle(color: Colors.white70)),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${crate.id} | ${l10n.type}: ${crate.type}', style: const TextStyle(color: Colors.white70)),
+              const SizedBox(height: 4),
+              _countBadge(Icons.local_florist, uniqueSpecies.toString(), Colors.blue),
+            ],
+          ),
           trailing: IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
             onPressed: () => _deleteLocation(crate.id, l10n),
@@ -143,6 +171,25 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailScreen(id: crate.id, type: ScannedType.crate))),
         );
       },
+    );
+  }
+
+  Widget _countBadge(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+        ],
+      ),
     );
   }
 
