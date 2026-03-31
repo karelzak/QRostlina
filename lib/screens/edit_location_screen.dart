@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
 import '../models/location.dart';
 import '../services/service_locator.dart';
@@ -20,7 +21,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
   late TextEditingController _idController;
   late TextEditingController _nameController;
   late TextEditingController _extraController; // Row for Bed, Type for Crate
-  int _length = 10;
+  late TextEditingController _lengthController;
   int _linesPerMeter = 2;
   int _rowsPerMeter = 2;
   BedLayout _layout = BedLayout.grid;
@@ -32,10 +33,11 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
     _idController = TextEditingController(text: loc?.id ?? (widget.isBed ? 'B-' : 'C-'));
     _nameController = TextEditingController(text: loc?.name ?? '');
     
+    int initialLength = 10;
     String extra = '';
     if (loc is Bed) {
       extra = loc.row ?? '';
-      _length = loc.length;
+      initialLength = loc.length;
       _linesPerMeter = loc.linesPerMeter;
       _rowsPerMeter = loc.rowsPerMeter;
       _layout = loc.layout;
@@ -43,6 +45,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
       extra = loc.type;
     }
     _extraController = TextEditingController(text: extra);
+    _lengthController = TextEditingController(text: initialLength.toString());
   }
 
   @override
@@ -50,6 +53,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
     _idController.dispose();
     _nameController.dispose();
     _extraController.dispose();
+    _lengthController.dispose();
     super.dispose();
   }
 
@@ -57,15 +61,16 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
     final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       final id = _idController.text.trim().toUpperCase();
+      final newLength = int.tryParse(_lengthController.text) ?? 10;
 
       // If editing an existing bed, check if structural changes are allowed
       if (widget.location is Bed) {
         final bed = widget.location as Bed;
         final layoutChanged = bed.layout != _layout;
         
-        // For Grid: layout change OR lines/rows change requires a check
-        // For others: only layout change requires a check
-        bool structuralChange = layoutChanged;
+        // For Grid: layout change OR lines/rows change OR length reduction requires a check
+        // For others: layout change OR length reduction requires a check
+        bool structuralChange = layoutChanged || newLength < bed.length;
         if (bed.layout == BedLayout.grid && _layout == BedLayout.grid) {
           if (bed.linesPerMeter != _linesPerMeter || bed.rowsPerMeter != _rowsPerMeter) {
             structuralChange = true;
@@ -82,7 +87,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
                 backgroundColor: Colors.grey[900],
                 title: const Text('Change Bed Structure?', style: TextStyle(color: Colors.white)),
                 content: const Text(
-                  'Changing the layout or grid dimensions will reset all plantings in this bed. Proceed?',
+                  'Changing the layout, grid dimensions, or reducing length will reset all plantings in this bed. Proceed?',
                   style: TextStyle(color: Colors.white70),
                 ),
                 actions: [
@@ -117,7 +122,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
         final bed = widget.location as Bed?;
         bool structuralChange = false;
         if (bed != null) {
-          structuralChange = bed.layout != _layout;
+          structuralChange = bed.layout != _layout || newLength < bed.length;
           if (bed.layout == BedLayout.grid && _layout == BedLayout.grid) {
             if (bed.linesPerMeter != _linesPerMeter || bed.rowsPerMeter != _rowsPerMeter) {
               structuralChange = true;
@@ -129,7 +134,7 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
           id: id,
           name: _nameController.text.trim(),
           row: _extraController.text.trim(),
-          length: _length,
+          length: newLength,
           linesPerMeter: _layout == BedLayout.rand ? 1 : _linesPerMeter,
           rowsPerMeter: _rowsPerMeter,
           layout: _layout,
@@ -196,20 +201,25 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
               ),
               if (widget.isBed) ...[
                 const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  value: _length,
+                TextFormField(
+                  controller: _lengthController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     labelText: l10n.bedLength,
                     labelStyle: const TextStyle(color: Colors.yellow),
                     enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                    focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow, width: 2)),
+                    suffixText: 'm',
+                    suffixStyle: const TextStyle(color: Colors.yellow),
                   ),
-                  dropdownColor: Colors.black,
                   style: const TextStyle(color: Colors.white, fontSize: 18),
-                  items: [
-                    DropdownMenuItem(value: 10, child: Text(l10n.meters(10))),
-                    DropdownMenuItem(value: 20, child: Text(l10n.meters(20))),
-                  ],
-                  onChanged: (val) => setState(() => _length = val!),
+                  validator: (val) {
+                    if (val == null || val.isEmpty) return 'Required';
+                    final len = int.tryParse(val);
+                    if (len == null || len <= 0) return 'Must be > 0';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<BedLayout>(

@@ -44,19 +44,19 @@ Beds (B-ID) are managed via three distinct layouts, each with specific logic for
 
 1. **Grid Layout (Organized)**
    - **Purpose:** Precise mapping of individual plants.
-   - **Structure:** Defined by `Lines` (max 3) and `Rows` (max 3) *per meter*.
+   - **Structure:** Defined by `Length` (arbitrary meters), `Lines` (max 3), and `Rows` (max 3) *per meter*.
    - **Data Mapping:** Each entry in `speciesMap` (key: "line-row") represents **1 specific plant**.
    - **Capacity:** `Length * Lines * Rows`.
    - **Visual Map:** Shows a full sub-grid for every meter (e.g., 2 columns if 2 lines).
-   - **Constraints:** Any structural change (Layout, Lines, or Rows) on a non-empty bed requires user confirmation and resets all plantings.
+   - **Constraints:** Any structural change (Layout, Lines, Rows, or reducing Length) on a non-empty bed requires user confirmation and resets all plantings.
 
 2. **Linear Layout (Density-based)**
    - **Purpose:** High-density planting where one species covers an entire meter.
-   - **Structure:** Defined by `Lines` (max 20) and `Rows` (max 20) *per meter*.
+   - **Structure:** Defined by `Length` (arbitrary meters), `Lines` (max 20), and `Rows` (max 20) *per meter*.
    - **Data Mapping:** Each entry in `speciesMap` (key: "1-meterIdx") represents **all plants in that meter**.
    - **Capacity:** `Length * Lines * Rows`. (e.g., 10 lines x 15 rows = 150 plants/m).
    - **Visual Map:** Simplified UI showing **one large cell per meter**. The cell displays the species name and total plant count (e.g., "150pcs").
-   - **Constraints:** Layout changes on non-empty beds require confirmation. However, `Lines` and `Rows` can be adjusted freely as they only affect the density/count calculation, not the mapping.
+   - **Constraints:** Layout or Length changes on non-empty beds require confirmation. However, `Lines` and `Rows` can be adjusted freely as they only affect the density/count calculation, not the mapping.
 
 3. **Random / Disorganized Layout**
    - **Purpose:** Quick tracking of species in a bed without any spatial organization.
