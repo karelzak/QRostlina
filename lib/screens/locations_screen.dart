@@ -56,10 +56,28 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
             icon: const Icon(Icons.more_vert),
             onSelected: (value) async {
               final isBed = _tabController.index == 0;
-              // Handle CSV import/export for current tab
+              if (value == 'export') {
+                if (isBed) {
+                  await CSVService.exportBeds();
+                } else {
+                  await CSVService.exportCrates();
+                }
+              } else if (value == 'import') {
+                int count = 0;
+                if (isBed) {
+                  count = await CSVService.importBeds();
+                } else {
+                  count = await CSVService.importCrates();
+                }
+                if (count > 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Imported $count ${isBed ? l10n.beds : l10n.crates}')),
+                  );
+                  _loadData();
+                }
+              }
             },
             itemBuilder: (context) {
-              final type = _tabController.index == 0 ? l10n.beds : l10n.crates;
               return [
                 PopupMenuItem(value: 'export', child: Text(l10n.export)),
                 PopupMenuItem(value: 'import', child: Text(l10n.import)),
