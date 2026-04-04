@@ -53,6 +53,9 @@ To prevent data loss and ensure consistent behavior across platforms, the follow
    - Ensure both `FirestoreDatabaseService` (Cloud) and `LocalStorageService` (Local JSON) are updated to handle any new or modified fields.
    - Use `jsonEncode`/`jsonDecode` for complex fields (like Maps or Lists) when exporting to CSV to maintain structure.
 
+3. **UI Safety Standards:**
+   - **Deletion Confirmation:** Deleting a location (Bed or Crate) that is NOT empty (contains species) **MUST** trigger a dialog with a warning (e.g., `deleteLocationNotEmpty`) to prevent accidental data loss.
+
 ## Bed Structure & Layouts
 Beds (B-ID) are managed via three distinct layouts, each with specific logic for capacity and visualization:
 

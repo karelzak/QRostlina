@@ -167,6 +167,51 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
+  void _deleteLocation(AppLocalizations l10n) async {
+    final location = _data as Location;
+    bool isEmpty = true;
+    if (location is Bed) {
+      isEmpty = location.filledCells <= 0;
+    } else if (location is Crate) {
+      isEmpty = location.speciesIds.isEmpty;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text(l10n.deleteLocation, style: const TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  l10n.deleteLocationNotEmpty,
+                  style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                ),
+              ),
+            Text(location.id, style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await locator.db.deleteLocation(location.id);
+      Navigator.pop(context, true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;

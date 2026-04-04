@@ -77,6 +77,7 @@
     }
   },
   "deleteLocation": "Smazat umístění?",
+  "deleteLocationNotEmpty": "Toto umístění není prázdné! Opravdu ho chcete smazat?",
   "export": "Exportovat",
   "import": "Importovat",
   "scannerNotAvailable": "Skener není dostupný na desktopu.",

@@ -135,7 +135,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
           ),
           trailing: IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
-            onPressed: () => _deleteLocation(bed.id, l10n),
+            onPressed: () => _deleteLocation(bed, l10n),
           ),
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailScreen(id: bed.id, type: ScannedType.bed))),
         );
@@ -166,7 +166,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
           ),
           trailing: IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
-            onPressed: () => _deleteLocation(crate.id, l10n),
+            onPressed: () => _deleteLocation(crate, l10n),
           ),
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailScreen(id: crate.id, type: ScannedType.crate))),
         );
@@ -193,12 +193,34 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
     );
   }
 
-  void _deleteLocation(String id, AppLocalizations l10n) async {
+  void _deleteLocation(Location location, AppLocalizations l10n) async {
+    bool isEmpty = true;
+    if (location is Bed) {
+      isEmpty = location.filledCells <= 0;
+    } else if (location is Crate) {
+      isEmpty = location.speciesIds.isEmpty;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
         title: Text(l10n.deleteLocation, style: const TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  l10n.deleteLocationNotEmpty,
+                  style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                ),
+              ),
+            Text(location.id, style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
           TextButton(
@@ -210,7 +232,7 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
     );
 
     if (confirmed == true) {
-      await locator.db.deleteLocation(id);
+      await locator.db.deleteLocation(location.id);
       _loadData();
     }
   }

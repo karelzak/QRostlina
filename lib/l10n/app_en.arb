@@ -77,6 +77,7 @@
     }
   },
   "deleteLocation": "Delete Location?",
+  "deleteLocationNotEmpty": "This location is not empty! Are you sure you want to delete it?",
   "export": "Export",
   "import": "Import",
   "scannerNotAvailable": "Scanner not available on Desktop.",
