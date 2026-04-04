@@ -40,6 +40,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
     }
 
     final species = await locator.db.getAllSpecies();
+    species.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     
     // Create new local versions of data
     Map<String, File?> newLocalThumbnails = {};

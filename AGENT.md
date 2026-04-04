@@ -56,6 +56,7 @@ To prevent data loss and ensure consistent behavior across platforms, the follow
 3. **UI Safety Standards:**
    - **Deletion Confirmation:** Deleting a location (Bed or Crate) that is NOT empty (contains species) **MUST** trigger a dialog with a warning (e.g., `deleteLocationNotEmpty`) to prevent accidental data loss.
    - **Import/Export Actions:** Every screen containing an import/export menu (e.g., `SpeciesListScreen`, `LocationsScreen`) **MUST** fully implement the `onSelected` callback in its `PopupMenuButton` to trigger the corresponding `CSVService` methods and refresh the UI data.
+   - **Alphabetical Sorting:** All primary lists (Species, Beds, Crates) **MUST** be sorted alphabetically by name (case-insensitive) when displayed in the UI.
 
 ## Bed Structure & Layouts
 Beds (B-ID) are managed via three distinct layouts, each with specific logic for capacity and visualization:

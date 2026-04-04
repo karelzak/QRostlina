@@ -31,6 +31,10 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
     setState(() => _loading = true);
     final beds = await locator.db.getAllBeds();
     final crates = await locator.db.getAllCrates();
+
+    beds.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    crates.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
     if (mounted) {
       setState(() {
         _beds = beds;
