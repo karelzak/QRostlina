@@ -12,11 +12,11 @@ class CSVService {
   static Future<void> exportSpecies() async {
     final species = await locator.db.getAllSpecies();
     List<List<dynamic>> rows = [
-      ['ID', 'Name', 'Latin Name', 'Color', 'Description']
+      ['ID', 'Name', 'Latin Name', 'Color', 'Description', 'Photo URL']
     ];
 
     for (var s in species) {
-      rows.add([s.id, s.name, s.latinName ?? '', s.color ?? '', s.description ?? '']);
+      rows.add([s.id, s.name, s.latinName ?? '', s.color ?? '', s.description ?? '', s.photoUrl ?? '']);
     }
 
     await _saveCSV(rows, 'species_export.csv');
@@ -25,7 +25,7 @@ class CSVService {
   static Future<void> exportBeds() async {
     final beds = await locator.db.getAllBeds();
     List<List<dynamic>> rows = [
-      ['ID', 'Name', 'Label', 'Length', 'RowsPerMeter', 'Layout', 'SpeciesMap']
+      ['ID', 'Name', 'Label', 'Length', 'LinesPerMeter', 'RowsPerMeter', 'Layout', 'SpeciesMap', 'RandSpeciesIds']
     ];
 
     for (var b in beds) {
@@ -34,9 +34,11 @@ class CSVService {
         b.name,
         b.row ?? '',
         b.length,
+        b.linesPerMeter,
         b.rowsPerMeter,
         b.layout.name,
-        jsonEncode(b.speciesMap)
+        jsonEncode(b.speciesMap),
+        b.randSpeciesIds.join(';')
       ]);
     }
 
@@ -72,6 +74,7 @@ class CSVService {
         latinName: r.length > 2 && r[2].toString().isNotEmpty ? r[2].toString() : null,
         color: r.length > 3 && r[3].toString().isNotEmpty ? r[3].toString() : null,
         description: r.length > 4 && r[4].toString().isNotEmpty ? r[4].toString() : null,
+        photoUrl: r.length > 5 && r[5].toString().isNotEmpty ? r[5].toString() : null,
       );
       await locator.db.addSpecies(s);
       count++;
@@ -86,20 +89,25 @@ class CSVService {
     int count = 0;
     for (int i = 1; i < rows.length; i++) {
       final r = rows[i];
-      if (r.length < 6) continue;
+      if (r.length < 7) continue;
 
       try {
-        final speciesMapRaw = r.length > 6 ? r[6].toString() : '{}';
+        final speciesMapRaw = r.length > 7 ? r[7].toString() : '{}';
         final Map<String, dynamic> decodedMap = jsonDecode(speciesMapRaw);
+
+        final randSpeciesIdsRaw = r.length > 8 ? r[8].toString() : '';
+        final randSpeciesIds = randSpeciesIdsRaw.split(';').where((s) => s.isNotEmpty).toList();
         
         final b = Bed(
           id: r[0].toString().trim(),
           name: r[1].toString().trim(),
           row: r[2].toString().isNotEmpty ? r[2].toString() : null,
           length: int.tryParse(r[3].toString()) ?? 10,
-          rowsPerMeter: int.tryParse(r[4].toString()) ?? 2,
-          layout: BedLayout.values.byName(r[5].toString().trim().toLowerCase()),
+          linesPerMeter: int.tryParse(r[4].toString()) ?? 2,
+          rowsPerMeter: int.tryParse(r[5].toString()) ?? 2,
+          layout: BedLayout.values.byName(r[6].toString().trim().toLowerCase()),
           speciesMap: Map<String, String>.from(decodedMap),
+          randSpeciesIds: randSpeciesIds,
         );
         await locator.db.saveLocation(b);
         count++;
