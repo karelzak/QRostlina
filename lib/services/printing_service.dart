@@ -174,8 +174,8 @@ class BrotherPrintingService implements PrintingService {
         return false;
       }
 
-      await printer.replaceTextName("txt_name", species.name);
-      await printer.replaceTextName("qr_id", species.id);
+      await printer.replaceTextName(species.name, "txt_name");
+      await printer.replaceTextName(species.id, "qr_id");
 
       final printStatus = await printer.flushPTTPrint();
       debugPrint("PrintingService: Print finished with code: ${printStatus.errorCode}");
