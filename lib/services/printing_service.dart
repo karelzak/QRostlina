@@ -1,9 +1,13 @@
 import 'package:another_brother/label_info.dart';
 import 'package:another_brother/printer_info.dart' as brother;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 import '../models/species.dart';
+import '../models/print_template.dart';
 
 abstract class PrintingService {
   Future<void> initialize();
@@ -11,6 +15,11 @@ abstract class PrintingService {
   List<DiscoveredPrinter> get lastDiscoveredPrinters;
   Future<bool> printSpecies(Species species, String templatePath, String macAddress, brother.Model model);
   Future<String?> validateConnection(String macAddress, brother.Model model);
+
+  // Template management
+  Future<List<PrintTemplate>> getTemplates();
+  Future<PrintTemplate> addTemplate(String sourceFilePath, String name, String tapeSize);
+  Future<void> deleteTemplate(String templateId);
 }
 
 class DiscoveredPrinter {
@@ -258,6 +267,71 @@ class BrotherPrintingService implements PrintingService {
     } catch (e) {
       debugPrint("PrintingService: Validation error: $e");
       return "Connection Failed";
+    }
+  }
+
+  // --- Template management ---
+
+  Future<Directory> _templatesDir() async {
+    final docs = await getApplicationDocumentsDirectory();
+    final dir = Directory(p.join(docs.path, 'templates'));
+    if (!await dir.exists()) await dir.create(recursive: true);
+    return dir;
+  }
+
+  Future<File> _metadataFile() async {
+    final dir = await _templatesDir();
+    return File(p.join(dir.path, 'templates.json'));
+  }
+
+  @override
+  Future<List<PrintTemplate>> getTemplates() async {
+    final file = await _metadataFile();
+    if (!await file.exists()) return [];
+    final content = await file.readAsString();
+    final List<dynamic> list = jsonDecode(content);
+    return list.map((e) => PrintTemplate.fromMap(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> _saveTemplates(List<PrintTemplate> templates) async {
+    final file = await _metadataFile();
+    await file.writeAsString(jsonEncode(templates.map((t) => t.toMap()).toList()));
+  }
+
+  @override
+  Future<PrintTemplate> addTemplate(String sourceFilePath, String name, String tapeSize) async {
+    final dir = await _templatesDir();
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final ext = p.extension(sourceFilePath).toLowerCase();
+    final destPath = p.join(dir.path, '$id$ext');
+
+    await File(sourceFilePath).copy(destPath);
+
+    final template = PrintTemplate(
+      id: id,
+      name: name,
+      localPath: destPath,
+      tapeSize: tapeSize,
+    );
+
+    final templates = await getTemplates();
+    templates.add(template);
+    await _saveTemplates(templates);
+
+    debugPrint("PrintingService: Added template '$name' -> $destPath");
+    return template;
+  }
+
+  @override
+  Future<void> deleteTemplate(String templateId) async {
+    final templates = await getTemplates();
+    final template = templates.where((t) => t.id == templateId).firstOrNull;
+    if (template != null) {
+      final file = File(template.localPath);
+      if (await file.exists()) await file.delete();
+      templates.removeWhere((t) => t.id == templateId);
+      await _saveTemplates(templates);
+      debugPrint("PrintingService: Deleted template '${template.name}'");
     }
   }
 }
