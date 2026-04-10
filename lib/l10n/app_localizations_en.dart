@@ -169,6 +169,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteLocation => 'Delete Location?';
 
   @override
+  String get deleteLocationNotEmpty =>
+      'This location is not empty! Are you sure you want to delete it?';
+
+  @override
   String get export => 'Export';
 
   @override

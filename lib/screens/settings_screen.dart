@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,12 +20,39 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
   late TabController _tabController;
   String _statusMessage = 'Ready';
   String _persistencePath = 'Loading...';
+  bool _isDiscovering = false;
+
+  static const String _printerMacKey = 'printer_mac';
+  static const String _printerNameKey = 'printer_name';
+  static const String _printerModelIdKey = 'printer_model_id';
+  String _savedPrinterMac = '';
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _loadPath();
+    _loadPrinterSettings();
+  }
+
+  Future<void> _loadPrinterSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _savedPrinterMac = prefs.getString(_printerMacKey) ?? '';
+    });
+  }
+
+  Future<void> _savePrinter(String mac, String name, {int modelId = -1}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_printerMacKey, mac);
+    await prefs.setString(_printerNameKey, name);
+    if (modelId >= 0) {
+      await prefs.setInt(_printerModelIdKey, modelId);
+    }
+    setState(() {
+      _savedPrinterMac = mac;
+      _statusMessage = 'Saved: $name';
+    });
   }
 
   @override
@@ -111,11 +139,13 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
           indicatorColor: Colors.black,
           labelColor: Colors.black,
           unselectedLabelColor: Colors.black54,
+          isScrollable: true,
           tabs: [
             Tab(text: l10n.general),
             Tab(text: l10n.data),
             Tab(text: l10n.auth),
             Tab(text: l10n.access),
+            const Tab(text: 'PRINTING'),
           ],
         ),
       ),
@@ -126,6 +156,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
           _buildDataTab(l10n),
           _buildAuthTab(l10n),
           _buildAccessTab(l10n),
+          _buildPrintingTab(l10n),
         ],
       ),
     );
@@ -450,6 +481,91 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
           ],
         );
       },
+    );
+  }
+
+  void _discoverPrinters() async {
+    setState(() {
+      _isDiscovering = true;
+      _statusMessage = 'Discovering printers...';
+    });
+
+    try {
+      await locator.print.discoverPrinters();
+      setState(() {
+        _isDiscovering = false;
+        _statusMessage = 'Found ${locator.print.lastDiscoveredPrinters.length} printers';
+      });
+    } catch (e) {
+      setState(() {
+        _isDiscovering = false;
+        _statusMessage = 'Discovery failed: $e';
+      });
+    }
+  }
+
+  Widget _buildPrintingTab(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _isDiscovering ? null : _discoverPrinters,
+              icon: _isDiscovering
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                : const Icon(Icons.bluetooth_searching),
+              label: const Text('DISCOVER PRINTERS'),
+              style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 56)),
+            ),
+            const SizedBox(height: 16),
+            if (locator.print.lastDiscoveredPrinters.isNotEmpty)
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: locator.print.lastDiscoveredPrinters.length,
+                itemBuilder: (context, index) {
+                  final printer = locator.print.lastDiscoveredPrinters[index];
+                  bool isSelected = _savedPrinterMac == printer.macAddress;
+                  return ListTile(
+                    tileColor: isSelected ? Colors.yellow.withValues(alpha: 0.1) : Colors.grey[900],
+                    title: Text(printer.name, style: TextStyle(color: Colors.white, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                    subtitle: Text(printer.macAddress,
+                      style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                    trailing: isSelected
+                      ? const Icon(Icons.check_circle, color: Colors.yellow)
+                      : const Icon(Icons.radio_button_unchecked, color: Colors.white24),
+                    onTap: () {
+                      _savePrinter(printer.macAddress, printer.name, modelId: printer.model.getId());
+                    },
+                  );
+                },
+              )
+            else if (!_isDiscovering)
+              const Center(child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Text('No printers found yet. Tap Discover to scan.',
+                  style: TextStyle(color: Colors.white54), textAlign: TextAlign.center),
+              )),
+            const SizedBox(height: 24),
+            const Divider(color: Colors.white24),
+            const Text('TEMPLATES (Coming Soon)', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Template management will be added in Phase 2.', style: TextStyle(color: Colors.white54, fontSize: 12)),
+            const SizedBox(height: 40),
+            Container(
+              padding: const EdgeInsets.all(16),
+              color: Colors.black,
+              child: Text(
+                _statusMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

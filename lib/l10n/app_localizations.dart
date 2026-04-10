@@ -398,6 +398,12 @@ abstract class AppLocalizations {
   /// **'Delete Location?'**
   String get deleteLocation;
 
+  /// No description provided for @deleteLocationNotEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This location is not empty! Are you sure you want to delete it?'**
+  String get deleteLocationNotEmpty;
+
   /// No description provided for @export.
   ///
   /// In en, this message translates to:

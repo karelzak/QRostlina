@@ -169,6 +169,10 @@ class AppLocalizationsCs extends AppLocalizations {
   String get deleteLocation => 'Smazat umístění?';
 
   @override
+  String get deleteLocationNotEmpty =>
+      'Toto umístění není prázdné! Opravdu ho chcete smazat?';
+
+  @override
   String get export => 'Exportovat';
 
   @override

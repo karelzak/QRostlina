@@ -1,0 +1,263 @@
+import 'package:another_brother/label_info.dart';
+import 'package:another_brother/printer_info.dart' as brother;
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import '../models/species.dart';
+
+abstract class PrintingService {
+  Future<void> initialize();
+  Future<List<DiscoveredPrinter>> discoverPrinters();
+  List<DiscoveredPrinter> get lastDiscoveredPrinters;
+  Future<bool> printSpecies(Species species, String templatePath, String macAddress, brother.Model model);
+  Future<String?> validateConnection(String macAddress, brother.Model model);
+}
+
+class DiscoveredPrinter {
+  final String name;
+  final String macAddress;
+  final brother.Model model;
+
+  DiscoveredPrinter({required this.name, required this.macAddress, required this.model});
+}
+
+/// Maps Bluetooth device name prefixes to the closest Model enum value.
+/// PT-E920BT is not in another_brother v2.2.4; PT_P910BT is the closest
+/// compatible model (same 36mm tape, BT, PT label printer series).
+brother.Model _modelFromName(String deviceName) {
+  final upper = deviceName.toUpperCase();
+  for (final model in brother.Model.getValues()) {
+    final modelName = model.getName().toUpperCase();
+    if (upper.startsWith(modelName)) return model;
+  }
+  // PT-E920BT not in enum — map to PT_P910BT (closest 36mm BT PT printer)
+  if (upper.startsWith('PT-E920') || upper.startsWith('PT_E920')) {
+    return brother.Model.PT_P910BT;
+  }
+  return brother.Model.PT_E850TKW; // safe fallback for unknown PT printers
+}
+
+/// Extra model name strings for BT discovery that aren't in the Model enum.
+const _extraBtFilterNames = ['PT-E920BT'];
+
+class BrotherPrintingService implements PrintingService {
+  List<DiscoveredPrinter> _discoveredPrinters = [];
+
+  @override
+  List<DiscoveredPrinter> get lastDiscoveredPrinters => _discoveredPrinters;
+
+  @override
+  Future<void> initialize() async {
+    if (Platform.isAndroid) {
+      debugPrint("PrintingService: Requesting permissions...");
+      final statuses = await [
+        Permission.bluetooth,
+        Permission.bluetoothScan,
+        Permission.bluetoothConnect,
+        Permission.location,
+      ].request();
+      debugPrint("PrintingService: Permission statuses: $statuses");
+    }
+  }
+
+  @override
+  Future<List<DiscoveredPrinter>> discoverPrinters() async {
+    try {
+      debugPrint("PrintingService: Starting discovery...");
+      final printer = brother.Printer();
+      
+      // Ensure permissions are granted before discovery
+      if (Platform.isAndroid) {
+        if (!await Permission.bluetoothScan.isGranted || 
+            !await Permission.bluetoothConnect.isGranted ||
+            !await Permission.location.isGranted) {
+           debugPrint("PrintingService: Permissions not fully granted, requesting...");
+           await [Permission.bluetoothScan, Permission.bluetoothConnect, Permission.location].request();
+        }
+      }
+
+      // Build filter list from all known PT models + extra names not yet in enum
+      final List<String> ptModels = [
+        for (final m in brother.Model.getValues())
+          if (m.getName().startsWith('PT-')) m.getName(),
+        ..._extraBtFilterNames,
+      ];
+
+      // 1. Try Bluetooth Search (Classic)
+      debugPrint("PrintingService: Calling getBluetoothPrinters (matching common PT models)...");
+      final List<brother.BluetoothPrinter> btPrinters = await printer.getBluetoothPrinters(ptModels);
+      debugPrint("PrintingService: Found ${btPrinters.length} bluetooth devices");
+
+      // 2. Try BLE Search (Bluetooth Low Energy)
+      debugPrint("PrintingService: Calling getBLEPrinters (10s timeout)...");
+      final List<brother.BLEPrinter> blePrinters = await printer.getBLEPrinters(10000);
+      debugPrint("PrintingService: Found ${blePrinters.length} BLE devices");
+
+      // 3. Try Network Search (as Wi-Fi Direct might be active)
+      debugPrint("PrintingService: Calling getNetPrinters...");
+      final List<brother.NetPrinter> netPrinters = await printer.getNetPrinters(ptModels);
+      debugPrint("PrintingService: Found ${netPrinters.length} network devices");
+
+      final List<DiscoveredPrinter> results = [];
+
+      for (var p in btPrinters) {
+        final name = p.modelName ?? 'Brother Printer (BT)';
+        debugPrint("PrintingService: BT Device: $name at ${p.macAddress}");
+        results.add(DiscoveredPrinter(
+          name: name,
+          macAddress: p.macAddress ?? '',
+          model: _modelFromName(name),
+        ));
+      }
+
+      for (var p in blePrinters) {
+        final name = p.localName ?? 'Brother Printer (BLE)';
+        debugPrint("PrintingService: BLE Device: $name");
+        results.add(DiscoveredPrinter(
+          name: name,
+          macAddress: p.localName ?? '', // For BLE, localName is used for connection
+          model: _modelFromName(name),
+        ));
+      }
+
+      for (var p in netPrinters) {
+        final name = p.modelName ?? 'Brother Printer (WiFi)';
+        debugPrint("PrintingService: NET Device: $name at ${p.ipAddress}");
+        results.add(DiscoveredPrinter(
+          name: name,
+          macAddress: p.ipAddress ?? '',
+          model: _modelFromName(name),
+        ));
+      }
+
+      _discoveredPrinters = results;
+      return results;
+    } catch (e, stack) {
+      debugPrint("PrintingService: Discovery error: $e");
+      debugPrint("PrintingService: Stacktrace: $stack");
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> printSpecies(Species species, String templatePath, String macAddress, brother.Model model) async {
+    try {
+      final printer = brother.Printer();
+      final printInfo = brother.PrinterInfo();
+
+      printInfo.printerModel = model;
+      
+      // Determine port based on whether macAddress looks like a MAC or a Local Name (BLE)
+      // MAC: XX:XX:XX:XX:XX:XX or XXXXXXXXXXXX
+      // Local Name: PT-E920BT etc.
+      bool isMac = macAddress.contains(':') || (macAddress.length == 12 && !macAddress.contains('-'));
+
+      if (isMac) {
+        printInfo.port = brother.Port.BLUETOOTH;
+        printInfo.macAddress = macAddress;
+      } else if (macAddress.contains('.')) {
+        // IP Address
+        printInfo.port = brother.Port.NET;
+        printInfo.ipAddress = macAddress;
+      } else {
+        // BLE Local Name
+        printInfo.port = brother.Port.BLE;
+        printInfo.setLocalName(macAddress);
+      }
+
+      await printer.setPrinterInfo(printInfo);
+
+      debugPrint("PrintingService: Starting PTT Print for template 1 on port ${printInfo.port}");
+      bool started = await printer.startPTTPrint(1, "");
+      if (!started) {
+        debugPrint("PrintingService: Failed to start PTT Print session");
+        return false;
+      }
+
+      await printer.replaceTextName("txt_name", species.name);
+      await printer.replaceTextName("qr_id", species.id);
+
+      final printStatus = await printer.flushPTTPrint();
+      debugPrint("PrintingService: Print finished with code: ${printStatus.errorCode}");
+      
+      return printStatus.errorCode == brother.ErrorCode.ERROR_NONE;
+    } catch (e) {
+      debugPrint("PrintingService: Print error: $e");
+      return false;
+    }
+  }
+
+  @override
+  Future<String?> validateConnection(String macAddress, brother.Model model) async {
+    try {
+      debugPrint("PrintingService: Validating connection to $macAddress...");
+
+      // Determine port type from address format
+      final brother.Port port;
+      final bool isMac = macAddress.contains(':') || (macAddress.length == 12 && !macAddress.contains('-'));
+      if (isMac) {
+        port = brother.Port.BLUETOOTH;
+      } else if (macAddress.contains('.')) {
+        port = brother.Port.NET;
+      } else {
+        port = brother.Port.BLE;
+      }
+
+      // Try the hint model first, then PT_P910BT (for E920BT), then other PT models
+      final List<brother.Model> candidates = [
+        model,
+        _modelFromName(macAddress), // in case macAddress is a BLE local name
+        brother.Model.PT_P910BT,
+        brother.Model.PT_E850TKW,
+        brother.Model.PT_P950NW,
+        brother.Model.PT_P900W,
+        brother.Model.PT_D610BT,
+        brother.Model.PT_D460BT,
+        brother.Model.PT_P710BT,
+        brother.Model.PT_E550W,
+        brother.Model.PT_P750W,
+        brother.Model.PT_D800W,
+      ];
+
+      // Deduplicate while preserving order
+      final seen = <int>{};
+      final uniqueCandidates = candidates.where((m) => seen.add(m.getId())).toList();
+
+      for (var testModel in uniqueCandidates) {
+        final modelName = testModel.getName();
+        debugPrint("--------------------------------------------------");
+        debugPrint("TESTING MODEL: $modelName on port ${port.getName()}");
+
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        final printer = brother.Printer();
+        final printInfo = brother.PrinterInfo();
+        printInfo.printerModel = testModel;
+        printInfo.port = port;
+
+        if (port == brother.Port.BLUETOOTH) {
+          printInfo.macAddress = macAddress;
+        } else if (port == brother.Port.NET) {
+          printInfo.ipAddress = macAddress;
+        } else {
+          printInfo.setLocalName(macAddress);
+        }
+
+        await printer.setPrinterInfo(printInfo);
+        final status = await printer.getPrinterStatus();
+
+        if (status.errorCode == brother.ErrorCode.ERROR_NONE) {
+          debugPrint("PrintingService: SUCCESS! Model $modelName on port ${port.getName()}");
+          return "Connected: OK ($modelName)";
+        } else {
+          debugPrint("PrintingService: Result: ${status.errorCode.getName()}");
+        }
+      }
+
+      return "Model not identified (All PT models failed on ${port.getName()})";
+    } catch (e) {
+      debugPrint("PrintingService: Validation error: $e");
+      return "Connection Failed";
+    }
+  }
+}

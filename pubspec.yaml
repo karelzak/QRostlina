@@ -50,6 +50,8 @@ dependencies:
   firebase_auth: ^5.5.0
   google_sign_in: ^6.2.2
   shared_preferences: ^2.5.2
+  another_brother: ^2.2.0
+  permission_handler: ^11.4.0
 
 dev_dependencies:
   flutter_test:
