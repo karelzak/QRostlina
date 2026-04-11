@@ -21,8 +21,10 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
   String _printerName = '';
   int _printerModelId = -1;
 
-  LabelLayout _layout = LabelLayout.simple;
   int _tapeWidthMm = 12;
+  bool _includeQr = true;
+  bool _includeNote = false;
+  bool _flagMode = false;
 
   bool _isPrinting = false;
   bool _isDiscovering = false;
@@ -106,9 +108,13 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
         widget.species,
         _printerMac,
         model,
-        note: _noteController.text,
-        layout: _layout,
         tapeWidthMm: _tapeWidthMm,
+        content: LabelContent(
+          qr: _includeQr,
+          note: _includeNote,
+          flag: _flagMode,
+          noteText: _noteController.text,
+        ),
       );
 
       setState(() {
@@ -123,10 +129,18 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
     }
   }
 
+  /// QR too small to scan on 12mm tape
+  bool get _qrAllowed => _tapeWidthMm >= 18;
+
   @override
   Widget build(BuildContext context) {
     final s = widget.species;
     final hasPrinter = _printerMac.isNotEmpty;
+
+    // Auto-disable QR when switching to small tape
+    if (!_qrAllowed && _includeQr) {
+      _includeQr = false;
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('PRINT LABEL')),
@@ -180,67 +194,77 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Layout selection
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<LabelLayout>(
-                          initialValue: _layout,
-                          dropdownColor: Colors.grey[800],
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
-                            labelText: 'Layout',
-                            labelStyle: TextStyle(color: Colors.yellow),
-                            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                            focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: LabelLayout.simple, child: Text('Simple')),
-                            DropdownMenuItem(value: LabelLayout.flag, child: Text('Flag')),
-                          ],
-                          onChanged: (v) => setState(() => _layout = v!),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: DropdownButtonFormField<int>(
-                          initialValue: _tapeWidthMm,
-                          dropdownColor: Colors.grey[800],
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
-                            labelText: 'Tape',
-                            labelStyle: TextStyle(color: Colors.yellow),
-                            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                            focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 6, child: Text('6mm')),
-                            DropdownMenuItem(value: 9, child: Text('9mm')),
-                            DropdownMenuItem(value: 12, child: Text('12mm')),
-                            DropdownMenuItem(value: 18, child: Text('18mm')),
-                            DropdownMenuItem(value: 24, child: Text('24mm')),
-                            DropdownMenuItem(value: 36, child: Text('36mm')),
-                          ],
-                          onChanged: (v) => setState(() => _tapeWidthMm = v!),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Note input
-                  TextField(
-                    controller: _noteController,
+                  // Tape size
+                  DropdownButtonFormField<int>(
+                    initialValue: _tapeWidthMm,
+                    dropdownColor: Colors.grey[800],
                     style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
-                      labelText: 'NOTE (optional, per-label)',
-                      labelStyle: TextStyle(color: Colors.white70),
-                      hintText: 'e.g. Cerveny, roubovanec...',
-                      hintStyle: TextStyle(color: Colors.white24),
+                      labelText: 'Tape size',
+                      labelStyle: TextStyle(color: Colors.yellow),
                       enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
                       focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                     ),
+                    items: const [
+                      DropdownMenuItem(value: 12, child: Text('12 mm')),
+                      DropdownMenuItem(value: 18, child: Text('18 mm')),
+                      DropdownMenuItem(value: 24, child: Text('24 mm')),
+                      DropdownMenuItem(value: 36, child: Text('36 mm')),
+                    ],
+                    onChanged: (v) => setState(() => _tapeWidthMm = v!),
                   ),
+                  const SizedBox(height: 12),
+
+                  // Content toggles
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      FilterChip(
+                        label: const Text('QR Code'),
+                        selected: _includeQr,
+                        onSelected: _qrAllowed ? (v) => setState(() => _includeQr = v) : null,
+                        selectedColor: Colors.yellow,
+                        checkmarkColor: Colors.black,
+                        disabledColor: Colors.grey[800],
+                      ),
+                      FilterChip(
+                        label: const Text('Note'),
+                        selected: _includeNote,
+                        onSelected: (v) => setState(() => _includeNote = v),
+                        selectedColor: Colors.yellow,
+                        checkmarkColor: Colors.black,
+                      ),
+                      FilterChip(
+                        label: const Text('Flag (mirror)'),
+                        selected: _flagMode,
+                        onSelected: (v) => setState(() => _flagMode = v),
+                        selectedColor: Colors.yellow,
+                        checkmarkColor: Colors.black,
+                      ),
+                    ],
+                  ),
+                  if (!_qrAllowed)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text('QR code disabled for 12mm (too small to scan)',
+                          style: TextStyle(color: Colors.white38, fontSize: 11)),
+                    ),
+                  const SizedBox(height: 12),
+
+                  // Note input (only when Note is selected)
+                  if (_includeNote)
+                    TextField(
+                      controller: _noteController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Note text',
+                        labelStyle: TextStyle(color: Colors.white70),
+                        hintText: 'e.g. Cerveny, roubovanec...',
+                        hintStyle: TextStyle(color: Colors.white24),
+                        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                        focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                      ),
+                    ),
 
                   // Status
                   if (_statusMessage.isNotEmpty)
@@ -259,7 +283,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
             ),
           ),
 
-          // Print button — always at bottom
+          // Print button
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: SizedBox(

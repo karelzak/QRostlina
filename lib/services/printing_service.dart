@@ -7,12 +7,19 @@ import 'package:flutter/foundation.dart';
 import 'package:qr/qr.dart';
 import '../models/species.dart';
 
-/// Label layout types matching the two real-world use cases.
-enum LabelLayout {
-  /// Simple label: NAME + NOTE + QR code side by side
-  simple,
-  /// Flag label: QR | NAME | fold | NAME | QR
-  flag,
+/// What content to include on the label.
+class LabelContent {
+  final bool qr;
+  final bool note;
+  final bool flag; // mirror for cable wrapping
+  final String noteText;
+
+  const LabelContent({
+    this.qr = true,
+    this.note = false,
+    this.flag = false,
+    this.noteText = '',
+  });
 }
 
 abstract class PrintingService {
@@ -20,9 +27,8 @@ abstract class PrintingService {
   Future<List<DiscoveredPrinter>> discoverPrinters();
   List<DiscoveredPrinter> get lastDiscoveredPrinters;
   Future<bool> printSpecies(Species species, String macAddress, brother.Model model, {
-    String note = '',
-    LabelLayout layout = LabelLayout.simple,
     int tapeWidthMm = 12,
+    LabelContent content = const LabelContent(),
   });
 }
 
@@ -35,8 +41,6 @@ class DiscoveredPrinter {
 }
 
 /// Maps Bluetooth device name prefixes to the closest Model enum value.
-/// PT-E920BT is not in another_brother v2.2.4; PT_P910BT is the closest
-/// compatible model (same 36mm tape, BT, PT label printer series).
 brother.Model _modelFromName(String deviceName) {
   final upper = deviceName.toUpperCase();
   for (final model in brother.Model.getValues()) {
@@ -49,13 +53,10 @@ brother.Model _modelFromName(String deviceName) {
   return brother.Model.PT_E850TKW;
 }
 
-/// Extra model name strings for BT discovery that aren't in the Model enum.
 const _extraBtFilterNames = ['PT-E920BT'];
 
 /// PT-E920BT prints at 360 DPI.
 const _dpi = 360;
-
-/// Convert mm to pixels at printer DPI.
 int _mmToPx(double mm) => (mm * _dpi / 25.4).round();
 
 class BrotherPrintingService implements PrintingService {
@@ -88,7 +89,6 @@ class BrotherPrintingService implements PrintingService {
         if (!await Permission.bluetoothScan.isGranted ||
             !await Permission.bluetoothConnect.isGranted ||
             !await Permission.location.isGranted) {
-          debugPrint("PrintingService: Permissions not fully granted, requesting...");
           await [Permission.bluetoothScan, Permission.bluetoothConnect, Permission.location].request();
         }
       }
@@ -99,50 +99,41 @@ class BrotherPrintingService implements PrintingService {
         ..._extraBtFilterNames,
       ];
 
-      debugPrint("PrintingService: Calling getBluetoothPrinters...");
       final List<brother.BluetoothPrinter> btPrinters = await printer.getBluetoothPrinters(ptModels);
-      debugPrint("PrintingService: Found ${btPrinters.length} bluetooth devices");
+      debugPrint("PrintingService: Found ${btPrinters.length} BT devices");
 
-      debugPrint("PrintingService: Calling getBLEPrinters (10s timeout)...");
       final List<brother.BLEPrinter> blePrinters = await printer.getBLEPrinters(10000);
       debugPrint("PrintingService: Found ${blePrinters.length} BLE devices");
 
-      debugPrint("PrintingService: Calling getNetPrinters...");
       final List<brother.NetPrinter> netPrinters = await printer.getNetPrinters(ptModels);
-      debugPrint("PrintingService: Found ${netPrinters.length} network devices");
+      debugPrint("PrintingService: Found ${netPrinters.length} NET devices");
 
       final List<DiscoveredPrinter> results = [];
-
       for (var p in btPrinters) {
         final name = p.modelName ?? 'Brother Printer (BT)';
-        debugPrint("PrintingService: BT Device: $name at ${p.macAddress}");
         results.add(DiscoveredPrinter(name: name, macAddress: p.macAddress ?? '', model: _modelFromName(name)));
       }
       for (var p in blePrinters) {
         final name = p.localName ?? 'Brother Printer (BLE)';
-        debugPrint("PrintingService: BLE Device: $name");
         results.add(DiscoveredPrinter(name: name, macAddress: p.localName ?? '', model: _modelFromName(name)));
       }
       for (var p in netPrinters) {
         final name = p.modelName ?? 'Brother Printer (WiFi)';
-        debugPrint("PrintingService: NET Device: $name at ${p.ipAddress}");
         results.add(DiscoveredPrinter(name: name, macAddress: p.ipAddress ?? '', model: _modelFromName(name)));
       }
 
       _discoveredPrinters = results;
       return results;
     } catch (e, stack) {
-      debugPrint("PrintingService: Discovery error: $e");
-      debugPrint("PrintingService: Stacktrace: $stack");
+      debugPrint("PrintingService: Discovery error: $e\n$stack");
       rethrow;
     }
   }
 
   @override
   Future<bool> printSpecies(Species species, String macAddress, brother.Model model, {
-    String note = '',
-    LabelLayout layout = LabelLayout.simple,
     int tapeWidthMm = 12,
+    LabelContent content = const LabelContent(),
   }) async {
     try {
       final printer = brother.Printer();
@@ -152,11 +143,9 @@ class BrotherPrintingService implements PrintingService {
       printInfo.isAutoCut = true;
       printInfo.isCutAtEnd = true;
 
-      // Set label width
       final labelIndex = _labelIndexForTapeWidth(tapeWidthMm);
       if (labelIndex >= 0) printInfo.labelNameIndex = labelIndex;
 
-      // Determine port from address format
       bool isMac = macAddress.contains(':') || (macAddress.length == 12 && !macAddress.contains('-'));
       if (isMac) {
         printInfo.port = brother.Port.BLUETOOTH;
@@ -171,14 +160,12 @@ class BrotherPrintingService implements PrintingService {
 
       await printer.setPrinterInfo(printInfo);
 
-      // Generate label image
-      debugPrint("PrintingService: Generating label image (${layout.name}, ${tapeWidthMm}mm)");
-      final image = await _generateLabel(species, note: note, layout: layout, tapeWidthMm: tapeWidthMm);
+      debugPrint("PrintingService: Generating label (${tapeWidthMm}mm, qr=${content.qr}, note=${content.note}, flag=${content.flag})");
+      final image = await _generateLabel(species, tapeWidthMm, content);
 
-      // Print
-      debugPrint("PrintingService: Sending image to printer...");
+      debugPrint("PrintingService: Printing image ${image.width}x${image.height}...");
       final status = await printer.printImage(image);
-      debugPrint("PrintingService: Print result: ${status.errorCode.getName()}");
+      debugPrint("PrintingService: Result: ${status.errorCode.getName()}");
 
       return status.errorCode == brother.ErrorCode.ERROR_NONE;
     } catch (e) {
@@ -187,7 +174,6 @@ class BrotherPrintingService implements PrintingService {
     }
   }
 
-  /// Returns the label name index for a given tape width in mm.
   int _labelIndexForTapeWidth(int mm) {
     switch (mm) {
       case 6:  return PT.W6.getId();
@@ -200,30 +186,33 @@ class BrotherPrintingService implements PrintingService {
     }
   }
 
-  /// Generate a label image for the given species.
-  Future<ui.Image> _generateLabel(Species species, {
-    String note = '',
-    LabelLayout layout = LabelLayout.simple,
-    int tapeWidthMm = 12,
-  }) async {
-    final tapeH = _mmToPx(tapeWidthMm.toDouble());
-    // Margins ~2mm on each side
+  // ── Label generation ──────────────────────────────────────────
+
+  Future<ui.Image> _generateLabel(Species species, int tapeWidthMm, LabelContent content) async {
     final margin = _mmToPx(2);
+    final tapeH = _mmToPx(tapeWidthMm.toDouble());
     final printH = tapeH - margin * 2;
 
-    switch (layout) {
-      case LabelLayout.simple:
-        return _generateSimpleLabel(species, printH, margin, note: note);
-      case LabelLayout.flag:
-        return _generateFlagLabel(species, printH, margin, note: note);
-    }
+    // Build one half of the label
+    final halfImage = _buildHalf(species, printH, margin, content);
+
+    if (!content.flag) return halfImage;
+
+    // Flag: [half] | fold | [half mirrored]
+    return _buildFlag(halfImage, printH, margin);
   }
 
-  /// Simple label: [QR] [NAME / NOTE]
-  Future<ui.Image> _generateSimpleLabel(Species species, int printH, int margin, {String note = ''}) async {
-    final qrSize = printH;
-    final textAreaW = _mmToPx(40); // ~40mm for text
-    final totalW = margin + qrSize + margin + textAreaW + margin;
+  /// Build one label panel: optional QR + NAME + optional NOTE
+  ui.Image _buildHalf(Species species, int printH, int margin, LabelContent content) {
+    final showQr = content.qr;
+    final showNote = content.note && content.noteText.isNotEmpty;
+
+    final qrSize = showQr ? printH : 0;
+    final gap = showQr ? _mmToPx(2) : 0;
+
+    // Text area width scales with tape height for proportional labels
+    final textAreaW = _mmToPx(printH > _mmToPx(15) ? 40 : 30).toDouble();
+    final totalW = margin + qrSize + gap + textAreaW.toInt() + margin;
     final totalH = printH + margin * 2;
 
     final recorder = ui.PictureRecorder();
@@ -234,31 +223,36 @@ class BrotherPrintingService implements PrintingService {
         ui.Paint()..color = const ui.Color(0xFFFFFFFF));
 
     // QR code
-    _drawQrCode(canvas, species.id, margin.toDouble(), margin.toDouble(), qrSize.toDouble());
+    if (showQr) {
+      _drawQrCode(canvas, species.id, margin.toDouble(), margin.toDouble(), qrSize.toDouble());
+    }
 
-    // Name text
-    final nameX = margin + qrSize + margin;
-    final nameFontSize = (printH * 0.35).clamp(14, 60).toDouble();
-    _drawText(canvas, species.name, nameX.toDouble(), margin.toDouble(),
-        textAreaW.toDouble(), printH * 0.55, nameFontSize, bold: true);
+    // Text origin
+    final textX = (margin + qrSize + gap).toDouble();
 
-    // Note text (smaller, below name)
-    if (note.isNotEmpty) {
-      final noteFontSize = (printH * 0.25).clamp(10, 40).toDouble();
-      _drawText(canvas, note, nameX.toDouble(), margin + printH * 0.6,
-          textAreaW.toDouble(), printH * 0.35, noteFontSize);
+    if (showNote) {
+      // NAME on top ~60%, NOTE below ~35%
+      final nameFontSize = _fontSize(printH, 0.35);
+      final noteFontSize = _fontSize(printH, 0.25);
+      _drawText(canvas, species.name, textX, margin.toDouble(),
+          textAreaW, printH * 0.6, nameFontSize, bold: true);
+      _drawText(canvas, content.noteText, textX, margin + printH * 0.65,
+          textAreaW, printH * 0.35, noteFontSize);
+    } else {
+      // NAME centered vertically
+      final nameFontSize = _fontSize(printH, 0.45);
+      _drawText(canvas, species.name, textX, margin.toDouble(),
+          textAreaW, printH.toDouble(), nameFontSize, bold: true, center: true);
     }
 
     final picture = recorder.endRecording();
-    return picture.toImage(totalW, totalH);
+    return picture.toImageSync(totalW, totalH);
   }
 
-  /// Flag label: [QR] [NAME] | fold line | [NAME] [QR]
-  Future<ui.Image> _generateFlagLabel(Species species, int printH, int margin, {String note = ''}) async {
-    final qrSize = printH;
-    final textAreaW = _mmToPx(30); // ~30mm per text area
-    final halfW = margin + qrSize + _mmToPx(2) + textAreaW + margin;
-    final foldW = _mmToPx(3); // ~3mm fold gap
+  /// Build a flag label: [half] | fold line | [half mirrored]
+  Future<ui.Image> _buildFlag(ui.Image half, int printH, int margin) async {
+    final halfW = half.width;
+    final foldW = _mmToPx(3);
     final totalW = halfW * 2 + foldW;
     final totalH = printH + margin * 2;
 
@@ -269,36 +263,31 @@ class BrotherPrintingService implements PrintingService {
     canvas.drawRect(ui.Rect.fromLTWH(0, 0, totalW.toDouble(), totalH.toDouble()),
         ui.Paint()..color = const ui.Color(0xFFFFFFFF));
 
-    final nameFontSize = (printH * 0.35).clamp(14, 60).toDouble();
-
-    // Left side: QR | NAME
-    _drawQrCode(canvas, species.id, margin.toDouble(), margin.toDouble(), qrSize.toDouble());
-    final textX1 = margin + qrSize + _mmToPx(2);
-    _drawText(canvas, species.name, textX1.toDouble(), margin.toDouble(),
-        textAreaW.toDouble(), printH.toDouble(), nameFontSize, bold: true, center: true);
+    // Left half
+    canvas.drawImage(half, ui.Offset.zero, ui.Paint());
 
     // Fold line (dashed)
-    final foldX = halfW.toDouble();
+    final foldX = halfW + foldW / 2;
     final dashPaint = ui.Paint()
       ..color = const ui.Color(0xFF888888)
       ..strokeWidth = 1;
     for (double y = 0; y < totalH; y += 6) {
-      canvas.drawLine(ui.Offset(foldX + foldW / 2, y), ui.Offset(foldX + foldW / 2, y + 3), dashPaint);
+      canvas.drawLine(ui.Offset(foldX.toDouble(), y), ui.Offset(foldX.toDouble(), y + 3), dashPaint);
     }
 
-    // Right side: NAME | QR
-    final rightStart = halfW + foldW;
-    final textX2 = rightStart + margin;
-    _drawText(canvas, species.name, textX2.toDouble(), margin.toDouble(),
-        textAreaW.toDouble(), printH.toDouble(), nameFontSize, bold: true, center: true);
-    final qrX2 = textX2 + textAreaW + _mmToPx(2);
-    _drawQrCode(canvas, species.id, qrX2.toDouble(), margin.toDouble(), qrSize.toDouble());
+    // Right half (mirrored horizontally)
+    canvas.save();
+    canvas.translate(totalW.toDouble(), 0);
+    canvas.scale(-1, 1);
+    canvas.drawImage(half, ui.Offset.zero, ui.Paint());
+    canvas.restore();
 
     final picture = recorder.endRecording();
     return picture.toImage(totalW, totalH);
   }
 
-  /// Draw a QR code on the canvas.
+  double _fontSize(int printH, double ratio) => (printH * ratio).clamp(12, 72).toDouble();
+
   void _drawQrCode(ui.Canvas canvas, String data, double x, double y, double size) {
     final qrCode = QrCode.fromData(data: data, errorCorrectLevel: QrErrorCorrectLevel.M);
     final qr = QrImage(qrCode);
@@ -318,7 +307,6 @@ class BrotherPrintingService implements PrintingService {
     }
   }
 
-  /// Draw text on the canvas, fitting within the given bounds.
   void _drawText(ui.Canvas canvas, String text, double x, double y,
       double maxW, double maxH, double fontSize,
       {bool bold = false, bool center = false}) {
