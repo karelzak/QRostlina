@@ -1,25 +1,29 @@
 import 'package:another_brother/label_info.dart';
 import 'package:another_brother/printer_info.dart' as brother;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart' as p;
+import 'package:qr/qr.dart';
 import '../models/species.dart';
-import '../models/print_template.dart';
+
+/// Label layout types matching the two real-world use cases.
+enum LabelLayout {
+  /// Simple label: NAME + NOTE + QR code side by side
+  simple,
+  /// Flag label: QR | NAME | fold | NAME | QR
+  flag,
+}
 
 abstract class PrintingService {
   Future<void> initialize();
   Future<List<DiscoveredPrinter>> discoverPrinters();
   List<DiscoveredPrinter> get lastDiscoveredPrinters;
-  Future<bool> printSpecies(Species species, String templatePath, String macAddress, brother.Model model, {String note = ''});
-  Future<String?> validateConnection(String macAddress, brother.Model model);
-
-  // Template management
-  Future<List<PrintTemplate>> getTemplates();
-  Future<PrintTemplate> addTemplate(String sourceFilePath, String name, String tapeSize);
-  Future<void> deleteTemplate(String templateId);
+  Future<bool> printSpecies(Species species, String macAddress, brother.Model model, {
+    String note = '',
+    LabelLayout layout = LabelLayout.simple,
+    int tapeWidthMm = 12,
+  });
 }
 
 class DiscoveredPrinter {
@@ -39,15 +43,20 @@ brother.Model _modelFromName(String deviceName) {
     final modelName = model.getName().toUpperCase();
     if (upper.startsWith(modelName)) return model;
   }
-  // PT-E920BT not in enum — map to PT_P910BT (closest 36mm BT PT printer)
   if (upper.startsWith('PT-E920') || upper.startsWith('PT_E920')) {
     return brother.Model.PT_P910BT;
   }
-  return brother.Model.PT_E850TKW; // safe fallback for unknown PT printers
+  return brother.Model.PT_E850TKW;
 }
 
 /// Extra model name strings for BT discovery that aren't in the Model enum.
 const _extraBtFilterNames = ['PT-E920BT'];
+
+/// PT-E920BT prints at 360 DPI.
+const _dpi = 360;
+
+/// Convert mm to pixels at printer DPI.
+int _mmToPx(double mm) => (mm * _dpi / 25.4).round();
 
 class BrotherPrintingService implements PrintingService {
   List<DiscoveredPrinter> _discoveredPrinters = [];
@@ -74,35 +83,30 @@ class BrotherPrintingService implements PrintingService {
     try {
       debugPrint("PrintingService: Starting discovery...");
       final printer = brother.Printer();
-      
-      // Ensure permissions are granted before discovery
+
       if (Platform.isAndroid) {
-        if (!await Permission.bluetoothScan.isGranted || 
+        if (!await Permission.bluetoothScan.isGranted ||
             !await Permission.bluetoothConnect.isGranted ||
             !await Permission.location.isGranted) {
-           debugPrint("PrintingService: Permissions not fully granted, requesting...");
-           await [Permission.bluetoothScan, Permission.bluetoothConnect, Permission.location].request();
+          debugPrint("PrintingService: Permissions not fully granted, requesting...");
+          await [Permission.bluetoothScan, Permission.bluetoothConnect, Permission.location].request();
         }
       }
 
-      // Build filter list from all known PT models + extra names not yet in enum
       final List<String> ptModels = [
         for (final m in brother.Model.getValues())
           if (m.getName().startsWith('PT-')) m.getName(),
         ..._extraBtFilterNames,
       ];
 
-      // 1. Try Bluetooth Search (Classic)
-      debugPrint("PrintingService: Calling getBluetoothPrinters (matching common PT models)...");
+      debugPrint("PrintingService: Calling getBluetoothPrinters...");
       final List<brother.BluetoothPrinter> btPrinters = await printer.getBluetoothPrinters(ptModels);
       debugPrint("PrintingService: Found ${btPrinters.length} bluetooth devices");
 
-      // 2. Try BLE Search (Bluetooth Low Energy)
       debugPrint("PrintingService: Calling getBLEPrinters (10s timeout)...");
       final List<brother.BLEPrinter> blePrinters = await printer.getBLEPrinters(10000);
       debugPrint("PrintingService: Found ${blePrinters.length} BLE devices");
 
-      // 3. Try Network Search (as Wi-Fi Direct might be active)
       debugPrint("PrintingService: Calling getNetPrinters...");
       final List<brother.NetPrinter> netPrinters = await printer.getNetPrinters(ptModels);
       debugPrint("PrintingService: Found ${netPrinters.length} network devices");
@@ -112,31 +116,17 @@ class BrotherPrintingService implements PrintingService {
       for (var p in btPrinters) {
         final name = p.modelName ?? 'Brother Printer (BT)';
         debugPrint("PrintingService: BT Device: $name at ${p.macAddress}");
-        results.add(DiscoveredPrinter(
-          name: name,
-          macAddress: p.macAddress ?? '',
-          model: _modelFromName(name),
-        ));
+        results.add(DiscoveredPrinter(name: name, macAddress: p.macAddress ?? '', model: _modelFromName(name)));
       }
-
       for (var p in blePrinters) {
         final name = p.localName ?? 'Brother Printer (BLE)';
         debugPrint("PrintingService: BLE Device: $name");
-        results.add(DiscoveredPrinter(
-          name: name,
-          macAddress: p.localName ?? '', // For BLE, localName is used for connection
-          model: _modelFromName(name),
-        ));
+        results.add(DiscoveredPrinter(name: name, macAddress: p.localName ?? '', model: _modelFromName(name)));
       }
-
       for (var p in netPrinters) {
         final name = p.modelName ?? 'Brother Printer (WiFi)';
         debugPrint("PrintingService: NET Device: $name at ${p.ipAddress}");
-        results.add(DiscoveredPrinter(
-          name: name,
-          macAddress: p.ipAddress ?? '',
-          model: _modelFromName(name),
-        ));
+        results.add(DiscoveredPrinter(name: name, macAddress: p.ipAddress ?? '', model: _modelFromName(name)));
       }
 
       _discoveredPrinters = results;
@@ -149,16 +139,25 @@ class BrotherPrintingService implements PrintingService {
   }
 
   @override
-  Future<bool> printSpecies(Species species, String templatePath, String macAddress, brother.Model model, {String note = ''}) async {
+  Future<bool> printSpecies(Species species, String macAddress, brother.Model model, {
+    String note = '',
+    LabelLayout layout = LabelLayout.simple,
+    int tapeWidthMm = 12,
+  }) async {
     try {
       final printer = brother.Printer();
       final printInfo = brother.PrinterInfo();
 
       printInfo.printerModel = model;
+      printInfo.isAutoCut = true;
+      printInfo.isCutAtEnd = true;
+
+      // Set label width
+      final labelIndex = _labelIndexForTapeWidth(tapeWidthMm);
+      if (labelIndex >= 0) printInfo.labelNameIndex = labelIndex;
 
       // Determine port from address format
       bool isMac = macAddress.contains(':') || (macAddress.length == 12 && !macAddress.contains('-'));
-
       if (isMac) {
         printInfo.port = brother.Port.BLUETOOTH;
         printInfo.macAddress = macAddress;
@@ -172,181 +171,172 @@ class BrotherPrintingService implements PrintingService {
 
       await printer.setPrinterInfo(printInfo);
 
-      // Transfer template to printer
-      debugPrint("PrintingService: Transferring template $templatePath");
-      final transferStatus = await printer.transfer(templatePath);
-      debugPrint("PrintingService: Transfer result: ${transferStatus.errorCode.getName()}");
+      // Generate label image
+      debugPrint("PrintingService: Generating label image (${layout.name}, ${tapeWidthMm}mm)");
+      final image = await _generateLabel(species, note: note, layout: layout, tapeWidthMm: tapeWidthMm);
 
-      // Start P-touch Template mode (key 1, UTF-8)
-      debugPrint("PrintingService: Starting PTT Print");
-      bool started = await printer.startPTTPrint(1, "UTF-8");
-      if (!started) {
-        debugPrint("PrintingService: Failed to start PTT Print session");
-        return false;
-      }
+      // Print
+      debugPrint("PrintingService: Sending image to printer...");
+      final status = await printer.printImage(image);
+      debugPrint("PrintingService: Print result: ${status.errorCode.getName()}");
 
-      // Replace all well-known object names (no-op if object doesn't exist in template)
-      // Text: species name
-      await printer.replaceTextName(species.name, "NAME");
-      await printer.replaceTextName(species.name, "NAME1");
-      await printer.replaceTextName(species.name, "NAME2");
-      // QR code: species ID
-      await printer.replaceTextName(species.id, "QR");
-      await printer.replaceTextName(species.id, "QR1");
-      await printer.replaceTextName(species.id, "QR2");
-      // Plain text ID
-      await printer.replaceTextName(species.id, "ID");
-      // User-provided per-label note
-      if (note.isNotEmpty) {
-        await printer.replaceTextName(note, "NOTE");
-      }
-
-      final printStatus = await printer.flushPTTPrint();
-      debugPrint("PrintingService: Print finished with code: ${printStatus.errorCode.getName()}");
-
-      return printStatus.errorCode == brother.ErrorCode.ERROR_NONE;
+      return status.errorCode == brother.ErrorCode.ERROR_NONE;
     } catch (e) {
       debugPrint("PrintingService: Print error: $e");
       return false;
     }
   }
 
-  @override
-  Future<String?> validateConnection(String macAddress, brother.Model model) async {
-    try {
-      debugPrint("PrintingService: Validating connection to $macAddress...");
-
-      // Determine port type from address format
-      final brother.Port port;
-      final bool isMac = macAddress.contains(':') || (macAddress.length == 12 && !macAddress.contains('-'));
-      if (isMac) {
-        port = brother.Port.BLUETOOTH;
-      } else if (macAddress.contains('.')) {
-        port = brother.Port.NET;
-      } else {
-        port = brother.Port.BLE;
-      }
-
-      // Try the hint model first, then PT_P910BT (for E920BT), then other PT models
-      final List<brother.Model> candidates = [
-        model,
-        _modelFromName(macAddress), // in case macAddress is a BLE local name
-        brother.Model.PT_P910BT,
-        brother.Model.PT_E850TKW,
-        brother.Model.PT_P950NW,
-        brother.Model.PT_P900W,
-        brother.Model.PT_D610BT,
-        brother.Model.PT_D460BT,
-        brother.Model.PT_P710BT,
-        brother.Model.PT_E550W,
-        brother.Model.PT_P750W,
-        brother.Model.PT_D800W,
-      ];
-
-      // Deduplicate while preserving order
-      final seen = <int>{};
-      final uniqueCandidates = candidates.where((m) => seen.add(m.getId())).toList();
-
-      for (var testModel in uniqueCandidates) {
-        final modelName = testModel.getName();
-        debugPrint("--------------------------------------------------");
-        debugPrint("TESTING MODEL: $modelName on port ${port.getName()}");
-
-        await Future.delayed(const Duration(milliseconds: 500));
-
-        final printer = brother.Printer();
-        final printInfo = brother.PrinterInfo();
-        printInfo.printerModel = testModel;
-        printInfo.port = port;
-
-        if (port == brother.Port.BLUETOOTH) {
-          printInfo.macAddress = macAddress;
-        } else if (port == brother.Port.NET) {
-          printInfo.ipAddress = macAddress;
-        } else {
-          printInfo.setLocalName(macAddress);
-        }
-
-        await printer.setPrinterInfo(printInfo);
-        final status = await printer.getPrinterStatus();
-
-        if (status.errorCode == brother.ErrorCode.ERROR_NONE) {
-          debugPrint("PrintingService: SUCCESS! Model $modelName on port ${port.getName()}");
-          return "Connected: OK ($modelName)";
-        } else {
-          debugPrint("PrintingService: Result: ${status.errorCode.getName()}");
-        }
-      }
-
-      return "Model not identified (All PT models failed on ${port.getName()})";
-    } catch (e) {
-      debugPrint("PrintingService: Validation error: $e");
-      return "Connection Failed";
+  /// Returns the label name index for a given tape width in mm.
+  int _labelIndexForTapeWidth(int mm) {
+    switch (mm) {
+      case 6:  return PT.W6.getId();
+      case 9:  return PT.W9.getId();
+      case 12: return PT.W12.getId();
+      case 18: return PT.W18.getId();
+      case 24: return PT.W24.getId();
+      case 36: return PT.W36.getId();
+      default: return -1;
     }
   }
 
-  // --- Template management ---
+  /// Generate a label image for the given species.
+  Future<ui.Image> _generateLabel(Species species, {
+    String note = '',
+    LabelLayout layout = LabelLayout.simple,
+    int tapeWidthMm = 12,
+  }) async {
+    final tapeH = _mmToPx(tapeWidthMm.toDouble());
+    // Margins ~2mm on each side
+    final margin = _mmToPx(2);
+    final printH = tapeH - margin * 2;
 
-  Future<Directory> _templatesDir() async {
-    final docs = await getApplicationDocumentsDirectory();
-    final dir = Directory(p.join(docs.path, 'templates'));
-    if (!await dir.exists()) await dir.create(recursive: true);
-    return dir;
+    switch (layout) {
+      case LabelLayout.simple:
+        return _generateSimpleLabel(species, printH, margin, note: note);
+      case LabelLayout.flag:
+        return _generateFlagLabel(species, printH, margin, note: note);
+    }
   }
 
-  Future<File> _metadataFile() async {
-    final dir = await _templatesDir();
-    return File(p.join(dir.path, 'templates.json'));
+  /// Simple label: [QR] [NAME / NOTE]
+  Future<ui.Image> _generateSimpleLabel(Species species, int printH, int margin, {String note = ''}) async {
+    final qrSize = printH;
+    final textAreaW = _mmToPx(40); // ~40mm for text
+    final totalW = margin + qrSize + margin + textAreaW + margin;
+    final totalH = printH + margin * 2;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+
+    // White background
+    canvas.drawRect(ui.Rect.fromLTWH(0, 0, totalW.toDouble(), totalH.toDouble()),
+        ui.Paint()..color = const ui.Color(0xFFFFFFFF));
+
+    // QR code
+    _drawQrCode(canvas, species.id, margin.toDouble(), margin.toDouble(), qrSize.toDouble());
+
+    // Name text
+    final nameX = margin + qrSize + margin;
+    final nameFontSize = (printH * 0.35).clamp(14, 60).toDouble();
+    _drawText(canvas, species.name, nameX.toDouble(), margin.toDouble(),
+        textAreaW.toDouble(), printH * 0.55, nameFontSize, bold: true);
+
+    // Note text (smaller, below name)
+    if (note.isNotEmpty) {
+      final noteFontSize = (printH * 0.25).clamp(10, 40).toDouble();
+      _drawText(canvas, note, nameX.toDouble(), margin + printH * 0.6,
+          textAreaW.toDouble(), printH * 0.35, noteFontSize);
+    }
+
+    final picture = recorder.endRecording();
+    return picture.toImage(totalW, totalH);
   }
 
-  @override
-  Future<List<PrintTemplate>> getTemplates() async {
-    final file = await _metadataFile();
-    if (!await file.exists()) return [];
-    final content = await file.readAsString();
-    final List<dynamic> list = jsonDecode(content);
-    return list.map((e) => PrintTemplate.fromMap(e as Map<String, dynamic>)).toList();
+  /// Flag label: [QR] [NAME] | fold line | [NAME] [QR]
+  Future<ui.Image> _generateFlagLabel(Species species, int printH, int margin, {String note = ''}) async {
+    final qrSize = printH;
+    final textAreaW = _mmToPx(30); // ~30mm per text area
+    final halfW = margin + qrSize + _mmToPx(2) + textAreaW + margin;
+    final foldW = _mmToPx(3); // ~3mm fold gap
+    final totalW = halfW * 2 + foldW;
+    final totalH = printH + margin * 2;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+
+    // White background
+    canvas.drawRect(ui.Rect.fromLTWH(0, 0, totalW.toDouble(), totalH.toDouble()),
+        ui.Paint()..color = const ui.Color(0xFFFFFFFF));
+
+    final nameFontSize = (printH * 0.35).clamp(14, 60).toDouble();
+
+    // Left side: QR | NAME
+    _drawQrCode(canvas, species.id, margin.toDouble(), margin.toDouble(), qrSize.toDouble());
+    final textX1 = margin + qrSize + _mmToPx(2);
+    _drawText(canvas, species.name, textX1.toDouble(), margin.toDouble(),
+        textAreaW.toDouble(), printH.toDouble(), nameFontSize, bold: true, center: true);
+
+    // Fold line (dashed)
+    final foldX = halfW.toDouble();
+    final dashPaint = ui.Paint()
+      ..color = const ui.Color(0xFF888888)
+      ..strokeWidth = 1;
+    for (double y = 0; y < totalH; y += 6) {
+      canvas.drawLine(ui.Offset(foldX + foldW / 2, y), ui.Offset(foldX + foldW / 2, y + 3), dashPaint);
+    }
+
+    // Right side: NAME | QR
+    final rightStart = halfW + foldW;
+    final textX2 = rightStart + margin;
+    _drawText(canvas, species.name, textX2.toDouble(), margin.toDouble(),
+        textAreaW.toDouble(), printH.toDouble(), nameFontSize, bold: true, center: true);
+    final qrX2 = textX2 + textAreaW + _mmToPx(2);
+    _drawQrCode(canvas, species.id, qrX2.toDouble(), margin.toDouble(), qrSize.toDouble());
+
+    final picture = recorder.endRecording();
+    return picture.toImage(totalW, totalH);
   }
 
-  Future<void> _saveTemplates(List<PrintTemplate> templates) async {
-    final file = await _metadataFile();
-    await file.writeAsString(jsonEncode(templates.map((t) => t.toMap()).toList()));
+  /// Draw a QR code on the canvas.
+  void _drawQrCode(ui.Canvas canvas, String data, double x, double y, double size) {
+    final qrCode = QrCode.fromData(data: data, errorCorrectLevel: QrErrorCorrectLevel.M);
+    final qr = QrImage(qrCode);
+    final moduleCount = qr.moduleCount;
+    final cellSize = size / moduleCount;
+
+    final paint = ui.Paint()..color = const ui.Color(0xFF000000);
+    for (int row = 0; row < moduleCount; row++) {
+      for (int col = 0; col < moduleCount; col++) {
+        if (qr.isDark(row, col)) {
+          canvas.drawRect(
+            ui.Rect.fromLTWH(x + col * cellSize, y + row * cellSize, cellSize, cellSize),
+            paint,
+          );
+        }
+      }
+    }
   }
 
-  @override
-  Future<PrintTemplate> addTemplate(String sourceFilePath, String name, String tapeSize) async {
-    final dir = await _templatesDir();
-    final id = DateTime.now().millisecondsSinceEpoch.toString();
-    final ext = p.extension(sourceFilePath).toLowerCase();
-    final destPath = p.join(dir.path, '$id$ext');
-
-    await File(sourceFilePath).copy(destPath);
-
-    final template = PrintTemplate(
-      id: id,
-      name: name,
-      localPath: destPath,
-      tapeSize: tapeSize,
+  /// Draw text on the canvas, fitting within the given bounds.
+  void _drawText(ui.Canvas canvas, String text, double x, double y,
+      double maxW, double maxH, double fontSize,
+      {bool bold = false, bool center = false}) {
+    final style = ui.TextStyle(
+      color: const ui.Color(0xFF000000),
+      fontSize: fontSize,
+      fontWeight: bold ? ui.FontWeight.bold : ui.FontWeight.normal,
     );
+    final paragraphBuilder = ui.ParagraphBuilder(ui.ParagraphStyle(
+      textAlign: center ? ui.TextAlign.center : ui.TextAlign.left,
+      maxLines: 3,
+      ellipsis: '...',
+    ))
+      ..pushStyle(style)
+      ..addText(text);
 
-    final templates = await getTemplates();
-    templates.add(template);
-    await _saveTemplates(templates);
-
-    debugPrint("PrintingService: Added template '$name' -> $destPath");
-    return template;
-  }
-
-  @override
-  Future<void> deleteTemplate(String templateId) async {
-    final templates = await getTemplates();
-    final template = templates.where((t) => t.id == templateId).firstOrNull;
-    if (template != null) {
-      final file = File(template.localPath);
-      if (await file.exists()) await file.delete();
-      templates.removeWhere((t) => t.id == templateId);
-      await _saveTemplates(templates);
-      debugPrint("PrintingService: Deleted template '${template.name}'");
-    }
+    final paragraph = paragraphBuilder.build();
+    paragraph.layout(ui.ParagraphConstraints(width: maxW));
+    canvas.drawParagraph(paragraph, ui.Offset(x, center ? y + (maxH - paragraph.height) / 2 : y));
   }
 }

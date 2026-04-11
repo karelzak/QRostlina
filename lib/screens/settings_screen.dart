@@ -5,7 +5,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../l10n/app_localizations.dart';
-import '../models/print_template.dart';
 import '../services/service_locator.dart';
 import '../services/auth_service.dart';
 import '../services/local_storage_service.dart';
@@ -34,7 +33,6 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     _tabController = TabController(length: 5, vsync: this);
     _loadPath();
     _loadPrinterSettings();
-    _loadTemplates();
   }
 
   Future<void> _loadPrinterSettings() async {
@@ -486,133 +484,6 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     );
   }
 
-  List<PrintTemplate> _templates = [];
-
-  Future<void> _loadTemplates() async {
-    final templates = await locator.print.getTemplates();
-    if (mounted) setState(() => _templates = templates);
-  }
-
-  Future<void> _addTemplate() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-    );
-    if (result == null || result.files.single.path == null) return;
-    final filePath = result.files.single.path!;
-    final fileName = result.files.single.name;
-    final ext = fileName.toLowerCase();
-
-    if (!ext.endsWith('.blf') && !ext.endsWith('.pdz')) {
-      if (!mounted) return;
-      final hint = ext.endsWith('.lbx')
-          ? 'This is a P-touch Editor project file.\nUse Transfer Template or Transfer Manager to export as .pdz or .blf.'
-          : 'Only .blf and .pdz files are supported.';
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: const Text('Unsupported File', style: TextStyle(color: Colors.redAccent)),
-          content: Text(hint, style: const TextStyle(color: Colors.white70)),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
-          ],
-        ),
-      );
-      return;
-    }
-
-    if (!mounted) return;
-
-    // Ask for template name and tape size
-    final nameController = TextEditingController(text: fileName.replaceAll(RegExp(r'\.(blf|pdz)$', caseSensitive: false), ''));
-    String tapeSize = '36mm';
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: const Text('Add Template', style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Template Name',
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: tapeSize,
-                dropdownColor: Colors.grey[800],
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Tape Size',
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-                items: const [
-                  DropdownMenuItem(value: '6mm', child: Text('6mm')),
-                  DropdownMenuItem(value: '9mm', child: Text('9mm')),
-                  DropdownMenuItem(value: '12mm', child: Text('12mm')),
-                  DropdownMenuItem(value: '18mm', child: Text('18mm')),
-                  DropdownMenuItem(value: '24mm', child: Text('24mm')),
-                  DropdownMenuItem(value: '36mm', child: Text('36mm')),
-                ],
-                onChanged: (v) => setDialogState(() => tapeSize = v!),
-              ),
-              const SizedBox(height: 12),
-              Text('File: $fileName', style: const TextStyle(color: Colors.white54, fontSize: 12)),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Add', style: TextStyle(color: Colors.yellow)),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    try {
-      await locator.print.addTemplate(filePath, nameController.text, tapeSize);
-      await _loadTemplates();
-      setState(() => _statusMessage = 'Template added: ${nameController.text}');
-    } catch (e) {
-      setState(() => _statusMessage = 'Failed to add template: $e');
-    }
-  }
-
-  Future<void> _deleteTemplate(PrintTemplate template) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Delete Template?', style: TextStyle(color: Colors.white)),
-        content: Text('Delete "${template.name}"?', style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    await locator.print.deleteTemplate(template.id);
-    await _loadTemplates();
-    setState(() => _statusMessage = 'Deleted: ${template.name}');
-  }
-
   void _discoverPrinters() async {
     setState(() {
       _isDiscovering = true;
@@ -675,44 +546,6 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
               const Center(child: Padding(
                 padding: EdgeInsets.all(32.0),
                 child: Text('No printers found yet. Tap Discover to scan.',
-                  style: TextStyle(color: Colors.white54), textAlign: TextAlign.center),
-              )),
-            const SizedBox(height: 24),
-            const Divider(color: Colors.white24),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('TEMPLATES', style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
-                IconButton(
-                  icon: const Icon(Icons.add_circle, color: Colors.yellow),
-                  onPressed: _addTemplate,
-                ),
-              ],
-            ),
-            if (_templates.isNotEmpty)
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _templates.length,
-                itemBuilder: (context, index) {
-                  final template = _templates[index];
-                  return ListTile(
-                    tileColor: Colors.grey[900],
-                    leading: const Icon(Icons.description, color: Colors.white54),
-                    title: Text(template.name, style: const TextStyle(color: Colors.white)),
-                    subtitle: Text(template.tapeSize, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
-                      onPressed: () => _deleteTemplate(template),
-                    ),
-                  );
-                },
-              )
-            else
-              const Center(child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text('No templates. Tap + to add a .blf file from P-touch Editor.',
                   style: TextStyle(color: Colors.white54), textAlign: TextAlign.center),
               )),
             const SizedBox(height: 40),

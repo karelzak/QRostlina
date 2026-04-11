@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:another_brother/printer_info.dart' as brother;
 import '../models/species.dart';
-import '../models/print_template.dart';
 import '../services/service_locator.dart';
+import '../services/printing_service.dart';
 
 class SpeciesPrintingScreen extends StatefulWidget {
   final Species species;
@@ -15,13 +15,14 @@ class SpeciesPrintingScreen extends StatefulWidget {
 }
 
 class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
-  List<PrintTemplate> _templates = [];
-  PrintTemplate? _selectedTemplate;
   final _noteController = TextEditingController();
 
   String _printerMac = '';
   String _printerName = '';
   int _printerModelId = -1;
+
+  LabelLayout _layout = LabelLayout.simple;
+  int _tapeWidthMm = 12;
 
   bool _isPrinting = false;
   bool _isDiscovering = false;
@@ -41,14 +42,11 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final templates = await locator.print.getTemplates();
     if (!mounted) return;
     setState(() {
       _printerMac = prefs.getString('printer_mac') ?? '';
       _printerName = prefs.getString('printer_name') ?? '';
       _printerModelId = prefs.getInt('printer_model_id') ?? -1;
-      _templates = templates;
-      if (templates.length == 1) _selectedTemplate = templates.first;
     });
   }
 
@@ -62,7 +60,6 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
       await locator.print.discoverPrinters();
       final printers = locator.print.lastDiscoveredPrinters;
       if (printers.isNotEmpty) {
-        // Auto-select first printer
         final p = printers.first;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('printer_mac', p.macAddress);
@@ -90,12 +87,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
   }
 
   Future<void> _print() async {
-    if (_selectedTemplate == null) {
-      setState(() => _statusMessage = 'Select a template first');
-      return;
-    }
     if (_printerMac.isEmpty) {
-      // Auto-discover
       await _discover();
       if (_printerMac.isEmpty) return;
     }
@@ -112,10 +104,11 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
     try {
       final success = await locator.print.printSpecies(
         widget.species,
-        _selectedTemplate!.localPath,
         _printerMac,
         model,
         note: _noteController.text,
+        layout: _layout,
+        tapeWidthMm: _tapeWidthMm,
       );
 
       setState(() {
@@ -187,31 +180,52 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Template selection
-                  if (_templates.isEmpty)
-                    const Text('No templates. Add .blf files in Settings > Printing.',
-                        style: TextStyle(color: Colors.redAccent), textAlign: TextAlign.center)
-                  else
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedTemplate?.id,
-                      dropdownColor: Colors.grey[800],
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        labelText: 'Template',
-                        labelStyle: TextStyle(color: Colors.yellow),
-                        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                        focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                  // Layout selection
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<LabelLayout>(
+                          initialValue: _layout,
+                          dropdownColor: Colors.grey[800],
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            labelText: 'Layout',
+                            labelStyle: TextStyle(color: Colors.yellow),
+                            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                            focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: LabelLayout.simple, child: Text('Simple')),
+                            DropdownMenuItem(value: LabelLayout.flag, child: Text('Flag')),
+                          ],
+                          onChanged: (v) => setState(() => _layout = v!),
+                        ),
                       ),
-                      items: _templates.map((t) => DropdownMenuItem(
-                        value: t.id,
-                        child: Text('${t.name}  (${t.tapeSize})'),
-                      )).toList(),
-                      onChanged: (id) {
-                        setState(() {
-                          _selectedTemplate = _templates.firstWhere((t) => t.id == id);
-                        });
-                      },
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<int>(
+                          initialValue: _tapeWidthMm,
+                          dropdownColor: Colors.grey[800],
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            labelText: 'Tape',
+                            labelStyle: TextStyle(color: Colors.yellow),
+                            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                            focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 6, child: Text('6mm')),
+                            DropdownMenuItem(value: 9, child: Text('9mm')),
+                            DropdownMenuItem(value: 12, child: Text('12mm')),
+                            DropdownMenuItem(value: 18, child: Text('18mm')),
+                            DropdownMenuItem(value: 24, child: Text('24mm')),
+                            DropdownMenuItem(value: 36, child: Text('36mm')),
+                          ],
+                          onChanged: (v) => setState(() => _tapeWidthMm = v!),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
 
                   // Note input
@@ -252,7 +266,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
               height: 64,
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: (_isPrinting || _templates.isEmpty) ? null : _print,
+                onPressed: _isPrinting ? null : _print,
                 icon: _isPrinting
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
                     : const Icon(Icons.print, size: 28),
