@@ -143,6 +143,7 @@ class BrotherPrintingService implements PrintingService {
       printInfo.printerModel = model;
       printInfo.isAutoCut = true;
       printInfo.isCutAtEnd = true;
+      printInfo.skipStatusCheck = true; // PT-E920BT not in SDK, skip model verification
 
       final labelIndex = _labelIndexForTapeWidth(tapeWidthMm);
       if (labelIndex >= 0) printInfo.labelNameIndex = labelIndex;
