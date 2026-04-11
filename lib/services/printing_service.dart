@@ -13,7 +13,7 @@ abstract class PrintingService {
   Future<void> initialize();
   Future<List<DiscoveredPrinter>> discoverPrinters();
   List<DiscoveredPrinter> get lastDiscoveredPrinters;
-  Future<bool> printSpecies(Species species, String templatePath, String macAddress, brother.Model model);
+  Future<bool> printSpecies(Species species, String templatePath, String macAddress, brother.Model model, {String note = ''});
   Future<String?> validateConnection(String macAddress, brother.Model model);
 
   // Template management
@@ -149,46 +149,61 @@ class BrotherPrintingService implements PrintingService {
   }
 
   @override
-  Future<bool> printSpecies(Species species, String templatePath, String macAddress, brother.Model model) async {
+  Future<bool> printSpecies(Species species, String templatePath, String macAddress, brother.Model model, {String note = ''}) async {
     try {
       final printer = brother.Printer();
       final printInfo = brother.PrinterInfo();
 
       printInfo.printerModel = model;
-      
-      // Determine port based on whether macAddress looks like a MAC or a Local Name (BLE)
-      // MAC: XX:XX:XX:XX:XX:XX or XXXXXXXXXXXX
-      // Local Name: PT-E920BT etc.
+
+      // Determine port from address format
       bool isMac = macAddress.contains(':') || (macAddress.length == 12 && !macAddress.contains('-'));
 
       if (isMac) {
         printInfo.port = brother.Port.BLUETOOTH;
         printInfo.macAddress = macAddress;
       } else if (macAddress.contains('.')) {
-        // IP Address
         printInfo.port = brother.Port.NET;
         printInfo.ipAddress = macAddress;
       } else {
-        // BLE Local Name
         printInfo.port = brother.Port.BLE;
         printInfo.setLocalName(macAddress);
       }
 
       await printer.setPrinterInfo(printInfo);
 
-      debugPrint("PrintingService: Starting PTT Print for template 1 on port ${printInfo.port}");
-      bool started = await printer.startPTTPrint(1, "");
+      // Transfer template to printer
+      debugPrint("PrintingService: Transferring template $templatePath");
+      final transferStatus = await printer.transfer(templatePath);
+      debugPrint("PrintingService: Transfer result: ${transferStatus.errorCode.getName()}");
+
+      // Start P-touch Template mode (key 1, UTF-8)
+      debugPrint("PrintingService: Starting PTT Print");
+      bool started = await printer.startPTTPrint(1, "UTF-8");
       if (!started) {
         debugPrint("PrintingService: Failed to start PTT Print session");
         return false;
       }
 
-      await printer.replaceTextName(species.name, "txt_name");
-      await printer.replaceTextName(species.id, "qr_id");
+      // Replace all well-known object names (no-op if object doesn't exist in template)
+      // Text: species name
+      await printer.replaceTextName(species.name, "NAME");
+      await printer.replaceTextName(species.name, "NAME1");
+      await printer.replaceTextName(species.name, "NAME2");
+      // QR code: species ID
+      await printer.replaceTextName(species.id, "QR");
+      await printer.replaceTextName(species.id, "QR1");
+      await printer.replaceTextName(species.id, "QR2");
+      // Plain text ID
+      await printer.replaceTextName(species.id, "ID");
+      // User-provided per-label note
+      if (note.isNotEmpty) {
+        await printer.replaceTextName(note, "NOTE");
+      }
 
       final printStatus = await printer.flushPTTPrint();
-      debugPrint("PrintingService: Print finished with code: ${printStatus.errorCode}");
-      
+      debugPrint("PrintingService: Print finished with code: ${printStatus.errorCode.getName()}");
+
       return printStatus.errorCode == brother.ErrorCode.ERROR_NONE;
     } catch (e) {
       debugPrint("PrintingService: Print error: $e");

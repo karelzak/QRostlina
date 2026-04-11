@@ -52,9 +52,15 @@ await printer.transfer('/path/to/template.blf');
 // 3. Start template mode (key = template number in .blf)
 bool started = await printer.startPTTPrint(1, "UTF-8");
 
-// 4. Replace named objects — signature: (data, objectName)
-await printer.replaceTextName(species.name, "txt_name");
-await printer.replaceTextName(species.id, "qr_id");
+// 4. Replace all well-known objects (no-op if missing in template)
+await printer.replaceTextName(species.name, "NAME");
+await printer.replaceTextName(species.name, "NAME1");
+await printer.replaceTextName(species.name, "NAME2");
+await printer.replaceTextName(species.id, "QR");
+await printer.replaceTextName(species.id, "QR1");
+await printer.replaceTextName(species.id, "QR2");
+await printer.replaceTextName(species.id, "ID");
+await printer.replaceTextName(userNote, "NOTE");
 
 // 5. Print
 PrinterStatus status = await printer.flushPTTPrint();
@@ -67,14 +73,34 @@ PrinterStatus status = await printer.flushPTTPrint();
 | `replaceTextIndex` | `(String data, int index)` | Replace object by index |
 | `replaceTextName` | `(String data, String objectName)` | Replace object by name (preferred) |
 
+### Object Naming Convention
+Templates in P-touch Editor must use these object names. The app tries all of them on every print — objects not present in the template are silently skipped.
+
+| Object Name | Data Source | Type | Description |
+|-------------|-----------|------|-------------|
+| `NAME` | `species.name` | Text | Species name |
+| `NAME1` | `species.name` | Text | Species name (flag label, left side) |
+| `NAME2` | `species.name` | Text | Species name (flag label, right side) |
+| `QR` | `species.id` | QR Code | QR code with species ID |
+| `QR1` | `species.id` | QR Code | QR code (flag label, left side) |
+| `QR2` | `species.id` | QR Code | QR code (flag label, right side) |
+| `ID` | `species.id` | Text | Species ID as plain text |
+| `NOTE` | User input | Text | Per-label note typed before printing |
+| `DATE` | *(auto)* | Date/Time | Auto-filled by printer, not replaced by app |
+
 ### QR Code / Barcode Replacement
-- **No dedicated barcode/QR method exists.** `replaceTextName()` is the only way.
-- The Brother P-touch Template system treats all named replaceable objects uniformly — text, barcodes, and QR codes are all replaced via `replaceTextName()`.
-- **Requirement:** In P-touch Editor, the QR/barcode object must be set as "replaceable" and given a name (e.g., `qr_id`).
+- **No dedicated barcode/QR method exists.** `replaceTextName()` is used for all object types.
+- In P-touch Editor, QR/barcode objects must be named (e.g., `QR1`) to be replaceable.
 - **Status:** Needs real-device verification to confirm QR data updates correctly.
 
 ### Important: No `TemplateObjectReplacer` Class
 The `another_brother` SDK does **NOT** have a `TemplateObjectReplacer` class. Replacement is done directly via `Printer` methods (`replaceTextName`, etc.).
+
+### Template File Formats
+- **`.lbx`** — P-touch Editor project file (ZIP with XML). Source format for editing.
+- **`.blf`** — Binary Label Format for transfer to printer via SDK. Export via P-touch Transfer Manager.
+- **`.pdz`** — Alternative transfer format (BT/USB only).
+- Source `.lbx` files are stored in `print-templates/` for reference.
 
 ### PrinterInfo Template Settings
 | Field | Type | Default | Purpose |
