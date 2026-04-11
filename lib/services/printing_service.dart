@@ -175,14 +175,16 @@ class BrotherPrintingService implements PrintingService {
     }
   }
 
+  /// Returns the ordinal index in PT._values for the given tape width.
+  /// This is the index position, NOT the label ID.
   int _labelIndexForTapeWidth(int mm) {
     switch (mm) {
-      case 6:  return PT.W6.getId();
-      case 9:  return PT.W9.getId();
-      case 12: return PT.W12.getId();
-      case 18: return PT.W18.getId();
-      case 24: return PT.W24.getId();
-      case 36: return PT.W36.getId();
+      case 6:  return 1;  // W6
+      case 9:  return 2;  // W9
+      case 12: return 3;  // W12
+      case 18: return 4;  // W18
+      case 24: return 5;  // W24
+      case 36: return 11; // W36
       default: return -1;
     }
   }
