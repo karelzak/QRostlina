@@ -505,7 +505,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     if (!ext.endsWith('.blf') && !ext.endsWith('.pdz')) {
       if (!mounted) return;
       final hint = ext.endsWith('.lbx')
-          ? 'This is a P-touch Editor project file.\nExport it as .blf via Transfer Manager first.'
+          ? 'This is a P-touch Editor project file.\nUse Transfer Template or Transfer Manager to export as .pdz or .blf.'
           : 'Only .blf and .pdz files are supported.';
       showDialog(
         context: context,
