@@ -500,6 +500,26 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     if (result == null || result.files.single.path == null) return;
     final filePath = result.files.single.path!;
     final fileName = result.files.single.name;
+    final ext = fileName.toLowerCase();
+
+    if (!ext.endsWith('.blf') && !ext.endsWith('.pdz')) {
+      if (!mounted) return;
+      final hint = ext.endsWith('.lbx')
+          ? 'This is a P-touch Editor project file.\nExport it as .blf via Transfer Manager first.'
+          : 'Only .blf and .pdz files are supported.';
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: const Text('Unsupported File', style: TextStyle(color: Colors.redAccent)),
+          content: Text(hint, style: const TextStyle(color: Colors.white70)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+          ],
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
 

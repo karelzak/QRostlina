@@ -137,112 +137,120 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('PRINT LABEL')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Species info
-            Card(
-              color: Colors.grey[900],
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(s.name, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text(s.id, style: const TextStyle(color: Colors.yellow, fontSize: 14)),
-                    if (s.latinName != null && s.latinName!.isNotEmpty)
-                      Text(s.latinName!, style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic)),
-                  ],
-                ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Species info
+                  Card(
+                    color: Colors.grey[900],
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(s.name, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          Text(s.id, style: const TextStyle(color: Colors.yellow, fontSize: 14)),
+                          if (s.latinName != null && s.latinName!.isNotEmpty)
+                            Text(s.latinName!, style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Printer status
+                  ListTile(
+                    tileColor: Colors.grey[900],
+                    leading: Icon(
+                      hasPrinter ? Icons.print : Icons.print_disabled,
+                      color: hasPrinter ? Colors.green : Colors.redAccent,
+                    ),
+                    title: Text(
+                      hasPrinter ? _printerName : 'No printer',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: hasPrinter
+                        ? Text(_printerMac, style: const TextStyle(color: Colors.white54, fontSize: 12))
+                        : null,
+                    trailing: IconButton(
+                      icon: _isDiscovering
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.yellow))
+                          : const Icon(Icons.bluetooth_searching, color: Colors.yellow),
+                      onPressed: _isDiscovering ? null : _discover,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Template selection
+                  if (_templates.isEmpty)
+                    const Text('No templates. Add .blf files in Settings > Printing.',
+                        style: TextStyle(color: Colors.redAccent), textAlign: TextAlign.center)
+                  else
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedTemplate?.id,
+                      dropdownColor: Colors.grey[800],
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Template',
+                        labelStyle: TextStyle(color: Colors.yellow),
+                        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                        focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                      ),
+                      items: _templates.map((t) => DropdownMenuItem(
+                        value: t.id,
+                        child: Text('${t.name}  (${t.tapeSize})'),
+                      )).toList(),
+                      onChanged: (id) {
+                        setState(() {
+                          _selectedTemplate = _templates.firstWhere((t) => t.id == id);
+                        });
+                      },
+                    ),
+                  const SizedBox(height: 16),
+
+                  // Note input
+                  TextField(
+                    controller: _noteController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'NOTE (optional, per-label)',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      hintText: 'e.g. Cerveny, roubovanec...',
+                      hintStyle: TextStyle(color: Colors.white24),
+                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                      focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                    ),
+                  ),
+
+                  // Status
+                  if (_statusMessage.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(top: 16),
+                      color: Colors.black,
+                      child: Text(
+                        _statusMessage,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
+          ),
 
-            // Printer status
-            ListTile(
-              tileColor: Colors.grey[900],
-              leading: Icon(
-                hasPrinter ? Icons.print : Icons.print_disabled,
-                color: hasPrinter ? Colors.green : Colors.redAccent,
-              ),
-              title: Text(
-                hasPrinter ? _printerName : 'No printer',
-                style: const TextStyle(color: Colors.white),
-              ),
-              subtitle: hasPrinter
-                  ? Text(_printerMac, style: const TextStyle(color: Colors.white54, fontSize: 12))
-                  : null,
-              trailing: IconButton(
-                icon: _isDiscovering
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.yellow))
-                    : const Icon(Icons.bluetooth_searching, color: Colors.yellow),
-                onPressed: _isDiscovering ? null : _discover,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Template selection
-            if (_templates.isEmpty)
-              const Text('No templates. Add .blf files in Settings > Printing.',
-                  style: TextStyle(color: Colors.redAccent), textAlign: TextAlign.center)
-            else
-              DropdownButtonFormField<String>(
-                initialValue: _selectedTemplate?.id,
-                dropdownColor: Colors.grey[800],
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Template',
-                  labelStyle: TextStyle(color: Colors.yellow),
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-                ),
-                items: _templates.map((t) => DropdownMenuItem(
-                  value: t.id,
-                  child: Text('${t.name}  (${t.tapeSize})'),
-                )).toList(),
-                onChanged: (id) {
-                  setState(() {
-                    _selectedTemplate = _templates.firstWhere((t) => t.id == id);
-                  });
-                },
-              ),
-            const SizedBox(height: 16),
-
-            // Note input
-            TextField(
-              controller: _noteController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'NOTE (optional, per-label)',
-                labelStyle: TextStyle(color: Colors.white70),
-                hintText: 'e.g. Cerveny, roubovanec...',
-                hintStyle: TextStyle(color: Colors.white24),
-                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-              ),
-            ),
-
-            const Spacer(),
-
-            // Status
-            if (_statusMessage.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
-                color: Colors.black,
-                child: Text(
-                  _statusMessage,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
-                ),
-              ),
-
-            // Print button
-            SizedBox(
+          // Print button — always at bottom
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
               height: 64,
+              width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: (_isPrinting || _templates.isEmpty) ? null : _print,
                 icon: _isPrinting
@@ -256,8 +264,8 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
