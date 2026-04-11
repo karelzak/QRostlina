@@ -70,7 +70,20 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
       _printerMac = prefs.getString('printer_mac') ?? '';
       _printerName = prefs.getString('printer_name') ?? '';
       _printerModelId = prefs.getInt('printer_model_id') ?? -1;
+      _tapeWidthMm = prefs.getInt('label_tape_width') ?? 12;
+      _includeQr = prefs.getBool('label_include_qr') ?? true;
+      _includeNote = prefs.getBool('label_include_note') ?? false;
+      _flagMode = prefs.getBool('label_flag_mode') ?? false;
     });
+    _updatePreview();
+  }
+
+  Future<void> _saveLabelSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('label_tape_width', _tapeWidthMm);
+    await prefs.setBool('label_include_qr', _includeQr);
+    await prefs.setBool('label_include_note', _includeNote);
+    await prefs.setBool('label_flag_mode', _flagMode);
   }
 
   Future<void> _discover() async {
@@ -232,7 +245,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                       DropdownMenuItem(value: 24, child: Text('24 mm')),
                       DropdownMenuItem(value: 36, child: Text('36 mm')),
                     ],
-                    onChanged: (v) { setState(() => _tapeWidthMm = v!); _updatePreview(); },
+                    onChanged: (v) { setState(() => _tapeWidthMm = v!); _saveLabelSettings(); _updatePreview(); },
                   ),
                   const SizedBox(height: 12),
 
@@ -243,7 +256,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                       FilterChip(
                         label: const Text('QR Code'),
                         selected: _includeQr,
-                        onSelected: _qrAllowed ? (v) { setState(() => _includeQr = v); _updatePreview(); } : null,
+                        onSelected: _qrAllowed ? (v) { setState(() => _includeQr = v); _saveLabelSettings(); _updatePreview(); } : null,
                         selectedColor: Colors.yellow,
                         checkmarkColor: Colors.black,
                         disabledColor: Colors.grey[800],
@@ -251,14 +264,14 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                       FilterChip(
                         label: const Text('Note'),
                         selected: _includeNote,
-                        onSelected: (v) { setState(() => _includeNote = v); _updatePreview(); },
+                        onSelected: (v) { setState(() => _includeNote = v); _saveLabelSettings(); _updatePreview(); },
                         selectedColor: Colors.yellow,
                         checkmarkColor: Colors.black,
                       ),
                       FilterChip(
                         label: const Text('Flag (2-sided)'),
                         selected: _flagMode,
-                        onSelected: (v) { setState(() => _flagMode = v); _updatePreview(); },
+                        onSelected: (v) { setState(() => _flagMode = v); _saveLabelSettings(); _updatePreview(); },
                         selectedColor: Colors.yellow,
                         checkmarkColor: Colors.black,
                       ),
