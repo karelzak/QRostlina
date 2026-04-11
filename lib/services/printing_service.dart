@@ -141,6 +141,7 @@ class BrotherPrintingService implements PrintingService {
       final printInfo = brother.PrinterInfo();
 
       printInfo.printerModel = model;
+      printInfo.orientation = brother.Orientation.LANDSCAPE;
       printInfo.isAutoCut = true;
       printInfo.isCutAtEnd = true;
       printInfo.skipStatusCheck = true; // PT-E920BT not in SDK, skip model verification
