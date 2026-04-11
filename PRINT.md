@@ -101,6 +101,16 @@ The `another_brother` SDK does **NOT** have a `TemplateObjectReplacer` class. Re
 - **`.blf`** — Binary Label Format for transfer to printer via SDK. Export via P-touch Transfer Manager.
 - **`.pdz`** — Alternative transfer format (BT/USB only).
 - Source `.lbx` files are stored in `print-templates/` for reference.
+- **The app only accepts `.blf` and `.pdz` files** — `.lbx` is rejected with a hint.
+
+### Template Preparation Workflow (one-time per template, requires Windows)
+1. Design label in **P-touch Editor** (Windows). Name objects per the convention above.
+2. Open **P-touch Transfer Manager** (comes with P-touch Editor).
+3. Transfer → Save Transfer File (.blf).
+4. Copy `.blf` to Android device (USB, cloud drive, etc.).
+5. In the app: Settings > Printing > tap `+` > pick the `.blf` file.
+
+Note: Brother does not provide P-touch Editor or Transfer Manager for Linux. The SDK's `printImage` API exists as an alternative (render labels in code), but templates are preferred because P-touch Editor handles exact mm dimensions, margins, cut marks, and printer-specific features.
 
 ### PrinterInfo Template Settings
 | Field | Type | Default | Purpose |
