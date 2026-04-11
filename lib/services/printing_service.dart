@@ -196,7 +196,7 @@ class BrotherPrintingService implements PrintingService {
   @override
   Future<ui.Image> generateLabel(Species species, int tapeWidthMm, LabelContent content) async {
     final margin = _mmToPx(2);
-    final leadIn = _mmToPx(5); // extra blank space at the start of the label
+    final leadIn = content.flag ? _mmToPx(5) : margin; // extra lead-in for flags only
     final tapeH = _mmToPx(tapeWidthMm.toDouble());
     final printH = tapeH - margin * 2;
 
