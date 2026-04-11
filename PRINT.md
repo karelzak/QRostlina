@@ -117,21 +117,10 @@ class PrintTemplate {
   final String name;
   final String localPath;  // Path in app documents directory
   final String tapeSize;   // e.g., "36mm", "24mm", "12mm"
-  final Map<String, String> fieldMappings; // Object Name in P-touch -> Field in Species
 
-  PrintTemplate({
-    required this.id,
-    required this.name,
-    required this.localPath,
-    required this.tapeSize,
-    this.fieldMappings = const {
-      'txt_name': 'name',
-      'qr_id': 'id',
-    },
-  });
-
-  Map<String, dynamic> toMap() => { ... };
-  factory PrintTemplate.fromMap(Map<String, dynamic> map) => { ... };
+  // No per-template field mappings needed.
+  // The app tries all well-known object names on every print
+  // (see Object Naming Convention above).
 }
 ```
 
@@ -164,22 +153,26 @@ class PrintTemplate {
 - [x] Discovery results persist in service singleton across screen navigations.
 - [x] Printer selection saved to SharedPreferences (MAC, name, model ID).
 
-### Phase 2: Template Management
-- [ ] Create `PrintTemplate` model.
-- [ ] Pick `.blf` file from device, copy to app documents directory.
-- [ ] Template list in Settings PRINTING tab (add/delete).
-- [ ] Store template metadata in SharedPreferences (or JSON).
+### Phase 2: Template Management ✅
+- [x] Create `PrintTemplate` model (`lib/models/print_template.dart`).
+- [x] Pick `.blf` file from device, copy to app documents `templates/` directory.
+- [x] Template list in Settings PRINTING tab (add/delete).
+- [x] Store template metadata as JSON in app documents.
 - [ ] (Later) Cloud sync: upload to Firebase Storage, metadata in Firestore.
 
-### Phase 3: Printing Logic
-- [ ] Implement the P-touch Template workflow (`transfer` → `startPTTPrint` → `replaceTextName` → `flushPTTPrint`).
+### Phase 3: Printing Logic ✅
+- [x] Implement the P-touch Template workflow (`transfer` → `startPTTPrint` → `replaceTextName` → `flushPTTPrint`).
+- [x] Object naming convention: try all well-known names (NAME, QR1, NOTE, etc.) on every print.
+- [x] Per-label NOTE field: user-provided text entered before printing.
+- [x] Auto-discover printer if none saved at print time.
 - [ ] Verify QR code replacement works on real device.
 - [ ] Handle errors (printer offline, low battery, wrong tape size).
-- [ ] Auto-discover printer if not connected at print time.
 
-### Phase 4: UI Completion
-- [ ] Add print icon to `DetailScreen` (Species only).
-- [ ] Create `SpeciesPrintingScreen` with template selection.
+### Phase 4: UI Completion ✅
+- [x] Add print icon to `DetailScreen` AppBar (Species only).
+- [x] Create `SpeciesPrintingScreen` (`lib/screens/species_printing_screen.dart`).
+  - Species info card, printer status with re-discover button.
+  - Template dropdown, NOTE text field, large PRINT button.
 - [ ] "Last used template" persistence.
 
 ## 8. Open Questions

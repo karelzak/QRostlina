@@ -11,6 +11,7 @@ import '../services/local_image_service.dart';
 import '../widgets/search_dialog.dart';
 import 'edit_species_screen.dart';
 import 'edit_location_screen.dart';
+import 'species_printing_screen.dart';
 
 class DetailScreen extends StatefulWidget {
   final String id;
@@ -222,7 +223,15 @@ class _DetailScreenState extends State<DetailScreen> {
       appBar: AppBar(
         title: Text(title),
         actions: [
-          if (widget.type == ScannedType.species && _data != null)
+          if (widget.type == ScannedType.species && _data != null) ...[
+            IconButton(
+              icon: const Icon(Icons.print),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => SpeciesPrintingScreen(species: _data as Species),
+                ));
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () async {
@@ -233,6 +242,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 if (result == true) _loadData(showLoading: false);
               },
             ),
+          ],
           if ((widget.type == ScannedType.bed || widget.type == ScannedType.crate) && _data != null) ...[
              IconButton(
               icon: const Icon(Icons.delete_sweep, color: Colors.redAccent),
