@@ -26,6 +26,7 @@ abstract class PrintingService {
   Future<void> initialize();
   Future<List<DiscoveredPrinter>> discoverPrinters();
   List<DiscoveredPrinter> get lastDiscoveredPrinters;
+  Future<ui.Image> generateLabel(Species species, int tapeWidthMm, LabelContent content);
   Future<bool> printSpecies(Species species, String macAddress, brother.Model model, {
     int tapeWidthMm = 12,
     LabelContent content = const LabelContent(),
@@ -161,7 +162,7 @@ class BrotherPrintingService implements PrintingService {
       await printer.setPrinterInfo(printInfo);
 
       debugPrint("PrintingService: Generating label (${tapeWidthMm}mm, qr=${content.qr}, note=${content.note}, flag=${content.flag})");
-      final image = await _generateLabel(species, tapeWidthMm, content);
+      final image = await generateLabel(species, tapeWidthMm, content);
 
       debugPrint("PrintingService: Printing image ${image.width}x${image.height}...");
       final status = await printer.printImage(image);
@@ -188,7 +189,8 @@ class BrotherPrintingService implements PrintingService {
 
   // ── Label generation ──────────────────────────────────────────
 
-  Future<ui.Image> _generateLabel(Species species, int tapeWidthMm, LabelContent content) async {
+  @override
+  Future<ui.Image> generateLabel(Species species, int tapeWidthMm, LabelContent content) async {
     final margin = _mmToPx(2);
     final tapeH = _mmToPx(tapeWidthMm.toDouble());
     final printH = tapeH - margin * 2;

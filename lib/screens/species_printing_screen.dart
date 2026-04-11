@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:another_brother/printer_info.dart' as brother;
@@ -29,17 +30,37 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
   bool _isPrinting = false;
   bool _isDiscovering = false;
   String _statusMessage = '';
+  ui.Image? _previewImage;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _noteController.addListener(_updatePreview);
+    _updatePreview();
   }
 
   @override
   void dispose() {
+    _noteController.removeListener(_updatePreview);
     _noteController.dispose();
+    _previewImage?.dispose();
     super.dispose();
+  }
+
+  void _updatePreview() async {
+    final content = LabelContent(
+      qr: _includeQr && _qrAllowed,
+      note: _includeNote,
+      flag: _flagMode,
+      noteText: _noteController.text,
+    );
+    final image = await locator.print.generateLabel(widget.species, _tapeWidthMm, content);
+    if (!mounted) return;
+    setState(() {
+      _previewImage?.dispose();
+      _previewImage = image;
+    });
   }
 
   Future<void> _load() async {
@@ -211,7 +232,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                       DropdownMenuItem(value: 24, child: Text('24 mm')),
                       DropdownMenuItem(value: 36, child: Text('36 mm')),
                     ],
-                    onChanged: (v) => setState(() => _tapeWidthMm = v!),
+                    onChanged: (v) { setState(() => _tapeWidthMm = v!); _updatePreview(); },
                   ),
                   const SizedBox(height: 12),
 
@@ -222,7 +243,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                       FilterChip(
                         label: const Text('QR Code'),
                         selected: _includeQr,
-                        onSelected: _qrAllowed ? (v) => setState(() => _includeQr = v) : null,
+                        onSelected: _qrAllowed ? (v) { setState(() => _includeQr = v); _updatePreview(); } : null,
                         selectedColor: Colors.yellow,
                         checkmarkColor: Colors.black,
                         disabledColor: Colors.grey[800],
@@ -230,14 +251,14 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                       FilterChip(
                         label: const Text('Note'),
                         selected: _includeNote,
-                        onSelected: (v) => setState(() => _includeNote = v),
+                        onSelected: (v) { setState(() => _includeNote = v); _updatePreview(); },
                         selectedColor: Colors.yellow,
                         checkmarkColor: Colors.black,
                       ),
                       FilterChip(
                         label: const Text('Flag (mirror)'),
                         selected: _flagMode,
-                        onSelected: (v) => setState(() => _flagMode = v),
+                        onSelected: (v) { setState(() => _flagMode = v); _updatePreview(); },
                         selectedColor: Colors.yellow,
                         checkmarkColor: Colors.black,
                       ),
@@ -263,6 +284,24 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                         hintStyle: TextStyle(color: Colors.white24),
                         enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
                         focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                      ),
+                    ),
+
+                  // Preview
+                  if (_previewImage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.yellow, width: 2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: RawImage(image: _previewImage, filterQuality: FilterQuality.none),
+                        ),
                       ),
                     ),
 
