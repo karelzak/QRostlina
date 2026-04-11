@@ -256,7 +256,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                         checkmarkColor: Colors.black,
                       ),
                       FilterChip(
-                        label: const Text('Flag (mirror)'),
+                        label: const Text('Flag (2-sided)'),
                         selected: _flagMode,
                         onSelected: (v) { setState(() => _flagMode = v); _updatePreview(); },
                         selectedColor: Colors.yellow,

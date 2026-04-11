@@ -277,12 +277,8 @@ class BrotherPrintingService implements PrintingService {
       canvas.drawLine(ui.Offset(foldX.toDouble(), y), ui.Offset(foldX.toDouble(), y + 3), dashPaint);
     }
 
-    // Right half (mirrored horizontally)
-    canvas.save();
-    canvas.translate(totalW.toDouble(), 0);
-    canvas.scale(-1, 1);
-    canvas.drawImage(half, ui.Offset.zero, ui.Paint());
-    canvas.restore();
+    // Right half (same orientation — tape is opaque)
+    canvas.drawImage(half, ui.Offset((halfW + foldW).toDouble(), 0), ui.Paint());
 
     final picture = recorder.endRecording();
     return picture.toImage(totalW, totalH);
