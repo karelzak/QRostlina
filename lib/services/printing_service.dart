@@ -195,12 +195,13 @@ class BrotherPrintingService implements PrintingService {
 
   @override
   Future<ui.Image> generateLabel(Species species, int tapeWidthMm, LabelContent content) async {
-    final margin = _mmToPx(5);
+    final margin = _mmToPx(2);
+    final leadIn = _mmToPx(5); // extra blank space at the start of the label
     final tapeH = _mmToPx(tapeWidthMm.toDouble());
     final printH = tapeH - margin * 2;
 
     // Build one half of the label
-    final halfImage = _buildHalf(species, printH, margin, content);
+    final halfImage = _buildHalf(species, printH, margin, leadIn, content);
 
     if (!content.flag) return halfImage;
 
@@ -209,7 +210,7 @@ class BrotherPrintingService implements PrintingService {
   }
 
   /// Build one label panel: optional QR + NAME + optional NOTE
-  ui.Image _buildHalf(Species species, int printH, int margin, LabelContent content) {
+  ui.Image _buildHalf(Species species, int printH, int margin, int leadIn, LabelContent content) {
     final showQr = content.qr;
     final showNote = content.note && content.noteText.isNotEmpty;
 
@@ -218,7 +219,7 @@ class BrotherPrintingService implements PrintingService {
 
     // Text area width scales with tape height for proportional labels
     final textAreaW = _mmToPx(printH > _mmToPx(15) ? 40 : 30).toDouble();
-    final totalW = margin + qrSize + gap + textAreaW.toInt() + margin;
+    final totalW = leadIn + qrSize + gap + textAreaW.toInt() + margin;
     final totalH = printH + margin * 2;
 
     final recorder = ui.PictureRecorder();
@@ -230,11 +231,11 @@ class BrotherPrintingService implements PrintingService {
 
     // QR code
     if (showQr) {
-      _drawQrCode(canvas, species.id, margin.toDouble(), margin.toDouble(), qrSize.toDouble());
+      _drawQrCode(canvas, species.id, leadIn.toDouble(), margin.toDouble(), qrSize.toDouble());
     }
 
     // Text origin
-    final textX = (margin + qrSize + gap).toDouble();
+    final textX = (leadIn + qrSize + gap).toDouble();
 
     if (showNote) {
       // NAME on top ~60%, NOTE below ~35%
