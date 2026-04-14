@@ -29,11 +29,13 @@
   - `detail_screen.dart`: Unified detail view for S-, B-, and C- IDs. Handles Visual Map for Beds.
   - `edit_species_screen.dart` / `edit_location_screen.dart`: CRUD forms.
   - `scanner_screen.dart`: QR scanner interface (mobile) or manual ID entry (desktop).
+  - `printing_screen.dart`: Generic label printing UI for all entity types and free-text labels.
   - `settings_screen.dart`: Auth, Data (Sync/Backup), and Language settings.
 - `lib/services/`:
   - `database_service.dart`: Interface for data operations.
   - `firestore_database_service.dart`: Implementation for Firebase/Cloud mode.
   - `local_storage_service.dart`: Implementation for Local/Offline mode (JSON).
+  - `printing_service.dart`: Brother printer discovery, label rendering, and printing.
   - `auth_service.dart`: Firebase Auth & Google Sign-In.
   - `service_locator.dart`: GetIt setup for dependency injection.
 - `lib/widgets/`: Reusable UI components (ID inputs, dialogs).
@@ -85,17 +87,56 @@ Beds (B-ID) are managed via three distinct layouts, each with specific logic for
    - **Visual Map:** Replaced with a simple list of species (similar to a Crate).
    - **Constraints:** Layout changes on non-empty beds require confirmation.
 
-## Phase 2: Cloud Support & Synchronization (In Progress)
-...
+## Phase 2: Cloud Support & Synchronization (Done)
 16. [x] Linear Bed Support.
-    - Status: High-density support (Lines x Rows) implemented.
 17. [x] Random (Disorganized) Bed Support.
-    - Status: Implemented as flat species list.
 
-## MVP Scope (Phase 1)
-...
+## MVP Scope (Phase 1) — Complete
 15. [x] Visual Grid Map for Beds.
-    - Status: Organized by meter, supports sub-grid layouts and human-friendly indexing.
 16. [x] Linear Bed Support with High-Density Calculation.
 17. [x] Random Bed Support (List view).
+
+## Label Printing — Brother PT-E920BT
+
+### Architecture
+- **Service:** `lib/services/printing_service.dart` — entity-agnostic `PrintingService` interface + `BrotherPrintingService` implementation.
+- **Screen:** `lib/screens/printing_screen.dart` — generic `PrintingScreen` used for all entity types and free-text labels.
+- **Library:** `another_brother` v2.2.4 (Flutter wrapper for Brother SDK v4).
+- **Connectivity:** Bluetooth Classic. Printer selection saved to SharedPreferences (MAC, name, model ID).
+
+### PT-E920BT Workaround
+The `another_brother` `Model` enum does **not** include PT-E920BT. Use `Model.PT_P910BT` as the closest compatible model. Discovery adds `"PT-E920BT"` as an extra BT filter name; `_modelFromName()` maps names starting with `PT-E920` to `PT_P910BT`. The printer runs at **360 DPI**.
+
+### Label Generation (Image-Based)
+Labels are rendered as `ui.Image` in code (not via `.blf` templates). Key parameters:
+- `generateLabel(String? qrData, String text, int tapeWidthMm, LabelContent content)`
+- `printLabel(String? qrData, String text, String macAddress, Model model, ...)`
+- **Tape sizes:** 12mm, 18mm, 24mm, 36mm. QR disabled on 12mm (too small to scan).
+- **Orientation:** Always LANDSCAPE.
+- **Flag mode:** Mirrors label left/right with fold line for cable wrapping.
+
+### Per-Entity Label Content
+| Entity  | fixedText (always on) | toggleableLabel (Label chip) | QR data |
+|---------|-----------------------|------------------------------|---------|
+| Species | `name`                | —                            | `id`    |
+| Bed     | `id`                  | `row` (field label)          | `id`    |
+| Crate   | `id`                  | —                            | `id`    |
+| Generic | — (user types text)   | —                            | label text |
+
+### P-touch Template Printing (Alternative Path — Not Currently Used)
+Templates (`.blf` files) can be transferred to the printer and filled via `replaceTextName()`. Object naming convention if templates are used in the future:
+
+| Object Name | Data Source | Type | Description |
+|-------------|-----------|------|-------------|
+| `NAME` / `NAME1` / `NAME2` | entity name | Text | Label text (flag: left/right) |
+| `QR` / `QR1` / `QR2` | entity ID | QR Code | QR code (flag: left/right) |
+| `ID` | entity ID | Text | ID as plain text |
+| `NOTE` | user input | Text | Per-label note |
+| `DATE` | *(auto)* | Date/Time | Auto-filled by printer |
+
+Template preparation requires Windows (P-touch Editor → P-touch Transfer Manager → export `.blf`). The app only accepts `.blf` and `.pdz` files.
+
+### Open Questions
+- **QR Code in Template:** Needs real-device test to confirm `replaceTextName` updates QR code data in `.blf`.
+- **Template transfer frequency:** Does the printer retain templates after power cycle?
 
