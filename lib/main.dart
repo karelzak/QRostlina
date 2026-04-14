@@ -4,6 +4,7 @@ import 'l10n/app_localizations.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/species_list_screen.dart';
 import 'screens/locations_screen.dart';
+import 'screens/printing_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/service_locator.dart';
 import 'services/auth_service.dart';
@@ -89,6 +90,16 @@ class MainMenuScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.print),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PrintingScreen()),
+              );
+            },
+            tooltip: 'Print label',
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {

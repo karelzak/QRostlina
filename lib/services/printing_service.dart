@@ -5,8 +5,6 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:qr/qr.dart';
-import '../models/species.dart';
-
 /// What content to include on the label.
 class LabelContent {
   final bool qr;
@@ -26,8 +24,8 @@ abstract class PrintingService {
   Future<void> initialize();
   Future<List<DiscoveredPrinter>> discoverPrinters();
   List<DiscoveredPrinter> get lastDiscoveredPrinters;
-  Future<ui.Image> generateLabel(Species species, int tapeWidthMm, LabelContent content);
-  Future<bool> printSpecies(Species species, String macAddress, brother.Model model, {
+  Future<ui.Image> generateLabel(String? qrData, String text, int tapeWidthMm, LabelContent content);
+  Future<bool> printLabel(String? qrData, String text, String macAddress, brother.Model model, {
     int tapeWidthMm = 12,
     LabelContent content = const LabelContent(),
   });
@@ -132,7 +130,7 @@ class BrotherPrintingService implements PrintingService {
   }
 
   @override
-  Future<bool> printSpecies(Species species, String macAddress, brother.Model model, {
+  Future<bool> printLabel(String? qrData, String text, String macAddress, brother.Model model, {
     int tapeWidthMm = 12,
     LabelContent content = const LabelContent(),
   }) async {
@@ -164,7 +162,7 @@ class BrotherPrintingService implements PrintingService {
       await printer.setPrinterInfo(printInfo);
 
       debugPrint("PrintingService: Generating label (${tapeWidthMm}mm, qr=${content.qr}, note=${content.note}, flag=${content.flag})");
-      final image = await generateLabel(species, tapeWidthMm, content);
+      final image = await generateLabel(qrData, text, tapeWidthMm, content);
 
       debugPrint("PrintingService: Printing image ${image.width}x${image.height}...");
       final status = await printer.printImage(image);
@@ -194,14 +192,14 @@ class BrotherPrintingService implements PrintingService {
   // ── Label generation ──────────────────────────────────────────
 
   @override
-  Future<ui.Image> generateLabel(Species species, int tapeWidthMm, LabelContent content) async {
+  Future<ui.Image> generateLabel(String? qrData, String text, int tapeWidthMm, LabelContent content) async {
     final margin = _mmToPx(2);
     final leadIn = content.flag ? _mmToPx(5) : margin; // extra lead-in for flags only
     final tapeH = _mmToPx(tapeWidthMm.toDouble());
     final printH = tapeH - margin * 2;
 
     // Build one half of the label
-    final halfImage = _buildHalf(species, printH, margin, leadIn, content);
+    final halfImage = _buildHalf(qrData, text, printH, margin, leadIn, content);
 
     if (!content.flag) return halfImage;
 
@@ -209,9 +207,9 @@ class BrotherPrintingService implements PrintingService {
     return _buildFlag(halfImage, printH, margin);
   }
 
-  /// Build one label panel: optional QR + NAME + optional NOTE
-  ui.Image _buildHalf(Species species, int printH, int margin, int leadIn, LabelContent content) {
-    final showQr = content.qr;
+  /// Build one label panel: optional QR + text + optional NOTE
+  ui.Image _buildHalf(String? qrData, String text, int printH, int margin, int leadIn, LabelContent content) {
+    final showQr = content.qr && qrData != null && qrData.isNotEmpty;
     final showNote = content.note && content.noteText.isNotEmpty;
 
     final qrSize = showQr ? printH : 0;
@@ -231,7 +229,7 @@ class BrotherPrintingService implements PrintingService {
 
     // QR code
     if (showQr) {
-      _drawQrCode(canvas, species.id, leadIn.toDouble(), margin.toDouble(), qrSize.toDouble());
+      _drawQrCode(canvas, qrData ?? '', leadIn.toDouble(), margin.toDouble(), qrSize.toDouble());
     }
 
     // Text origin
@@ -241,14 +239,14 @@ class BrotherPrintingService implements PrintingService {
       // NAME on top ~60%, NOTE below ~35%
       final nameFontSize = _fontSize(printH, 0.35);
       final noteFontSize = _fontSize(printH, 0.25);
-      _drawText(canvas, species.name, textX, margin.toDouble(),
+      _drawText(canvas, text, textX, margin.toDouble(),
           textAreaW, printH * 0.6, nameFontSize, bold: true);
       _drawText(canvas, content.noteText, textX, margin + printH * 0.65,
           textAreaW, printH * 0.35, noteFontSize);
     } else {
-      // NAME centered vertically
+      // Text centered vertically
       final nameFontSize = _fontSize(printH, 0.45);
-      _drawText(canvas, species.name, textX, margin.toDouble(),
+      _drawText(canvas, text, textX, margin.toDouble(),
           textAreaW, printH.toDouble(), nameFontSize, bold: true, center: true);
     }
 
