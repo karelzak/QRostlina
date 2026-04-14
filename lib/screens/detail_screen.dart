@@ -11,7 +11,7 @@ import '../services/local_image_service.dart';
 import '../widgets/search_dialog.dart';
 import 'edit_species_screen.dart';
 import 'edit_location_screen.dart';
-import 'species_printing_screen.dart';
+import 'printing_screen.dart';
 
 class DetailScreen extends StatefulWidget {
   final String id;
@@ -227,8 +227,15 @@ class _DetailScreenState extends State<DetailScreen> {
             IconButton(
               icon: const Icon(Icons.print),
               onPressed: () {
+                final s = _data as Species;
                 Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => SpeciesPrintingScreen(species: _data as Species),
+                  builder: (context) => PrintingScreen(
+                    qrData: s.id,
+                    fixedText: s.name,
+                    infoName: s.name,
+                    infoId: s.id,
+                    infoSubtitle: s.latinName,
+                  ),
                 ));
               },
             ),
@@ -244,6 +251,35 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
           ],
           if ((widget.type == ScannedType.bed || widget.type == ScannedType.crate) && _data != null) ...[
+            IconButton(
+              icon: const Icon(Icons.print),
+              onPressed: () {
+                if (widget.type == ScannedType.bed) {
+                  final b = _data as Bed;
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => PrintingScreen(
+                      qrData: b.id,
+                      fixedText: b.id,
+                      toggleableLabel: b.row,
+                      infoName: b.name,
+                      infoId: b.id,
+                      infoSubtitle: b.row,
+                    ),
+                  ));
+                } else {
+                  final c = _data as Crate;
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => PrintingScreen(
+                      qrData: c.id,
+                      fixedText: c.id,
+                      infoName: c.name,
+                      infoId: c.id,
+                      infoSubtitle: c.type,
+                    ),
+                  ));
+                }
+              },
+            ),
              IconButton(
               icon: const Icon(Icons.delete_sweep, color: Colors.redAccent),
               onPressed: () => _confirmClearLocation(l10n),

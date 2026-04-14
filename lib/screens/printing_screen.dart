@@ -2,21 +2,45 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:another_brother/printer_info.dart' as brother;
-import '../models/species.dart';
 import '../services/service_locator.dart';
 import '../services/printing_service.dart';
 
-class SpeciesPrintingScreen extends StatefulWidget {
-  final Species species;
+class PrintingScreen extends StatefulWidget {
+  /// Data for QR code. In generic mode, QR encodes the label text.
+  final String? qrData;
 
-  const SpeciesPrintingScreen({super.key, required this.species});
+  /// Text always printed on the label (e.g., species name, bed/crate ID).
+  final String? fixedText;
+
+  /// Optional text the user can toggle on/off via a "Label" chip (e.g., bed name).
+  final String? toggleableLabel;
+
+  /// Entity name for info card. Null = generic mode.
+  final String? infoName;
+
+  /// Entity ID for info card.
+  final String? infoId;
+
+  /// Extra info line (e.g., latin name, bed row, crate type).
+  final String? infoSubtitle;
+
+  const PrintingScreen({
+    super.key,
+    this.qrData,
+    this.fixedText,
+    this.toggleableLabel,
+    this.infoName,
+    this.infoId,
+    this.infoSubtitle,
+  });
 
   @override
-  State<SpeciesPrintingScreen> createState() => _SpeciesPrintingScreenState();
+  State<PrintingScreen> createState() => _PrintingScreenState();
 }
 
-class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
+class _PrintingScreenState extends State<PrintingScreen> {
   final _noteController = TextEditingController();
+  final _labelTextController = TextEditingController();
 
   String _printerMac = '';
   String _printerName = '';
@@ -25,6 +49,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
   int _tapeWidthMm = 12;
   bool _includeQr = true;
   bool _includeNote = false;
+  bool _includeLabel = true;
   bool _flagMode = false;
 
   bool _isPrinting = false;
@@ -32,30 +57,66 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
   String _statusMessage = '';
   ui.Image? _previewImage;
 
+  bool get _isGeneric => widget.infoName == null;
+  bool get _hasToggleableLabel => widget.toggleableLabel != null && widget.toggleableLabel!.isNotEmpty;
+
+  String get _effectiveLabelText {
+    if (_isGeneric) return _labelTextController.text;
+    final parts = <String>[];
+    if (widget.fixedText != null && widget.fixedText!.isNotEmpty) {
+      parts.add(widget.fixedText!);
+    }
+    if (_includeLabel && _hasToggleableLabel) {
+      parts.add(widget.toggleableLabel!);
+    }
+    return parts.join('\n');
+  }
+
+  String? get _effectiveQrData => _isGeneric
+      ? (_labelTextController.text.isNotEmpty ? _labelTextController.text : null)
+      : widget.qrData;
+
   @override
   void initState() {
     super.initState();
     _load();
     _noteController.addListener(_updatePreview);
+    if (_isGeneric) {
+      _labelTextController.addListener(_updatePreview);
+    }
     _updatePreview();
   }
 
   @override
   void dispose() {
     _noteController.removeListener(_updatePreview);
+    if (_isGeneric) {
+      _labelTextController.removeListener(_updatePreview);
+    }
     _noteController.dispose();
+    _labelTextController.dispose();
     _previewImage?.dispose();
     super.dispose();
   }
 
   void _updatePreview() async {
+    final text = _effectiveLabelText;
+    if (text.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _previewImage?.dispose();
+        _previewImage = null;
+      });
+      return;
+    }
     final content = LabelContent(
       qr: _includeQr && _qrAllowed,
       note: _includeNote,
       flag: _flagMode,
       noteText: _noteController.text,
     );
-    final image = await locator.print.generateLabel(widget.species, _tapeWidthMm, content);
+    final image = await locator.print.generateLabel(
+        _effectiveQrData, text, _tapeWidthMm, content);
     if (!mounted) return;
     setState(() {
       _previewImage?.dispose();
@@ -73,6 +134,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
       _tapeWidthMm = prefs.getInt('label_tape_width') ?? 12;
       _includeQr = prefs.getBool('label_include_qr') ?? true;
       _includeNote = prefs.getBool('label_include_note') ?? false;
+      _includeLabel = prefs.getBool('label_include_label') ?? true;
       _flagMode = prefs.getBool('label_flag_mode') ?? false;
     });
     _updatePreview();
@@ -83,6 +145,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
     await prefs.setInt('label_tape_width', _tapeWidthMm);
     await prefs.setBool('label_include_qr', _includeQr);
     await prefs.setBool('label_include_note', _includeNote);
+    await prefs.setBool('label_include_label', _includeLabel);
     await prefs.setBool('label_flag_mode', _flagMode);
   }
 
@@ -123,6 +186,9 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
   }
 
   Future<void> _print() async {
+    final text = _effectiveLabelText;
+    if (text.isEmpty) return;
+
     if (_printerMac.isEmpty) {
       await _discover();
       if (_printerMac.isEmpty) return;
@@ -134,12 +200,13 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
 
     setState(() {
       _isPrinting = true;
-      _statusMessage = 'Printing ${widget.species.name}...';
+      _statusMessage = 'Printing...';
     });
 
     try {
-      final success = await locator.print.printSpecies(
-        widget.species,
+      final success = await locator.print.printLabel(
+        _effectiveQrData,
+        text,
         _printerMac,
         model,
         tapeWidthMm: _tapeWidthMm,
@@ -168,7 +235,6 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final s = widget.species;
     final hasPrinter = _printerMac.isNotEmpty;
 
     // Auto-disable QR when switching to small tape
@@ -186,23 +252,38 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Species info
-                  Card(
-                    color: Colors.grey[900],
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(s.name, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 4),
-                          Text(s.id, style: const TextStyle(color: Colors.yellow, fontSize: 14)),
-                          if (s.latinName != null && s.latinName!.isNotEmpty)
-                            Text(s.latinName!, style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic)),
-                        ],
+                  // Entity info card OR generic text input
+                  if (_isGeneric)
+                    TextField(
+                      controller: _labelTextController,
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Label text',
+                        labelStyle: TextStyle(color: Colors.yellow),
+                        hintText: 'Type text for the label...',
+                        hintStyle: TextStyle(color: Colors.white24),
+                        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                        focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                      ),
+                    )
+                  else
+                    Card(
+                      color: Colors.grey[900],
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(widget.infoName!, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 4),
+                            Text(widget.infoId ?? '', style: const TextStyle(color: Colors.yellow, fontSize: 14)),
+                            if (widget.infoSubtitle != null && widget.infoSubtitle!.isNotEmpty)
+                              Text(widget.infoSubtitle!, style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic)),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(height: 16),
 
                   // Printer status
@@ -261,6 +342,14 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
                         checkmarkColor: Colors.black,
                         disabledColor: Colors.grey[800],
                       ),
+                      if (_hasToggleableLabel)
+                        FilterChip(
+                          label: const Text('Label'),
+                          selected: _includeLabel,
+                          onSelected: (v) { setState(() => _includeLabel = v); _saveLabelSettings(); _updatePreview(); },
+                          selectedColor: Colors.yellow,
+                          checkmarkColor: Colors.black,
+                        ),
                       FilterChip(
                         label: const Text('Note'),
                         selected: _includeNote,
@@ -342,7 +431,7 @@ class _SpeciesPrintingScreenState extends State<SpeciesPrintingScreen> {
               height: 64,
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _isPrinting ? null : _print,
+                onPressed: _isPrinting || _effectiveLabelText.isEmpty ? null : _print,
                 icon: _isPrinting
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
                     : const Icon(Icons.print, size: 28),
