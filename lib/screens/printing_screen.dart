@@ -340,7 +340,7 @@ class _PrintingScreenState extends State<PrintingScreen> {
                       spacing: 8,
                       children: [
                         FilterChip(
-                          label: const Text('QR Code'),
+                          label: const Text('QR'),
                           selected: _includeQr,
                           onSelected: _qrAllowed ? (v) { setState(() => _includeQr = v); _saveLabelSettings(); _updatePreview(); } : null,
                           selectedColor: Colors.yellow,
@@ -363,7 +363,7 @@ class _PrintingScreenState extends State<PrintingScreen> {
                           checkmarkColor: Colors.black,
                         ),
                         FilterChip(
-                          label: const Text('Flag (2-sided)'),
+                          label: const Text('Flag'),
                           selected: _flagMode,
                           onSelected: (v) { setState(() => _flagMode = v); _saveLabelSettings(); _updatePreview(); },
                           selectedColor: Colors.yellow,
