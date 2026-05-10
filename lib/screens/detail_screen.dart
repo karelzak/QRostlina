@@ -322,11 +322,13 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Colors.yellow))
-          : _data == null
-              ? _buildNotFound(l10n)
-              : _buildContent(l10n),
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator(color: Colors.yellow))
+            : _data == null
+                ? _buildNotFound(l10n)
+                : _buildContent(l10n),
+      ),
     );
   }
 

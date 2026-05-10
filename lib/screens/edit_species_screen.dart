@@ -162,56 +162,58 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
       appBar: AppBar(
         title: Text(isEditing ? 'EDIT SPECIES' : l10n.addNewSpecies),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              IdInputField(
-                controller: _idController,
-                label: 'Species ID (S-XXX)',
-                type: ScannedType.species,
-                enabled: !isEditing,
-                validator: (val) {
-                  if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('S-')) {
-                    return 'Required (e.g. S-001)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _nameController,
-                label: 'Variety Name',
-                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(controller: _latinNameController, label: 'Latin Name'),
-              const SizedBox(height: 16),
-              _buildTextField(controller: _colorController, label: 'Color'),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _descriptionController,
-                label: 'Description',
-                maxLines: 6,
-              ),
-              const SizedBox(height: 24),
-              const Divider(color: Colors.yellow, thickness: 1),
-              const SizedBox(height: 16),
-              Text(l10n.photo.toUpperCase(), 
-                style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 16),
-              _buildPhotoPicker(l10n),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _save,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 80),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                IdInputField(
+                  controller: _idController,
+                  label: 'Species ID (S-XXX)',
+                  type: ScannedType.species,
+                  enabled: !isEditing,
+                  validator: (val) {
+                    if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith('S-')) {
+                      return 'Required (e.g. S-001)';
+                    }
+                    return null;
+                  },
                 ),
-                child: Text(l10n.save.toUpperCase()),
-              ),
-            ],
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _nameController,
+                  label: 'Variety Name',
+                  validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(controller: _latinNameController, label: 'Latin Name'),
+                const SizedBox(height: 16),
+                _buildTextField(controller: _colorController, label: 'Color'),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _descriptionController,
+                  label: 'Description',
+                  maxLines: 6,
+                ),
+                const SizedBox(height: 24),
+                const Divider(color: Colors.yellow, thickness: 1),
+                const SizedBox(height: 16),
+                Text(l10n.photo.toUpperCase(), 
+                  style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 16),
+                _buildPhotoPicker(l10n),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: _save,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 80),
+                  ),
+                  child: Text(l10n.save.toUpperCase()),
+                ),
+              ],
+            ),
           ),
         ),
       ),

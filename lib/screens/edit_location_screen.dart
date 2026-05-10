@@ -182,131 +182,133 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(isEditing ? 'EDIT $typeLabel' : 'ADD NEW $typeLabel')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              IdInputField(
-                controller: _idController,
-                label: 'ID (${widget.isBed ? "B-" : "C-"})',
-                type: widget.isBed ? ScannedType.bed : ScannedType.crate,
-                enabled: !isEditing,
-                validator: (val) {
-                  final prefix = widget.isBed ? 'B-' : 'C-';
-                  if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith(prefix)) {
-                    return 'Required (e.g. $prefix-001)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _nameController,
-                label: l10n.name,
-                validator: (val) => (val == null || val.isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _extraController,
-                label: widget.isBed ? '${l10n.label} (e.g. A)' : '${l10n.type} (e.g. Plastic)',
-              ),
-              if (widget.isBed) ...[
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _lengthController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: l10n.bedLength,
-                    labelStyle: const TextStyle(color: Colors.yellow),
-                    enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-                    focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow, width: 2)),
-                    suffixText: 'm',
-                    suffixStyle: const TextStyle(color: Colors.yellow),
-                  ),
-                  style: const TextStyle(color: Colors.white, fontSize: 18),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                IdInputField(
+                  controller: _idController,
+                  label: 'ID (${widget.isBed ? "B-" : "C-"})',
+                  type: widget.isBed ? ScannedType.bed : ScannedType.crate,
+                  enabled: !isEditing,
                   validator: (val) {
-                    if (val == null || val.isEmpty) return 'Required';
-                    final len = int.tryParse(val);
-                    if (len == null || len <= 0) return 'Must be > 0';
+                    final prefix = widget.isBed ? 'B-' : 'C-';
+                    if (val == null || val.trim().length <= 2 || !val.trim().toUpperCase().startsWith(prefix)) {
+                      return 'Required (e.g. $prefix-001)';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<BedLayout>(
-                  value: _layout,
-                  decoration: InputDecoration(
-                    labelText: l10n.layoutType,
-                    labelStyle: const TextStyle(color: Colors.yellow),
-                    enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-                  ),
-                  dropdownColor: Colors.black,
-                  style: const TextStyle(color: Colors.white, fontSize: 18),
-                  items: [
-                    DropdownMenuItem(value: BedLayout.grid, child: Text(l10n.grid)),
-                    DropdownMenuItem(value: BedLayout.linear, child: Text(l10n.linear)),
-                    DropdownMenuItem(value: BedLayout.rand, child: Text(l10n.rand)),
-                  ],
-                  onChanged: (val) {
-                    setState(() {
-                      _layout = val!;
-                      final maxL = _layout == BedLayout.grid ? 3 : 20;
-                      final maxR = _layout == BedLayout.grid ? 3 : 20;
-                      if (_linesPerMeter > maxL) _linesPerMeter = 1;
-                      if (_rowsPerMeter > maxR) _rowsPerMeter = 1;
-                    });
-                  },
+                _buildTextField(
+                  controller: _nameController,
+                  label: l10n.name,
+                  validator: (val) => (val == null || val.isEmpty) ? 'Required' : null,
                 ),
-                if (_layout != BedLayout.rand) ...[
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _extraController,
+                  label: widget.isBed ? '${l10n.label} (e.g. A)' : '${l10n.type} (e.g. Plastic)',
+                ),
+                if (widget.isBed) ...[
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
-                    value: _linesPerMeter,
+                  TextFormField(
+                    controller: _lengthController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: InputDecoration(
-                      labelText: l10n.lines,
+                      labelText: l10n.bedLength,
+                      labelStyle: const TextStyle(color: Colors.yellow),
+                      enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                      focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow, width: 2)),
+                      suffixText: 'm',
+                      suffixStyle: const TextStyle(color: Colors.yellow),
+                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                    validator: (val) {
+                      if (val == null || val.isEmpty) return 'Required';
+                      final len = int.tryParse(val);
+                      if (len == null || len <= 0) return 'Must be > 0';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<BedLayout>(
+                    value: _layout,
+                    decoration: InputDecoration(
+                      labelText: l10n.layoutType,
                       labelStyle: const TextStyle(color: Colors.yellow),
                       enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                     ),
                     dropdownColor: Colors.black,
                     style: const TextStyle(color: Colors.white, fontSize: 18),
-                    items: List.generate(_layout == BedLayout.grid ? 3 : 20, (index) => index + 1)
-                        .map((val) => DropdownMenuItem(value: val, child: Text(val.toString())))
-                        .toList(),
-                    onChanged: (val) => setState(() => _linesPerMeter = val!),
+                    items: [
+                      DropdownMenuItem(value: BedLayout.grid, child: Text(l10n.grid)),
+                      DropdownMenuItem(value: BedLayout.linear, child: Text(l10n.linear)),
+                      DropdownMenuItem(value: BedLayout.rand, child: Text(l10n.rand)),
+                    ],
+                    onChanged: (val) {
+                      setState(() {
+                        _layout = val!;
+                        final maxL = _layout == BedLayout.grid ? 3 : 20;
+                        final maxR = _layout == BedLayout.grid ? 3 : 20;
+                        if (_linesPerMeter > maxL) _linesPerMeter = 1;
+                        if (_rowsPerMeter > maxR) _rowsPerMeter = 1;
+                      });
+                    },
                   ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
-                    value: _rowsPerMeter,
-                    decoration: InputDecoration(
-                      labelText: _layout == BedLayout.grid ? l10n.rows : l10n.plantsPerMeter,
-                      labelStyle: const TextStyle(color: Colors.yellow),
-                      enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                  if (_layout != BedLayout.rand) ...[
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<int>(
+                      value: _linesPerMeter,
+                      decoration: InputDecoration(
+                        labelText: l10n.lines,
+                        labelStyle: const TextStyle(color: Colors.yellow),
+                        enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                      ),
+                      dropdownColor: Colors.black,
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                      items: List.generate(_layout == BedLayout.grid ? 3 : 20, (index) => index + 1)
+                          .map((val) => DropdownMenuItem(value: val, child: Text(val.toString())))
+                          .toList(),
+                      onChanged: (val) => setState(() => _linesPerMeter = val!),
                     ),
-                    dropdownColor: Colors.black,
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
-                    items: List.generate(_layout == BedLayout.grid ? 3 : 20, (index) => index + 1)
-                        .map((val) => DropdownMenuItem(value: val, child: Text(val.toString())))
-                        .toList(),
-                    onChanged: (val) => setState(() => _rowsPerMeter = val!),
-                  ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'TOTAL: ${_linesPerMeter * _rowsPerMeter} plants per meter',
-                      style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<int>(
+                      value: _rowsPerMeter,
+                      decoration: InputDecoration(
+                        labelText: _layout == BedLayout.grid ? l10n.rows : l10n.plantsPerMeter,
+                        labelStyle: const TextStyle(color: Colors.yellow),
+                        enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                      ),
+                      dropdownColor: Colors.black,
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                      items: List.generate(_layout == BedLayout.grid ? 3 : 20, (index) => index + 1)
+                          .map((val) => DropdownMenuItem(value: val, child: Text(val.toString())))
+                          .toList(),
+                      onChanged: (val) => setState(() => _rowsPerMeter = val!),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'TOTAL: ${_linesPerMeter * _rowsPerMeter} plants per meter',
+                        style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                 ],
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: _save,
+                  style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 60)),
+                  child: Text('${l10n.save} $typeLabel'),
+                ),
               ],
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _save,
-                style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 60)),
-                child: Text('${l10n.save} $typeLabel'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

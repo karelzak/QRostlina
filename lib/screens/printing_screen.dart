@@ -244,207 +244,209 @@ class _PrintingScreenState extends State<PrintingScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('PRINT LABEL')),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Entity info card OR generic text input
-                  if (_isGeneric)
-                    TextField(
-                      controller: _labelTextController,
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
-                      maxLines: 3,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Entity info card OR generic text input
+                    if (_isGeneric)
+                      TextField(
+                        controller: _labelTextController,
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: 'Label text',
+                          labelStyle: TextStyle(color: Colors.yellow),
+                          hintText: 'Type text for the label...',
+                          hintStyle: TextStyle(color: Colors.white24),
+                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                          focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
+                        ),
+                      )
+                    else
+                      Card(
+                        color: Colors.grey[900],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(widget.infoName!, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text(widget.infoId ?? '', style: const TextStyle(color: Colors.yellow, fontSize: 14)),
+                              if (widget.infoSubtitle != null && widget.infoSubtitle!.isNotEmpty)
+                                Text(widget.infoSubtitle!, style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+  
+                    // Printer status
+                    ListTile(
+                      tileColor: Colors.grey[900],
+                      leading: Icon(
+                        hasPrinter ? Icons.print : Icons.print_disabled,
+                        color: hasPrinter ? Colors.green : Colors.redAccent,
+                      ),
+                      title: Text(
+                        hasPrinter ? _printerName : 'No printer',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      subtitle: hasPrinter
+                          ? Text(_printerMac, style: const TextStyle(color: Colors.white54, fontSize: 12))
+                          : null,
+                      trailing: IconButton(
+                        icon: _isDiscovering
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.yellow))
+                            : const Icon(Icons.bluetooth_searching, color: Colors.yellow),
+                        onPressed: _isDiscovering ? null : _discover,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+  
+                    // Tape size
+                    DropdownButtonFormField<int>(
+                      initialValue: _tapeWidthMm,
+                      dropdownColor: Colors.grey[800],
+                      style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
-                        labelText: 'Label text',
+                        labelText: 'Tape size',
                         labelStyle: TextStyle(color: Colors.yellow),
-                        hintText: 'Type text for the label...',
-                        hintStyle: TextStyle(color: Colors.white24),
                         enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
                         focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                       ),
-                    )
-                  else
-                    Card(
-                      color: Colors.grey[900],
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(widget.infoName!, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 4),
-                            Text(widget.infoId ?? '', style: const TextStyle(color: Colors.yellow, fontSize: 14)),
-                            if (widget.infoSubtitle != null && widget.infoSubtitle!.isNotEmpty)
-                              Text(widget.infoSubtitle!, style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic)),
-                          ],
-                        ),
-                      ),
+                      items: const [
+                        DropdownMenuItem(value: 12, child: Text('12 mm')),
+                        DropdownMenuItem(value: 18, child: Text('18 mm')),
+                        DropdownMenuItem(value: 24, child: Text('24 mm')),
+                        DropdownMenuItem(value: 36, child: Text('36 mm')),
+                      ],
+                      onChanged: (v) { setState(() => _tapeWidthMm = v!); _saveLabelSettings(); _updatePreview(); },
                     ),
-                  const SizedBox(height: 16),
-
-                  // Printer status
-                  ListTile(
-                    tileColor: Colors.grey[900],
-                    leading: Icon(
-                      hasPrinter ? Icons.print : Icons.print_disabled,
-                      color: hasPrinter ? Colors.green : Colors.redAccent,
-                    ),
-                    title: Text(
-                      hasPrinter ? _printerName : 'No printer',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    subtitle: hasPrinter
-                        ? Text(_printerMac, style: const TextStyle(color: Colors.white54, fontSize: 12))
-                        : null,
-                    trailing: IconButton(
-                      icon: _isDiscovering
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.yellow))
-                          : const Icon(Icons.bluetooth_searching, color: Colors.yellow),
-                      onPressed: _isDiscovering ? null : _discover,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Tape size
-                  DropdownButtonFormField<int>(
-                    initialValue: _tapeWidthMm,
-                    dropdownColor: Colors.grey[800],
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      labelText: 'Tape size',
-                      labelStyle: TextStyle(color: Colors.yellow),
-                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                      focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 12, child: Text('12 mm')),
-                      DropdownMenuItem(value: 18, child: Text('18 mm')),
-                      DropdownMenuItem(value: 24, child: Text('24 mm')),
-                      DropdownMenuItem(value: 36, child: Text('36 mm')),
-                    ],
-                    onChanged: (v) { setState(() => _tapeWidthMm = v!); _saveLabelSettings(); _updatePreview(); },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Content toggles
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      FilterChip(
-                        label: const Text('QR Code'),
-                        selected: _includeQr,
-                        onSelected: _qrAllowed ? (v) { setState(() => _includeQr = v); _saveLabelSettings(); _updatePreview(); } : null,
-                        selectedColor: Colors.yellow,
-                        checkmarkColor: Colors.black,
-                        disabledColor: Colors.grey[800],
-                      ),
-                      if (_hasToggleableLabel)
+                    const SizedBox(height: 12),
+  
+                    // Content toggles
+                    Wrap(
+                      spacing: 8,
+                      children: [
                         FilterChip(
-                          label: const Text('Label'),
-                          selected: _includeLabel,
-                          onSelected: (v) { setState(() => _includeLabel = v); _saveLabelSettings(); _updatePreview(); },
+                          label: const Text('QR Code'),
+                          selected: _includeQr,
+                          onSelected: _qrAllowed ? (v) { setState(() => _includeQr = v); _saveLabelSettings(); _updatePreview(); } : null,
+                          selectedColor: Colors.yellow,
+                          checkmarkColor: Colors.black,
+                          disabledColor: Colors.grey[800],
+                        ),
+                        if (_hasToggleableLabel)
+                          FilterChip(
+                            label: const Text('Label'),
+                            selected: _includeLabel,
+                            onSelected: (v) { setState(() => _includeLabel = v); _saveLabelSettings(); _updatePreview(); },
+                            selectedColor: Colors.yellow,
+                            checkmarkColor: Colors.black,
+                          ),
+                        FilterChip(
+                          label: const Text('Note'),
+                          selected: _includeNote,
+                          onSelected: (v) { setState(() => _includeNote = v); _saveLabelSettings(); _updatePreview(); },
                           selectedColor: Colors.yellow,
                           checkmarkColor: Colors.black,
                         ),
-                      FilterChip(
-                        label: const Text('Note'),
-                        selected: _includeNote,
-                        onSelected: (v) { setState(() => _includeNote = v); _saveLabelSettings(); _updatePreview(); },
-                        selectedColor: Colors.yellow,
-                        checkmarkColor: Colors.black,
-                      ),
-                      FilterChip(
-                        label: const Text('Flag (2-sided)'),
-                        selected: _flagMode,
-                        onSelected: (v) { setState(() => _flagMode = v); _saveLabelSettings(); _updatePreview(); },
-                        selectedColor: Colors.yellow,
-                        checkmarkColor: Colors.black,
-                      ),
-                    ],
-                  ),
-                  if (!_qrAllowed)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 4),
-                      child: Text('QR code disabled for 12mm (too small to scan)',
-                          style: TextStyle(color: Colors.white38, fontSize: 11)),
-                    ),
-                  const SizedBox(height: 12),
-
-                  // Note input (only when Note is selected)
-                  if (_includeNote)
-                    TextField(
-                      controller: _noteController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        labelText: 'Note text',
-                        labelStyle: TextStyle(color: Colors.white70),
-                        hintText: 'e.g. Cerveny, roubovanec...',
-                        hintStyle: TextStyle(color: Colors.white24),
-                        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                        focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
-                      ),
-                    ),
-
-                  // Preview
-                  if (_previewImage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: Colors.yellow, width: 2),
-                          borderRadius: BorderRadius.circular(4),
+                        FilterChip(
+                          label: const Text('Flag (2-sided)'),
+                          selected: _flagMode,
+                          onSelected: (v) { setState(() => _flagMode = v); _saveLabelSettings(); _updatePreview(); },
+                          selectedColor: Colors.yellow,
+                          checkmarkColor: Colors.black,
                         ),
-                        padding: const EdgeInsets.all(4),
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: RawImage(image: _previewImage, filterQuality: FilterQuality.none),
+                      ],
+                    ),
+                    if (!_qrAllowed)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text('QR code disabled for 12mm (too small to scan)',
+                            style: TextStyle(color: Colors.white38, fontSize: 11)),
+                      ),
+                    const SizedBox(height: 12),
+  
+                    // Note input (only when Note is selected)
+                    if (_includeNote)
+                      TextField(
+                        controller: _noteController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          labelText: 'Note text',
+                          labelStyle: TextStyle(color: Colors.white70),
+                          hintText: 'e.g. Cerveny, roubovanec...',
+                          hintStyle: TextStyle(color: Colors.white24),
+                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                          focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.yellow)),
                         ),
                       ),
-                    ),
-
-                  // Status
-                  if (_statusMessage.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(top: 16),
-                      color: Colors.black,
-                      child: Text(
-                        _statusMessage,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+  
+                    // Preview
+                    if (_previewImage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.yellow, width: 2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: RawImage(image: _previewImage, filterQuality: FilterQuality.none),
+                          ),
+                        ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-
-          // Print button
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              height: 64,
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isPrinting || _effectiveLabelText.isEmpty ? null : _print,
-                icon: _isPrinting
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
-                    : const Icon(Icons.print, size: 28),
-                label: const Text('PRINT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellow,
-                  foregroundColor: Colors.black,
-                  disabledBackgroundColor: Colors.grey[700],
+  
+                    // Status
+                    if (_statusMessage.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(top: 16),
+                        color: Colors.black,
+                        child: Text(
+                          _statusMessage,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
-          ),
-        ],
+  
+            // Print button
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SizedBox(
+                height: 64,
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isPrinting || _effectiveLabelText.isEmpty ? null : _print,
+                  icon: _isPrinting
+                      ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
+                      : const Icon(Icons.print, size: 28),
+                  label: const Text('PRINT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.yellow,
+                    foregroundColor: Colors.black,
+                    disabledBackgroundColor: Colors.grey[700],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -61,64 +61,66 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.scanQrCode)),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 5,
-            child: isMobile
-                ? MobileScanner(
-                    onDetect: _onDetect,
-                  )
-                : Container(
-                    color: Colors.grey[900],
-                    child: Center(
-                      child: Text(
-                        l10n.cameraOnlyMobile,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white70),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              flex: 5,
+              child: isMobile
+                  ? MobileScanner(
+                      onDetect: _onDetect,
+                    )
+                  : Container(
+                      color: Colors.grey[900],
+                      child: Center(
+                        child: Text(
+                          l10n.cameraOnlyMobile,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
                       ),
                     ),
-                  ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(24),
-            color: Colors.black,
-            child: Column(
-              children: [
-                TextField(
-                  controller: _manualIdController,
-                  style: const TextStyle(color: Colors.white, fontSize: 20),
-                  decoration: InputDecoration(
-                    labelText: l10n.manualIdEntry,
-                    labelStyle: const TextStyle(color: Colors.yellow),
-                    enabledBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.yellow),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.yellow, width: 2),
-                    ),
-                  ),
-                  onSubmitted: (value) {
-                    if (value.isNotEmpty) {
-                      _handleCode(value.toUpperCase());
-                      _manualIdController.clear();
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_manualIdController.text.isNotEmpty) {
-                      _handleCode(_manualIdController.text.toUpperCase());
-                      _manualIdController.clear();
-                    }
-                  },
-                  child: Text(l10n.submitId),
-                ),
-              ],
             ),
-          ),
-        ],
+            Container(
+              padding: const EdgeInsets.all(24),
+              color: Colors.black,
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _manualIdController,
+                    style: const TextStyle(color: Colors.white, fontSize: 20),
+                    decoration: InputDecoration(
+                      labelText: l10n.manualIdEntry,
+                      labelStyle: const TextStyle(color: Colors.yellow),
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.yellow),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.yellow, width: 2),
+                      ),
+                    ),
+                    onSubmitted: (value) {
+                      if (value.isNotEmpty) {
+                        _handleCode(value.toUpperCase());
+                        _manualIdController.clear();
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_manualIdController.text.isNotEmpty) {
+                        _handleCode(_manualIdController.text.toUpperCase());
+                        _manualIdController.clear();
+                      }
+                    },
+                    child: Text(l10n.submitId),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
