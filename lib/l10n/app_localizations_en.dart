@@ -281,7 +281,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get visualMap => 'VISUAL MAP';
+  String get visualMap => 'MAP';
 
   @override
   String get speciesInCrate => 'SPECIES IN CRATE';

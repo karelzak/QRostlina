@@ -611,7 +611,7 @@ abstract class AppLocalizations {
   /// No description provided for @visualMap.
   ///
   /// In en, this message translates to:
-  /// **'VISUAL MAP'**
+  /// **'MAP'**
   String get visualMap;
 
   /// No description provided for @speciesInCrate.

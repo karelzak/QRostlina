@@ -281,7 +281,7 @@ class AppLocalizationsCs extends AppLocalizations {
   }
 
   @override
-  String get visualMap => 'VIZUÁLNÍ MAPA';
+  String get visualMap => 'MAPA';
 
   @override
   String get speciesInCrate => 'ODRŮDY V PŘEPRAVCE';
