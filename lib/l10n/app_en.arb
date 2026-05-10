@@ -104,6 +104,10 @@
   "noBedsFound": "No beds found.",
   "noCratesFound": "No crates found.",
   "noSpeciesFound": "No species found.",
+  "history": "HISTORY",
+  "search": "SEARCH",
+  "scan": "SCAN",
+  "recent": "RECENT",
   "deleteSpecies": "Delete Species?",
   "deleteSpeciesConfirm": "Are you sure you want to delete {id}? This will also remove all its location references!",
   "@deleteSpeciesConfirm": {

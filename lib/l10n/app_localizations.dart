@@ -518,6 +518,30 @@ abstract class AppLocalizations {
   /// **'No species found.'**
   String get noSpeciesFound;
 
+  /// No description provided for @history.
+  ///
+  /// In en, this message translates to:
+  /// **'HISTORY'**
+  String get history;
+
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'SEARCH'**
+  String get search;
+
+  /// No description provided for @scan.
+  ///
+  /// In en, this message translates to:
+  /// **'SCAN'**
+  String get scan;
+
+  /// No description provided for @recent.
+  ///
+  /// In en, this message translates to:
+  /// **'RECENT'**
+  String get recent;
+
   /// No description provided for @deleteSpecies.
   ///
   /// In en, this message translates to:

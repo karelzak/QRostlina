@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../l10n/app_localizations.dart';
 import '../services/qr_scanner_service.dart';
+import '../widgets/species_selection_dialog.dart';
 import 'detail_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
@@ -41,6 +42,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     // Navigation to specific cards based on type
     debugPrint('Detected ${result.type}: ${result.id}');
+    if (result.type == ScannedType.species) {
+      SpeciesSelectionDialog.addToHistory(result.id);
+    }
     Navigator.push(
       context,
       MaterialPageRoute(

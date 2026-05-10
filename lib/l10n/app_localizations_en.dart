@@ -232,6 +232,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSpeciesFound => 'No species found.';
 
   @override
+  String get history => 'HISTORY';
+
+  @override
+  String get search => 'SEARCH';
+
+  @override
+  String get scan => 'SCAN';
+
+  @override
+  String get recent => 'RECENT';
+
+  @override
   String get deleteSpecies => 'Delete Species?';
 
   @override

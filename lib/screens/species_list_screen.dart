@@ -7,6 +7,7 @@ import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
 import '../services/csv_service.dart';
 import '../services/local_image_service.dart';
+import '../widgets/species_selection_dialog.dart';
 import 'detail_screen.dart';
 import 'edit_species_screen.dart';
 
@@ -191,6 +192,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
                           ],
                         ),
                         onTap: () async {
+                          SpeciesSelectionDialog.addToHistory(s.id);
                           await Navigator.push(
                             context,
                             MaterialPageRoute(

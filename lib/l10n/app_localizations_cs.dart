@@ -229,7 +229,19 @@ class AppLocalizationsCs extends AppLocalizations {
   String get noCratesFound => 'Žádné přepravky nenalezeny.';
 
   @override
-  String get noSpeciesFound => 'Žádné odrůdy nenalezeny.';
+  String get noSpeciesFound => 'Žádné odrůdy nebyly nalezeny.';
+
+  @override
+  String get history => 'HISTORIE';
+
+  @override
+  String get search => 'HLEDAT';
+
+  @override
+  String get scan => 'SKENOVAT';
+
+  @override
+  String get recent => 'NEDÁVNÉ';
 
   @override
   String get deleteSpecies => 'Smazat odrůdu?';

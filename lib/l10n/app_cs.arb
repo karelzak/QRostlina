@@ -103,8 +103,13 @@
   "crateIsEmpty": "Přepravka je prázdná.",
   "noBedsFound": "Žádné záhony nenalezeny.",
   "noCratesFound": "Žádné přepravky nenalezeny.",
-  "noSpeciesFound": "Žádné odrůdy nenalezeny.",
+  "noSpeciesFound": "Žádné odrůdy nebyly nalezeny.",
+  "history": "HISTORIE",
+  "search": "HLEDAT",
+  "scan": "SKENOVAT",
+  "recent": "NEDÁVNÉ",
   "deleteSpecies": "Smazat odrůdu?",
+
   "deleteSpeciesConfirm": "Opravdu chcete smazat {id}? Tím se také odstraní všechny odkazy na toto umístění!",
   "@deleteSpeciesConfirm": {
     "placeholders": {

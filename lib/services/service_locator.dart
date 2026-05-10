@@ -38,6 +38,7 @@ class ServiceLocator {
 
   DatabaseService get db => _dbService;
   PrintingService get print => _printService;
+  SharedPreferences get prefs => _prefs;
 
   bool get isCloudMode => _prefs.getString(_storageModeKey) == _modeCloud;
 

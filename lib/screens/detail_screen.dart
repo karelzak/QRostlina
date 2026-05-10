@@ -9,6 +9,7 @@ import '../services/qr_scanner_service.dart';
 import '../services/csv_service.dart';
 import '../services/local_image_service.dart';
 import '../widgets/search_dialog.dart';
+import '../widgets/species_selection_dialog.dart';
 import 'edit_species_screen.dart';
 import 'edit_location_screen.dart';
 import 'printing_screen.dart';
@@ -611,13 +612,10 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   void _selectSpeciesForCell(AppLocalizations l10n, int line, int row) async {
-    final allSpecies = await locator.db.getAllSpecies();
-    final items = allSpecies.map((s) => SearchItem(id: s.id, name: s.name, subtitle: s.latinName)).toList();
-
     if (!mounted) return;
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => SearchDialog(title: 'SELECT SPECIES', items: items),
+      builder: (context) => const SpeciesSelectionDialog(title: 'SELECT SPECIES'),
     );
 
     if (result != null && mounted) {
@@ -627,13 +625,10 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   void _addSpeciesToRandBed(AppLocalizations l10n) async {
-    final allSpecies = await locator.db.getAllSpecies();
-    final items = allSpecies.map((s) => SearchItem(id: s.id, name: s.name, subtitle: s.latinName)).toList();
-
     if (!mounted) return;
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => SearchDialog(title: 'ADD TO BED', items: items),
+      builder: (context) => const SpeciesSelectionDialog(title: 'ADD TO BED'),
     );
 
     if (result != null && mounted) {
@@ -670,6 +665,7 @@ class _DetailScreenState extends State<DetailScreen> {
             },
           ),
           onTap: () {
+            SpeciesSelectionDialog.addToHistory(sId);
             Navigator.push(context, MaterialPageRoute(
               builder: (context) => DetailScreen(id: sId, type: ScannedType.species)));
           },
@@ -693,6 +689,7 @@ class _DetailScreenState extends State<DetailScreen> {
               title: Text(l10n.viewDetails, style: const TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
+                SpeciesSelectionDialog.addToHistory(currentSpeciesId);
                 Navigator.push(context, MaterialPageRoute(
                   builder: (context) => DetailScreen(id: currentSpeciesId, type: ScannedType.species)));
               },
@@ -721,13 +718,10 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   void _addSpeciesToCrate(AppLocalizations l10n) async {
-    final allSpecies = await locator.db.getAllSpecies();
-    final items = allSpecies.map((s) => SearchItem(id: s.id, name: s.name, subtitle: s.latinName)).toList();
-
     if (!mounted) return;
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => SearchDialog(title: 'ADD TO CRATE', items: items),
+      builder: (context) => const SpeciesSelectionDialog(title: 'ADD TO CRATE'),
     );
 
     if (result != null && mounted) {
@@ -940,6 +934,7 @@ class _DetailScreenState extends State<DetailScreen> {
             },
           ),
           onTap: () {
+            SpeciesSelectionDialog.addToHistory(sId);
             Navigator.push(context, MaterialPageRoute(
               builder: (context) => DetailScreen(id: sId, type: ScannedType.species)));
           },
