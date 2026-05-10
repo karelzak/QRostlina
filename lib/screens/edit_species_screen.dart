@@ -7,6 +7,7 @@ import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
 import '../services/local_image_service.dart';
 import '../widgets/id_input_field.dart';
+import 'detail_screen.dart';
 
 class EditSpeciesScreen extends StatefulWidget {
   final Species? species; // If null, we're adding new; else editing
@@ -134,8 +135,17 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
         Future.delayed(Duration.zero, () {
           if (mounted) {
             final navigator = Navigator.of(context);
-            if (navigator.canPop()) {
-              navigator.pop(true);
+            if (widget.species == null) {
+              // For new species, go directly to detail screen
+              navigator.pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => DetailScreen(id: id, type: ScannedType.species),
+                ),
+              );
+            } else {
+              if (navigator.canPop()) {
+                navigator.pop(true);
+              }
             }
           }
         });

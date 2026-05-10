@@ -205,13 +205,13 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final result = await Navigator.push<dynamic>(
+          await Navigator.push<dynamic>(
             context,
             MaterialPageRoute(builder: (context) => const EditSpeciesScreen()),
           );
-          if (result != null) {
-            _refreshList();
-          }
+          // Always refresh because EditSpeciesScreen might have been replaced 
+          // by DetailScreen, and we want to see the new item in the list.
+          _refreshList();
         },
         backgroundColor: Colors.yellow,
         foregroundColor: Colors.black,

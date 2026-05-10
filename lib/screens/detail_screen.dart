@@ -361,11 +361,11 @@ class _DetailScreenState extends State<DetailScreen> {
                   default:
                     return;
                 }
-                final result = await Navigator.push<dynamic>(
+                await Navigator.push<dynamic>(
                   context,
                   MaterialPageRoute(builder: (context) => screen),
                 );
-                if (result != null) _loadData();
+                _loadData();
               },
               child: Text(l10n.createNew),
             ),

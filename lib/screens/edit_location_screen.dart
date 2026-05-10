@@ -5,6 +5,7 @@ import '../models/location.dart';
 import '../services/service_locator.dart';
 import '../services/qr_scanner_service.dart';
 import '../widgets/id_input_field.dart';
+import 'detail_screen.dart';
 
 class EditLocationScreen extends StatefulWidget {
   final Location? location;
@@ -154,7 +155,19 @@ class _EditLocationScreenState extends State<EditLocationScreen> {
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            Navigator.of(context).pop(loc.id);
+            final navigator = Navigator.of(context);
+            if (widget.location == null) {
+              navigator.pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => DetailScreen(
+                    id: loc.id,
+                    type: widget.isBed ? ScannedType.bed : ScannedType.crate,
+                  ),
+                ),
+              );
+            } else {
+              navigator.pop(loc.id);
+            }
           }
         });
       }

@@ -113,11 +113,13 @@ class _LocationsScreenState extends State<LocationsScreen> with SingleTickerProv
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final isBed = _tabController.index == 0;
-          final result = await Navigator.push<String>(
+          await Navigator.push<String>(
             context,
             MaterialPageRoute(builder: (context) => EditLocationScreen(isBed: isBed)),
           );
-          if (result != null) _loadData();
+          // Always refresh because EditLocationScreen might have been replaced 
+          // by DetailScreen, and we want to see the new item in the list.
+          _loadData();
         },
         backgroundColor: Colors.yellow,
         child: const Icon(Icons.add, color: Colors.black),
