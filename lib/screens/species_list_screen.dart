@@ -20,6 +20,9 @@ class SpeciesListScreen extends StatefulWidget {
 
 class _SpeciesListScreenState extends State<SpeciesListScreen> {
   List<Species>? _species;
+  List<Species>? _filteredSpecies;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
   Map<String, int> _bedCounts = {};
   Map<String, int> _crateCounts = {};
   Map<String, File?> _localThumbnails = {};
@@ -29,7 +32,35 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(_onSearchChanged);
     _refreshList(showLoading: true);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _filterSpecies();
+  }
+
+  void _filterSpecies() {
+    if (_species == null) return;
+    
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredSpecies = _species;
+      } else {
+        _filteredSpecies = _species!.where((s) {
+          return s.name.toLowerCase().contains(query) || 
+                 s.id.toLowerCase().contains(query) ||
+                 (s.latinName?.toLowerCase().contains(query) ?? false);
+        }).toList();
+      }
+    });
   }
 
   Future<void> _refreshList({bool showLoading = false}) async {
@@ -57,6 +88,7 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
         _species = species;
         _localThumbnails = newLocalThumbnails;
         _loading = false;
+        _filterSpecies();
         // Keep _countsLoading = true for now, load counts next
       });
     }
@@ -121,8 +153,32 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.speciesList),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: const TextStyle(color: Colors.black, fontSize: 20),
+                decoration: InputDecoration(
+                  hintText: '${l10n.search}...',
+                  hintStyle: const TextStyle(color: Colors.black54),
+                  border: InputBorder.none,
+                ),
+              )
+            : Text(l10n.speciesList),
         actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchController.clear();
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) async {
@@ -144,13 +200,20 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
       ),
       body: _loading && _species == null
           ? const Center(child: CircularProgressIndicator(color: Colors.yellow))
-          : _species == null || _species!.isEmpty
-              ? Center(child: Text(l10n.noSpeciesFound, style: const TextStyle(color: Colors.white70)))
+          : _filteredSpecies == null || _filteredSpecies!.isEmpty
+              ? Center(
+                  child: Text(
+                    _isSearching && _species != null && _species!.isNotEmpty
+                        ? l10n.noMatchesFound
+                        : l10n.noSpeciesFound,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                )
               : ListView.builder(
                   key: const PageStorageKey('species_list'),
-                  itemCount: _species!.length,
+                  itemCount: _filteredSpecies!.length,
                   itemBuilder: (context, index) {
-                    final s = _species![index];
+                    final s = _filteredSpecies![index];
                     final bedCount = _bedCounts[s.id] ?? 0;
                     final crateCount = _crateCounts[s.id] ?? 0;
 
