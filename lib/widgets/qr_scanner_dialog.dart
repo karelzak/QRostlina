@@ -13,6 +13,7 @@ class QRScannerDialog extends StatefulWidget {
 
 class _QRScannerDialogState extends State<QRScannerDialog> {
   final MobileScannerController controller = MobileScannerController();
+  bool _isHandled = false;
 
   @override
   void dispose() {
@@ -33,10 +34,13 @@ class _QRScannerDialogState extends State<QRScannerDialog> {
             ? MobileScanner(
                 controller: controller,
                 onDetect: (capture) {
+                  if (_isHandled) return;
+
                   final List<Barcode> barcodes = capture.barcodes;
                   if (barcodes.isNotEmpty) {
                     final code = barcodes.first.rawValue;
                     if (code != null) {
+                      _isHandled = true;
                       final result = QRScannerService.parse(code);
                       Navigator.pop(context, result);
                     }

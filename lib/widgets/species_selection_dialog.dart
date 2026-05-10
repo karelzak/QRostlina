@@ -31,6 +31,7 @@ class _SpeciesSelectionDialogState extends State<SpeciesSelectionDialog> with Si
   List<Species> _allSpecies = [];
   List<Species> _historySpecies = [];
   bool _loading = true;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -67,6 +68,9 @@ class _SpeciesSelectionDialogState extends State<SpeciesSelectionDialog> with Si
   }
 
   void _onSelected(String id) {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+
     SpeciesSelectionDialog.addToHistory(id);
     Navigator.pop(context, id);
   }
@@ -140,6 +144,8 @@ class _SpeciesSelectionDialogState extends State<SpeciesSelectionDialog> with Si
           child: MobileScanner(
             controller: _scannerController,
             onDetect: (capture) {
+              if (_isProcessing) return;
+
               final barcodes = capture.barcodes;
               if (barcodes.isNotEmpty) {
                 final code = barcodes.first.rawValue;

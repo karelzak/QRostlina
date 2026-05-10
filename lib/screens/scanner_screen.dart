@@ -16,19 +16,31 @@ class ScannerScreen extends StatefulWidget {
 
 class _ScannerScreenState extends State<ScannerScreen> {
   final TextEditingController _manualIdController = TextEditingController();
+  final MobileScannerController _controller = MobileScannerController();
+  bool _isHandlingCode = false;
+
+  @override
+  void dispose() {
+    _manualIdController.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 
   void _onDetect(BarcodeCapture capture) {
+    if (_isHandlingCode) return;
+
     final List<Barcode> barcodes = capture.barcodes;
     for (final barcode in barcodes) {
       final String? code = barcode.rawValue;
       if (code != null) {
+        setState(() => _isHandlingCode = true);
         _handleCode(code);
         break; 
       }
     }
   }
 
-  void _handleCode(String code) {
+  Future<void> _handleCode(String code) async {
     final result = QRScannerService.parse(code);
     final l10n = AppLocalizations.of(context)!;
     
@@ -45,12 +57,18 @@ class _ScannerScreenState extends State<ScannerScreen> {
     if (result.type == ScannedType.species) {
       SpeciesSelectionDialog.addToHistory(result.id);
     }
-    Navigator.push(
+    
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => DetailScreen(id: result.id, type: result.type),
       ),
     );
+
+    // Reset flag when coming back to the scanner
+    if (mounted) {
+      setState(() => _isHandlingCode = false);
+    }
   }
 
   @override
@@ -68,6 +86,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
               flex: 5,
               child: isMobile
                   ? MobileScanner(
+                      controller: _controller,
                       onDetect: _onDetect,
                     )
                   : Container(
