@@ -154,5 +154,6 @@
       }
     }
   },
-  "copies": "KOPIE"
+  "copies": "KOPIE",
+  "rating": "HODNOCENÍ"
 }

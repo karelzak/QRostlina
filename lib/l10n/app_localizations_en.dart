@@ -314,4 +314,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copies => 'COPIES';
+
+  @override
+  String get rating => 'RATING';
 }

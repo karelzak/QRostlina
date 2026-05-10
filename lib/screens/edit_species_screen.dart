@@ -28,6 +28,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
 
   String? _photoUrl;
   File? _localPhotoFile;
+  int _rating = 0;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -39,6 +40,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
     _colorController = TextEditingController(text: widget.species?.color ?? '');
     _descriptionController = TextEditingController(text: widget.species?.description ?? '');
     _photoUrl = widget.species?.photoUrl;
+    _rating = widget.species?.rating ?? 0;
     _loadLocalPhoto();
   }
 
@@ -126,6 +128,7 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
         color: _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
         description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
         photoUrl: finalPhotoUrl,
+        rating: _rating,
       );
 
       await locator.db.addSpecies(species);
@@ -197,6 +200,13 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
                   label: 'Description',
                   maxLines: 6,
                 ),
+                const SizedBox(height: 24),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(l10n.rating.toUpperCase(), 
+                    style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+                _buildRatingBar(),
                 const SizedBox(height: 24),
                 const Divider(color: Colors.yellow, thickness: 1),
                 const SizedBox(height: 16),
@@ -289,6 +299,29 @@ class _EditSpeciesScreenState extends State<EditSpeciesScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildRatingBar() {
+    return Row(
+      children: List.generate(5, (index) {
+        return IconButton(
+          onPressed: () {
+            setState(() {
+              // Toggle: if same rating is clicked, reset to 0
+              final newRating = index + 1;
+              _rating = _rating == newRating ? 0 : newRating;
+            });
+          },
+          icon: Icon(
+            index < _rating ? Icons.star : Icons.star_border,
+            color: Colors.yellow,
+            size: 40,
+          ),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        );
+      }),
     );
   }
 

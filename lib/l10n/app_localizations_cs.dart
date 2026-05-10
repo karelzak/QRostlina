@@ -314,4 +314,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get copies => 'KOPIE';
+
+  @override
+  String get rating => 'HODNOCENÍ';
 }

@@ -754,6 +754,8 @@ class _DetailScreenState extends State<DetailScreen> {
                         _infoRow(l10n.latin, s.latinName ?? '-'),
                         _infoRow(l10n.color, s.color ?? '-'),
                         const SizedBox(height: 16),
+                        _buildRatingBar(s.rating),
+                        const SizedBox(height: 16),
                         Text('${l10n.description}:', style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
                         Text(s.description ?? l10n.noDescription, style: const TextStyle(fontSize: 18)),
                       ],
@@ -818,6 +820,44 @@ class _DetailScreenState extends State<DetailScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildRatingBar(int currentRating) {
+    return Row(
+      children: List.generate(5, (index) {
+        return IconButton(
+          onPressed: () => _updateRating(index + 1),
+          icon: Icon(
+            index < currentRating ? Icons.star : Icons.star_border,
+            color: Colors.yellow,
+            size: 32,
+          ),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        );
+      }),
+    );
+  }
+
+  Future<void> _updateRating(int newRating) async {
+    if (_data is! Species) return;
+    final s = _data as Species;
+    
+    // Toggle: if same rating is clicked, reset to 0
+    final finalRating = s.rating == newRating ? 0 : newRating;
+    
+    final updatedSpecies = Species(
+      id: s.id,
+      name: s.name,
+      latinName: s.latinName,
+      color: s.color,
+      description: s.description,
+      photoUrl: s.photoUrl,
+      rating: finalRating,
+    );
+    
+    await locator.db.addSpecies(updatedSpecies);
+    _loadData(showLoading: false);
   }
 
   Widget _buildPhotoHeader(Species species, {double height = 250}) {

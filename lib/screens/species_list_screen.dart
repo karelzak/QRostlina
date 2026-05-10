@@ -223,9 +223,17 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(16),
                         leading: _buildThumbnail(s),
-                        title: Text(
-                          s.name.toUpperCase(),
-                          style: const TextStyle(color: Colors.yellow, fontSize: 22, fontWeight: FontWeight.bold),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                s.name.toUpperCase(),
+                                style: const TextStyle(color: Colors.yellow, fontSize: 22, fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (s.rating > 0) _buildRatingStars(s.rating),
+                          ],
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,6 +335,19 @@ class _SpeciesListScreenState extends State<SpeciesListScreen> {
                   )
                 : const Icon(Icons.image, color: Colors.white12),
       ),
+    );
+  }
+
+  Widget _buildRatingStars(int rating) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        return Icon(
+          index < rating ? Icons.star : Icons.star_border,
+          color: Colors.yellow,
+          size: 16,
+        );
+      }),
     );
   }
 

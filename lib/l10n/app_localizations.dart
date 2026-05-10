@@ -673,6 +673,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'COPIES'**
   String get copies;
+
+  /// No description provided for @rating.
+  ///
+  /// In en, this message translates to:
+  /// **'RATING'**
+  String get rating;
 }
 
 class _AppLocalizationsDelegate

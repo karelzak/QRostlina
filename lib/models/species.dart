@@ -5,6 +5,7 @@ class Species {
   final String? color;
   final String? description;
   final String? photoUrl;
+  final int rating; // 0 to 5
 
   Species({
     required this.id,
@@ -13,6 +14,7 @@ class Species {
     this.color,
     this.description,
     this.photoUrl,
+    this.rating = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class Species {
       'color': color,
       'description': description,
       'photoUrl': photoUrl,
+      'rating': rating,
     };
   }
 
@@ -34,6 +37,7 @@ class Species {
       color: map['color'],
       description: map['description'],
       photoUrl: map['photoUrl'],
+      rating: map['rating'] ?? 0,
     );
   }
 }
