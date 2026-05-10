@@ -18,7 +18,7 @@ abstract class DatabaseService {
   Future<void> deleteSpecies(String id);
   Future<void> deleteLocation(String id);
   Future<void> saveLocation(Location location);
-  Future<List<String>> getLocationsForSpecies(String speciesId);
+  Future<List<SpeciesLocation>> getLocationsForSpecies(String speciesId);
   Future<void> setSpeciesAtBedCell(String bedId, int line, int row, String? speciesId);
   Future<void> addSpeciesToRandBed(String bedId, String speciesId);
   Future<void> removeSpeciesFromRandBed(String bedId, String speciesId);

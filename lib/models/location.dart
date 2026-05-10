@@ -1,3 +1,17 @@
+import '../services/qr_scanner_service.dart';
+
+class SpeciesLocation {
+  final String id;
+  final String displayName;
+  final ScannedType type;
+
+  SpeciesLocation({
+    required this.id,
+    required this.displayName,
+    required this.type,
+  });
+}
+
 abstract class Location {
   final String id;
   final String name;
@@ -50,18 +64,19 @@ class Bed extends Location {
 
   bool get isConsistent => true;
 
-  String formatPosition(int? line, int? row) {
-    if (layout == BedLayout.rand) return id;
-    if (row == null) return 'N/A';
+  String formatPosition(int? line, int? plantRow, {bool useLabel = false}) {
+    String prefix = (useLabel && row != null && row!.isNotEmpty) ? row! : id;
+    if (layout == BedLayout.rand) return prefix;
+    if (plantRow == null) return 'N/A';
     
     if (layout == BedLayout.linear) {
-      return '$id-${row}M (${linesPerMeter * rowsPerMeter}pcs)';
+      return '$prefix-${plantRow}M (${linesPerMeter * rowsPerMeter}pcs)';
     }
 
-    int meter = ((row - 1) / rowsPerMeter).floor() + 1;
+    int meter = ((plantRow - 1) / rowsPerMeter).floor() + 1;
     String lineStr = line == 1 ? 'L' : (line == 2 ? 'R' : 'C');
-    int subRow = ((row - 1) % rowsPerMeter) + 1;
-    return '$id-${meter}M-$subRow$lineStr';
+    int subRow = ((plantRow - 1) % rowsPerMeter) + 1;
+    return '$prefix-${meter}M-$subRow$lineStr';
   }
 
   Map<String, dynamic> toMap() {

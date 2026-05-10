@@ -26,7 +26,7 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   dynamic _data;
-  List<String>? _locations; // For Species
+  List<SpeciesLocation>? _locations; // For Species
   Map<String, Species> _speciesMap = {};
   bool _loading = true;
   File? _localPhotoFile;
@@ -50,7 +50,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
     // Use local variables to gather data
     dynamic newData;
-    List<String>? newLocations;
+    List<SpeciesLocation>? newLocations;
     Map<String, Species> newSpeciesMap = {};
     int newBedInstanceCount = 0;
     int newCrateInstanceCount = 0;
@@ -71,9 +71,9 @@ class _DetailScreenState extends State<DetailScreen> {
           }
 
           for (var loc in newLocations!) {
-            if (loc.startsWith('B-')) {
+            if (loc.type == ScannedType.bed) {
               newBedInstanceCount++;
-            } else if (loc.startsWith('C-')) {
+            } else if (loc.type == ScannedType.crate) {
               newCrateInstanceCount++;
             }
           }
@@ -681,7 +681,7 @@ class _DetailScreenState extends State<DetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: Text('Cell ${(_data as Bed).formatPosition(line, row)}', 
+        title: Text('Cell ${(_data as Bed).formatPosition(line, row, useLabel: true)}', 
           style: const TextStyle(color: Colors.yellow, fontSize: 18, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -742,32 +742,18 @@ class _DetailScreenState extends State<DetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _infoRow(l10n.name, s.name),
-                        _infoRow(l10n.latin, s.latinName ?? '-'),
-                        _infoRow(l10n.color, s.color ?? '-'),
-                        const SizedBox(height: 16),
-                        _buildRatingBar(s.rating),
-                        const SizedBox(height: 16),
-                        Text('${l10n.description}:', style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
-                        Text(s.description ?? l10n.noDescription, style: const TextStyle(fontSize: 18)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: _buildPhotoHeader(s, height: 200),
-                  ),
-                ],
-              ),
+              _infoRow(l10n.name, s.name),
+              _infoRow(l10n.latin, s.latinName ?? '-'),
+              _infoRow(l10n.color, s.color ?? '-'),
+              const SizedBox(height: 12),
+              _buildRatingBar(s.rating),
+              const SizedBox(height: 16),
+              Text('${l10n.description}:', style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold)),
+              Text(s.description ?? l10n.noDescription, style: const TextStyle(fontSize: 18)),
+              if (s.photoUrl != null) ...[
+                const SizedBox(height: 24),
+                _buildPhotoHeader(s, height: 300),
+              ],
             ],
           ),
         ),
@@ -931,17 +917,15 @@ class _DetailScreenState extends State<DetailScreen> {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _locations!.length,
       itemBuilder: (context, index) {
-        final locStr = _locations![index];
+        final loc = _locations![index];
         return ListTile(
           tileColor: Colors.grey[900],
-          leading: Icon(locStr.startsWith('C-') ? Icons.inventory_2 : Icons.grid_view, color: Colors.yellow),
-          title: Text(locStr, style: const TextStyle(fontWeight: FontWeight.bold)),
+          leading: Icon(loc.type == ScannedType.crate ? Icons.inventory_2 : Icons.grid_view, color: Colors.yellow),
+          title: Text(loc.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
           trailing: const Icon(Icons.chevron_right, color: Colors.yellow),
           onTap: () {
-            final id = locStr.split('-').take(2).join('-'); 
-            final type = id.startsWith('B-') ? ScannedType.bed : ScannedType.crate;
             Navigator.push(context, MaterialPageRoute(
-              builder: (context) => DetailScreen(id: id, type: type)));
+              builder: (context) => DetailScreen(id: loc.id, type: loc.type)));
           },
         );
       },

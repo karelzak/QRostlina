@@ -187,23 +187,31 @@ class FirestoreDatabaseService implements DatabaseService {
   }
 
   @override
-  Future<List<String>> getLocationsForSpecies(String speciesId) async {
-    List<String> locations = [];
+  Future<List<SpeciesLocation>> getLocationsForSpecies(String speciesId) async {
+    List<SpeciesLocation> locations = [];
     
     final beds = await _db.collection('beds').get();
     for (var doc in beds.docs) {
       final bed = Bed.fromMap({...doc.data(), 'id': doc.id});
       if (bed.layout == BedLayout.rand) {
         if (bed.randSpeciesIds.contains(speciesId)) {
-          locations.add(bed.id);
+          locations.add(SpeciesLocation(
+            id: bed.id,
+            displayName: (bed.row != null && bed.row!.isNotEmpty) ? bed.row! : bed.id,
+            type: ScannedType.bed,
+          ));
         }
       } else {
         bed.speciesMap.forEach((key, sId) {
           if (sId == speciesId) {
             final parts = key.split('-');
             final line = int.tryParse(parts[0]);
-            final row = int.tryParse(parts[1]);
-            locations.add(bed.formatPosition(line, row));
+            final plantRow = int.tryParse(parts[1]);
+            locations.add(SpeciesLocation(
+              id: bed.id,
+              displayName: bed.formatPosition(line, plantRow, useLabel: true),
+              type: ScannedType.bed,
+            ));
           }
         });
       }
@@ -211,7 +219,11 @@ class FirestoreDatabaseService implements DatabaseService {
 
     final crates = await _db.collection('crates').where('speciesIds', arrayContains: speciesId).get();
     for (var doc in crates.docs) {
-      locations.add(doc.id);
+      locations.add(SpeciesLocation(
+        id: doc.id,
+        displayName: doc.id,
+        type: ScannedType.crate,
+      ));
     }
 
     return locations;

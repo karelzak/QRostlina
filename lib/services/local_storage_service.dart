@@ -300,22 +300,30 @@ class LocalStorageService implements DatabaseService {
   }
 
   @override
-  Future<List<String>> getLocationsForSpecies(String speciesId) async {
+  Future<List<SpeciesLocation>> getLocationsForSpecies(String speciesId) async {
     await _ensureInitialized();
-    List<String> locations = [];
+    List<SpeciesLocation> locations = [];
     
     for (var bed in _beds) {
       if (bed.layout == BedLayout.rand) {
         if (bed.randSpeciesIds.contains(speciesId)) {
-          locations.add(bed.id);
+          locations.add(SpeciesLocation(
+            id: bed.id,
+            displayName: (bed.row != null && bed.row!.isNotEmpty) ? bed.row! : bed.id,
+            type: ScannedType.bed,
+          ));
         }
       } else {
         bed.speciesMap.forEach((key, sId) {
           if (sId == speciesId) {
             final parts = key.split('-');
             final line = int.tryParse(parts[0]);
-            final row = int.tryParse(parts[1]);
-            locations.add(bed.formatPosition(line, row));
+            final plantRow = int.tryParse(parts[1]);
+            locations.add(SpeciesLocation(
+              id: bed.id,
+              displayName: bed.formatPosition(line, plantRow, useLabel: true),
+              type: ScannedType.bed,
+            ));
           }
         });
       }
@@ -323,7 +331,11 @@ class LocalStorageService implements DatabaseService {
 
     for (var crate in _crates) {
       if (crate.speciesIds.contains(speciesId)) {
-        locations.add(crate.id);
+        locations.add(SpeciesLocation(
+          id: crate.id,
+          displayName: crate.id,
+          type: ScannedType.crate,
+        ));
       }
     }
 
