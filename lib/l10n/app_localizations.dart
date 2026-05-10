@@ -667,6 +667,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'METER {number}'**
   String meterLabel(int number);
+
+  /// No description provided for @copies.
+  ///
+  /// In en, this message translates to:
+  /// **'COPIES'**
+  String get copies;
 }
 
 class _AppLocalizationsDelegate

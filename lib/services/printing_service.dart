@@ -28,6 +28,7 @@ abstract class PrintingService {
   Future<bool> printLabel(String? qrData, String text, String macAddress, brother.Model model, {
     int tapeWidthMm = 12,
     LabelContent content = const LabelContent(),
+    int numberOfCopies = 1,
   });
 }
 
@@ -133,6 +134,7 @@ class BrotherPrintingService implements PrintingService {
   Future<bool> printLabel(String? qrData, String text, String macAddress, brother.Model model, {
     int tapeWidthMm = 12,
     LabelContent content = const LabelContent(),
+    int numberOfCopies = 1,
   }) async {
     try {
       final printer = brother.Printer();
@@ -142,6 +144,7 @@ class BrotherPrintingService implements PrintingService {
       printInfo.orientation = brother.Orientation.LANDSCAPE;
       printInfo.isAutoCut = true;
       printInfo.isCutAtEnd = true;
+      printInfo.numberOfCopies = numberOfCopies;
       printInfo.skipStatusCheck = true; // PT-E920BT not in SDK, skip model verification
 
       final labelIndex = _labelIndexForTapeWidth(tapeWidthMm);

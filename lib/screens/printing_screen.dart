@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:another_brother/printer_info.dart' as brother;
+import '../l10n/app_localizations.dart';
 import '../services/service_locator.dart';
 import '../services/printing_service.dart';
 
@@ -51,6 +52,7 @@ class _PrintingScreenState extends State<PrintingScreen> {
   bool _includeNote = false;
   bool _includeLabel = true;
   bool _flagMode = false;
+  int _numberOfCopies = 1;
 
   bool _isPrinting = false;
   bool _isDiscovering = false;
@@ -210,6 +212,7 @@ class _PrintingScreenState extends State<PrintingScreen> {
         _printerMac,
         model,
         tapeWidthMm: _tapeWidthMm,
+        numberOfCopies: _numberOfCopies,
         content: LabelContent(
           qr: _includeQr,
           note: _includeNote,
@@ -235,6 +238,7 @@ class _PrintingScreenState extends State<PrintingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final hasPrinter = _printerMac.isNotEmpty;
 
     // Auto-disable QR when switching to small tape
@@ -373,9 +377,46 @@ class _PrintingScreenState extends State<PrintingScreen> {
                         child: Text('QR code disabled for 12mm (too small to scan)',
                             style: TextStyle(color: Colors.white38, fontSize: 11)),
                       ),
-                    const SizedBox(height: 12),
-  
-                    // Note input (only when Note is selected)
+                      const SizedBox(height: 12),
+
+                      // Number of copies
+                      Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[900],
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            l10n.copies.toUpperCase(),
+                            style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline, color: Colors.yellow),
+                            onPressed: _numberOfCopies > 1 ? () => setState(() => _numberOfCopies--) : null,
+                          ),
+                          SizedBox(
+                            width: 40,
+                            child: Text(
+                              '$_numberOfCopies',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline, color: Colors.yellow),
+                            onPressed: () => setState(() => _numberOfCopies++),
+                          ),
+                        ],
+                      ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Note input (only when Note is selected)
+
                     if (_includeNote)
                       TextField(
                         controller: _noteController,

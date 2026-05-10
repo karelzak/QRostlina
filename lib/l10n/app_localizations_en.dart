@@ -311,4 +311,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String meterLabel(int number) {
     return 'METER $number';
   }
+
+  @override
+  String get copies => 'COPIES';
 }

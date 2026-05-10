@@ -152,5 +152,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "copies": "COPIES"
 }
